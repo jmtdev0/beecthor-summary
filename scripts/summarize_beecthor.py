@@ -3,12 +3,11 @@
 Beecthor Bitcoin Summary Bot
 
 Checks for new videos on Beecthor's YouTube channel, extracts the transcript
-(3-tier fallback: youtube-transcript-api → yt-dlp subtitles → Groq Whisper audio),
+(3-tier fallback: youtube-transcript-api → Invidious captions → Invidious audio + Groq Whisper),
 summarizes it with Groq (Llama 3.3 70B), and sends the result to Telegram.
 Persists the last processed video ID in last_video_id.txt to avoid duplicates.
 """
 
-import glob as glob_module
 import os
 import subprocess
 import sys
@@ -94,125 +93,200 @@ def save_last_processed_id(video_id: str) -> None:
 # Transcript helpers  (3-tier fallback)
 # ---------------------------------------------------------------------------
 #
-#  Tier 1 — youtube-transcript-api  : fast, no download, works when captions exist
-#  Tier 2 — yt-dlp subtitles (iOS)  : bypasses bot-detection, still no full download
-#  Tier 3 — yt-dlp audio + Whisper  : always works; downloads audio and transcribes
-#                                     with Groq Whisper (free, same API key)
+#  Tier 1 — youtube-transcript-api    : fast, no download; works when captions exist
+#  Tier 2 — Invidious captions API    : proxy-based; bypasses YouTube bot-detection
+#  Tier 3 — Invidious audio + Whisper : downloads audio via proxy, transcribes free
+#
+#  GitHub Actions IPs are blocked by YouTube for direct content access, so Tiers 2
+#  and 3 route through Invidious (open-source YouTube frontend) as a proxy.
 # ---------------------------------------------------------------------------
 
-# Groq Whisper file-size hard limit (25 MB).  We cap the download below this.
-MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB to stay safely under
+# Multiple Invidious public instances for redundancy
+INVIDIOUS_INSTANCES = [
+    "https://inv.nadeko.net",
+    "https://invidious.fdn.fr",
+    "https://yt.cdaut.de",
+    "https://invidious.nerdvpn.de",
+    "https://invidious.privacyredirect.com",
+]
+
+# Groq Whisper hard limit is 25 MB; stay safely below it
+MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB
 
 
 def get_transcript(video_id: str) -> str:
-    """Try all three tiers in order and return the first successful transcript."""
+    """Try all three tiers in order; return the first successful transcript."""
 
     # --- Tier 1: youtube-transcript-api ---
     try:
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
         try:
-            # Prefer manual Spanish transcript
             transcript_obj = transcript_list.find_transcript(["es", "es-ES", "es-419"])
         except Exception:
-            # Accept any auto-generated transcript (Spanish first, English fallback)
+            # Accept any auto-generated transcript, Spanish first then English
             transcript_obj = transcript_list.find_generated_transcript(
                 ["es", "es-ES", "es-419", "en"]
             )
-        entries = transcript_obj.fetch()
-        text = " ".join(entry["text"] for entry in entries)
-        print(f"[Tier 1] Transcript via youtube-transcript-api ({len(text)} chars).")
+        text = " ".join(entry["text"] for entry in transcript_obj.fetch())
+        print(f"[Tier 1] youtube-transcript-api OK ({len(text)} chars).")
         return text
     except Exception as e:
-        print(f"[Tier 1] youtube-transcript-api failed: {e}")
+        print(f"[Tier 1] Failed: {e}")
 
-    # --- Tier 2: yt-dlp auto-subtitles with iOS player client ---
+    # --- Tier 2: Invidious captions API ---
     try:
-        text = _get_subtitles_via_ytdlp(video_id)
-        print(f"[Tier 2] Transcript via yt-dlp subtitles ({len(text)} chars).")
+        text = _get_captions_via_invidious(video_id)
+        print(f"[Tier 2] Invidious captions OK ({len(text)} chars).")
         return text
     except Exception as e:
-        print(f"[Tier 2] yt-dlp subtitle download failed: {e}")
+        print(f"[Tier 2] Failed: {e}")
 
-    # --- Tier 3: yt-dlp audio download + Groq Whisper ---
-    print("[Tier 3] Falling back to audio download + Groq Whisper transcription...")
-    text = _transcribe_audio_with_whisper(video_id)
-    print(f"[Tier 3] Transcript via Groq Whisper ({len(text)} chars).")
+    # --- Tier 3: Invidious audio download + Groq Whisper ---
+    print("[Tier 3] Downloading audio via Invidious for Whisper transcription...")
+    text = _transcribe_audio_via_invidious(video_id)
+    print(f"[Tier 3] Groq Whisper OK ({len(text)} chars).")
     return text
 
 
-def _get_subtitles_via_ytdlp(video_id: str) -> str:
-    """Download auto-generated VTT subtitles using the iOS player client."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.run(
-            [
-                "yt-dlp",
-                "--write-auto-sub",
-                "--sub-lang", "es.*,en",
-                "--sub-format", "vtt",
-                "--skip-download",
-                "--extractor-args", "youtube:player_client=ios",
-                "--output", f"{tmpdir}/sub",
-                f"https://www.youtube.com/watch?v={video_id}",
-            ],
-            capture_output=True,
-            check=True,
-        )
-        sub_files = glob_module.glob(f"{tmpdir}/*.vtt")
-        if not sub_files:
-            raise RuntimeError("No subtitle files produced by yt-dlp.")
-        with open(sub_files[0], encoding="utf-8") as f:
-            lines = f.readlines()
+def _get_captions_via_invidious(video_id: str) -> str:
+    """
+    Fetch available caption tracks from Invidious and return plain text.
+    Tries each public instance until one succeeds.
+    """
+    last_err: Exception = RuntimeError("No Invidious instances configured.")
 
-        # Strip VTT headers, timestamps, cue indices, and blank lines
-        text_lines = [
-            line.strip()
-            for line in lines
-            if line.strip()
-            and not line.startswith("WEBVTT")
-            and "-->" not in line
-            and not line.strip().isdigit()
-        ]
-        return " ".join(text_lines)
-
-
-def _transcribe_audio_with_whisper(video_id: str) -> str:
-    """Download audio with yt-dlp (iOS client) and transcribe with Groq Whisper."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        audio_path = os.path.join(tmpdir, "audio.mp3")
-
-        # Download audio only — iOS client bypasses most bot-detection
-        subprocess.run(
-            [
-                "yt-dlp",
-                "-x",
-                "--audio-format", "mp3",
-                "--audio-quality", "5",          # ~96 kbps; smaller file, enough for speech
-                "--extractor-args", "youtube:player_client=ios",
-                "--output", audio_path,
-                f"https://www.youtube.com/watch?v={video_id}",
-            ],
-            check=True,
-        )
-
-        file_size = os.path.getsize(audio_path)
-        print(f"Audio downloaded: {file_size / 1_048_576:.1f} MB")
-
-        if file_size > MAX_AUDIO_BYTES:
-            raise RuntimeError(
-                f"Audio file ({file_size / 1_048_576:.1f} MB) exceeds Groq Whisper "
-                f"limit ({MAX_AUDIO_BYTES / 1_048_576:.0f} MB). Video is too long."
+    for instance in INVIDIOUS_INSTANCES:
+        try:
+            # 1. List available caption tracks for this video
+            r = requests.get(
+                f"{instance}/api/v1/captions/{video_id}",
+                timeout=15,
             )
+            r.raise_for_status()
+            tracks = r.json().get("captions", [])
+            if not tracks:
+                raise ValueError("No caption tracks found.")
+
+            # 2. Prefer Spanish; fall back to English; otherwise take the first one
+            def lang_priority(track: dict) -> int:
+                code = track.get("languageCode", "")
+                if code.startswith("es"):
+                    return 0
+                if code.startswith("en"):
+                    return 1
+                return 2
+
+            track = sorted(tracks, key=lang_priority)[0]
+            # Invidious returns a relative URL like /api/v1/captions/VIDEO_ID?label=...
+            caption_url = track.get("url", "")
+            if caption_url.startswith("/"):
+                caption_url = f"{instance}{caption_url}"
+
+            # 3. Download the VTT content
+            vtt_resp = requests.get(caption_url, timeout=30)
+            vtt_resp.raise_for_status()
+            vtt_text = vtt_resp.text
+
+            # 4. Strip VTT metadata, timestamps, and cue numbers → plain text
+            lines = [
+                line.strip()
+                for line in vtt_text.splitlines()
+                if line.strip()
+                and not line.startswith("WEBVTT")
+                and "-->" not in line
+                and not line.strip().isdigit()
+            ]
+            return " ".join(lines)
+
+        except Exception as e:
+            print(f"  [{instance}] {e}")
+            last_err = e
+            continue
+
+    raise RuntimeError(f"All Invidious instances failed for captions. Last: {last_err}")
+
+
+def _transcribe_audio_via_invidious(video_id: str) -> str:
+    """
+    Download audio through an Invidious proxy (avoids YouTube bot-detection),
+    then transcribe with Groq Whisper (free, same API key).
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        audio_path = _download_audio_via_invidious(video_id, tmpdir)
 
         client = Groq(api_key=GROQ_API_KEY)
-        with open(audio_path, "rb") as audio_file:
+        ext = os.path.splitext(audio_path)[1].lstrip(".")  # "webm" or "mp4"
+        mime = f"audio/{ext}"
+
+        with open(audio_path, "rb") as f:
             transcription = client.audio.transcriptions.create(
-                file=(os.path.basename(audio_path), audio_file, "audio/mp3"),
+                file=(os.path.basename(audio_path), f, mime),
                 model="whisper-large-v3",
                 language="es",
                 response_format="text",
             )
-
         return transcription
+
+
+def _download_audio_via_invidious(video_id: str, tmpdir: str) -> str:
+    """
+    Fetch audio stream metadata from Invidious, then stream-download the audio.
+    Returns the local path of the downloaded file.
+    """
+    last_err: Exception = RuntimeError("No Invidious instances configured.")
+
+    for instance in INVIDIOUS_INSTANCES:
+        try:
+            # 1. Get video metadata (adaptive formats list)
+            r = requests.get(
+                f"{instance}/api/v1/videos/{video_id}",
+                timeout=15,
+            )
+            r.raise_for_status()
+            data = r.json()
+
+            # 2. Pick the lowest-bitrate audio-only format (sufficient for speech)
+            audio_fmts = [
+                f for f in data.get("adaptiveFormats", [])
+                if f.get("type", "").startswith("audio/")
+            ]
+            if not audio_fmts:
+                raise ValueError("No audio formats in Invidious response.")
+
+            fmt = min(audio_fmts, key=lambda f: f.get("bitrate", float("inf")))
+            itag = fmt["itag"]
+            ext = "webm" if "webm" in fmt.get("type", "") else "mp4"
+
+            # 3. Stream-download via Invidious proxy (local=true routes through the instance)
+            audio_url = (
+                f"{instance}/latest_version"
+                f"?id={video_id}&itag={itag}&local=true"
+            )
+            audio_path = os.path.join(tmpdir, f"audio.{ext}")
+            total = 0
+
+            with requests.get(audio_url, stream=True, timeout=180) as dl:
+                dl.raise_for_status()
+                with open(audio_path, "wb") as out:
+                    for chunk in dl.iter_content(chunk_size=65_536):
+                        total += len(chunk)
+                        if total > MAX_AUDIO_BYTES:
+                            raise RuntimeError(
+                                f"Audio exceeds {MAX_AUDIO_BYTES // 1_048_576} MB limit."
+                            )
+                        out.write(chunk)
+
+            print(
+                f"  [{instance}] Audio downloaded: {total / 1_048_576:.1f} MB"
+            )
+            return audio_path
+
+        except Exception as e:
+            print(f"  [{instance}] {e}")
+            last_err = e
+            continue
+
+    raise RuntimeError(f"All Invidious instances failed for audio. Last: {last_err}")
 
 
 # ---------------------------------------------------------------------------
