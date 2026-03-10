@@ -1,90 +1,92 @@
 # Beecthor Bitcoin Summary Bot
 
-A GitHub Actions workflow that automatically detects new videos from [Beecthor](https://www.youtube.com/@Beecthor)'s YouTube channel, extracts the transcript, summarizes the Bitcoin analysis using an LLM, and delivers the summary to a Telegram group.
+A daily manual routine that fetches the latest video from [Beecthor](https://www.youtube.com/@Beecthor)'s YouTube channel, parses the Spanish transcript, and delivers a structured Bitcoin analysis summary to a private Telegram group — including live BTC and SOL prices and a light-hearted "robot score" for Beecthor himself.
 
 ## How it works
 
 ```
-GitHub Actions (daily cron at 21:00 Madrid time)
-  └─ summarize_beecthor.py
-       ├─ yt-dlp          → fetches the latest video ID from the channel
-       ├─ Compares with last_video_id.txt
-       ├─ If new video found:
-       │    ├─ youtube-transcript-api → extracts Spanish transcript
-       │    ├─ Groq API (Llama 3.3 70B) → generates structured summary
-       │    └─ Telegram Bot API → sends summary to the group
-       └─ Commits updated last_video_id.txt to prevent duplicate messages
+Daily session (manual)
+  ├─ yt-dlp              → fetches latest video ID and downloads .es.vtt captions
+  ├─ Python parser       → strips VTT markup, deduplicates lines → plain transcript
+  ├─ Transcript saved    → transcripts/<video_id>_<date>.txt
+  ├─ CoinGecko API       → live BTC + SOL prices (USD & EUR); yesterday's from log
+  ├─ Manual analysis     → structured summary authored from the transcript
+  ├─ Telegram Bot API    → sends HTML message with spoiler block to the group
+  ├─ analyses_log.json   → appends entry (prices, video, message)
+  └─ git commit + push   → commits transcript + log + changelog to main
 ```
+
+## Telegram message format
+
+Each daily message includes:
+
+- **Link** to the video
+- **BTC prices**: yesterday → today with % change
+- **SOL prices**: yesterday → today with % change
+- **🤖 Robot score**: 0–10 rating (with one decimal) of how robotic vs. human Beecthor sounded that day — purely for fun. A score close to 10 means pure Elliott Wave tech-speak; closer to 0 means he wandered off-script and said something human.
+- **📌 Resumen**: 2–3 sentence plain-language verdict (does BTC go to new ATH or visit cycle lows first?)
+- **🔍 Análisis completo**: full structured analysis hidden behind a Telegram spoiler tap
 
 ## Features
 
-- **No video download** — only the transcript is fetched, keeping execution fast and lightweight
-- **Deduplication** — `last_video_id.txt` is committed back to the repo after each run so the same video is never processed twice
-- **Fallback transcription** — if `youtube-transcript-api` fails, `yt-dlp` auto-subtitles are used as a backup
-- **Manual trigger** — the workflow can be run on demand from the GitHub Actions tab (`workflow_dispatch`)
+- **No video download** — only the auto-generated `.es.vtt` subtitle file is fetched
+- **Spoiler block** — the detailed analysis is hidden until the reader taps, keeping the message clean
+- **Price comparison** — yesterday's prices are pulled from the last entry in `analyses_log.json`; SOL historical price from CoinGecko on the very first entry
+- **Transcript archive** — every parsed transcript is saved to `transcripts/` for future reference
+- **Daily git commit** — `analyses_log.json`, the new transcript, and `CHANGELOG.md` are committed and pushed to `main` after each session
 
 ## Project structure
 
 ```
 .github/
   workflows/
-    beecthor-summary.yml    # Workflow definition (cron + manual trigger)
+    beecthor-summary.yml          # Original GitHub Actions workflow (kept for reference)
 scripts/
-  summarize_beecthor.py     # Main logic: transcript → summary → Telegram
-requirements.txt            # Python dependencies
-last_video_id.txt           # Tracks the last processed video (auto-updated by CI)
+  summarize_beecthor.py           # Original main script (kept for reference)
+transcripts/
+  <video_id>_<date>.txt           # Parsed transcript archive (one file per day)
+analyses_log.json                 # All sent summaries with prices and metadata
+CHANGELOG.md                      # Notable changes grouped by date
+requirements.txt                  # Python dependencies
+last_video_id.txt                 # Last processed video ID
 ```
 
 ## Setup
 
-### 1. Fork / clone this repository
+### 1. Clone this repository
 
-Push it to your own GitHub account.
+```bash
+git clone https://github.com/jmtdev0/beecthor-summary.git
+cd beecthor-summary
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-### 2. Create a Telegram Bot
+### 2. Create a `.env` file
 
-1. Open Telegram and start a chat with `@BotFather`
-2. Send `/newbot` and follow the prompts
-3. Copy the **bot token** you receive
-4. Add the bot to your group
-5. Retrieve the **group chat ID** by sending any message to the group and opening:
-   ```
-   https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates
-   ```
-   The `chat.id` value (a negative number like `-100123456789`) is your chat ID.
+```
+GROQ_API_KEY=your_groq_key
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id   # negative number for supergroups
+```
 
-### 3. Create a Groq API key
+The Telegram bot must be **admin** in the target supergroup to send messages.
 
-1. Sign up at [console.groq.com](https://console.groq.com)
-2. Navigate to **API Keys** and generate a new key
+### 3. Configure git
 
-### 4. Add GitHub Secrets
-
-Go to your repo → **Settings → Secrets and variables → Actions → New repository secret** and add:
-
-| Secret name | Value |
-|---|---|
-| `GROQ_API_KEY` | Your Groq API key |
-| `TELEGRAM_BOT_TOKEN` | The token from @BotFather |
-| `TELEGRAM_CHAT_ID` | Your group's chat ID (negative number) |
-
-### 5. Run it
-
-The workflow runs automatically every day at **21:00 Madrid time (winter) / 22:00 (summer)**.
-
-To test it manually: **Actions tab → Beecthor Bitcoin Summary → Run workflow**.
+Ensure `git push` works without prompts (use a credential manager or SSH key).
 
 ## Dependencies
 
 | Package | Purpose |
 |---|---|
-| `yt-dlp` | Fetch latest video ID; fallback subtitle download |
-| `youtube-transcript-api` | Primary transcript extraction (no video download) |
-| `groq` | Groq Python SDK for LLM summarization |
-| `requests` | Telegram Bot API calls |
+| `yt-dlp` | Fetch latest video ID and download `.es.vtt` captions |
+| `requests` | Telegram Bot API calls (in original script) |
 
 ## Notes
 
-- GitHub Actions cron does not support timezone-aware scheduling natively. `0 20 * * *` (UTC) maps to 21:00 CET (winter) and 22:00 CEST (summer).
-- The Groq free tier is sufficient for this use case (one request per day, transcript ≤ 80K characters).
-- If Beecthor's video has no Spanish subtitles available yet, the workflow will exit with an error and retry the following day.
+- The original `summarize_beecthor.py` GitHub Actions script is kept in the repo but is not used in the current daily manual flow.
+- `youtube-transcript-api` and Groq API calls were attempted in early sessions but abandoned due to rate limits and transcript availability issues.
+- Telegram `parse_mode: HTML` is used (not Markdown) to support `<tg-spoiler>` tags.
+- The `|` character breaks Telegram MarkdownV2 — use `/` as a separator if needed.
