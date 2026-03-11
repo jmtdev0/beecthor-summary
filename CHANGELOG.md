@@ -1,5 +1,9 @@
 # Changelog
 
+### 11/03/2026
+* Rutina diaria: vídeo `rr0iPFxu6-0` ("BITCOIN TRAPPED!") analizado y enviado a Telegram (entrada 8 del log). BTC: 70.965$ (+0.67%) — SOL: 86.82$ (-0.66%). Robot score: 8.2/10.
+* Robot score ahora incluye un breve comentario justificativo en el mensaje.
+
 ### 10/03/2026
 * Rutina diaria: vídeo `4AdGq7RQSvc` ("¡NO TE CONFÍES!") analizado y enviado a Telegram (entrada 7 del log). BTC: 70.492$ / 60.611€ (+2.83%) — SOL: 87.40$ / 75.15€ (+7.00%).
 * Nueva funcionalidad: transcripciones guardadas en carpeta `transcripts/` (un fichero por día).
