@@ -1,5 +1,12 @@
 # Changelog
 
+### 12/03/2026
+* Rutina diaria: vídeo `oOuduDegqK8` analizado y enviado a Telegram.
+* Añadido Tier 2 al sistema de transcripción: yt-dlp descarga el `.es.vtt` directamente de YouTube (Tier 1 youtube-transcript-api seguía fallando; Invidious seguía inaccesible).
+* Añadido `python-dotenv` al script — carga `.env` automáticamente sin pasos manuales en la shell.
+* Script completamente reescrito: ahora incluye precios BTC/SOL (CoinGecko), índice robot, análisis HTML con spoiler, guardado de transcripción, actualización de `analyses_log.json` y commit automático a git.
+* README actualizado para ser guía completa de autoservicio: descripción del flujo, formato del mensaje, pasos de ejecución detallados y notas técnicas.
+
 ### 11/03/2026
 * Rutina diaria: vídeo `rr0iPFxu6-0` ("BITCOIN TRAPPED!") analizado y enviado a Telegram (entrada 8 del log). BTC: 70.965$ (+0.67%) — SOL: 86.82$ (-0.66%). Robot score: 8.2/10.
 * Robot score ahora incluye un breve comentario justificativo en el mensaje.
