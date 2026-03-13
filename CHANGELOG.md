@@ -5,6 +5,7 @@
 * Añadido Tier 2 al sistema de transcripción: yt-dlp descarga el `.es.vtt` directamente de YouTube (Tier 1 youtube-transcript-api seguía fallando; Invidious seguía inaccesible).
 * Añadido `python-dotenv` al script — carga `.env` automáticamente sin pasos manuales en la shell.
 * Script completamente reescrito: ahora incluye precios BTC/SOL (CoinGecko), índice robot, análisis HTML con spoiler, guardado de transcripción, actualización de `analyses_log.json` y commit automático a git.
+* Nuevo flag `--backfill <VIDEO_ID>`: recupera transcripción, genera análisis y añade entrada al log sin re-enviar a Telegram (usado hoy para `oOuduDegqK8`).
 * README actualizado para ser guía completa de autoservicio: descripción del flujo, formato del mensaje, pasos de ejecución detallados y notas técnicas.
 
 ### 11/03/2026
