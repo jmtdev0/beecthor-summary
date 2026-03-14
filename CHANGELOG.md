@@ -1,5 +1,8 @@
 # Changelog
 
+### 14/03/2026
+* Rutina diaria: vídeo `Op0XFls2yS0` analizado y enviado a Telegram (entrada #10 del log). BTC: 70.903$ / 61.824€ — SOL: 88.14$. Robot score: 8.2/10.
+
 ### 12/03/2026
 * Rutina diaria: vídeo `oOuduDegqK8` analizado y enviado a Telegram.
 * Añadido Tier 2 al sistema de transcripción: yt-dlp descarga el `.es.vtt` directamente de YouTube (Tier 1 youtube-transcript-api seguía fallando; Invidious seguía inaccesible).
