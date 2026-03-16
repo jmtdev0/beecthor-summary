@@ -1,5 +1,9 @@
 # Changelog
 
+### 15/03/2026
+* Rutina diaria: vídeo `cBXHBcXrtpo` analizado y enviado a Telegram (entrada #12 del log). BTC: 71.735$ / 62.841€ — SOL: 88.60$. Robot score: 8.2/10.
+* Prompt de robot score refinado: se desaconseja explícitamente el valor 8.2 y valores redondos, se anima a usar decimales (7.3, 8.7…) y el comentario debe citar algo concreto del vídeo de hoy.
+
 ### 14/03/2026
 * Rutina diaria: vídeo `Op0XFls2yS0` analizado y enviado a Telegram (entrada #10 del log). BTC: 70.903$ / 61.824€ — SOL: 88.14$. Robot score: 8.2/10.
 * Rutina diaria: vídeo `eBJ9P9wME3k` analizado y enviado a Telegram (entrada #11 del log). BTC: 70.681$ / 61.657€ — SOL: 87.00$. Robot score: 8.2/10.
