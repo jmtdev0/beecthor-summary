@@ -1,5 +1,11 @@
 # Changelog
 
+### 16/03/2026
+* Procesado vídeo tb-EC3nhdfM (entry #13, BTC $74,239). Robot score 8.7/10.
+* Añadido Tier 2.5 al fallback de transcripción: yt-dlp descarga audio directo de YouTube + Groq Whisper transcribe. Se activa cuando el vídeo es tan reciente que YouTube aún no ha generado subtítulos automáticos.
+* Añadido `--js-runtimes node` a todos los comandos yt-dlp (requerido desde versiones recientes de yt-dlp).
+* Enviado mensaje de apuesta Bet #2 resuelta al grupo de Telegram (win por 21 minutos, $74,050 high).
+
 ### 15/03/2026
 * Rutina diaria: vídeo `cBXHBcXrtpo` analizado y enviado a Telegram (entrada #12 del log). BTC: 71.735$ / 62.841€ — SOL: 88.60$. Robot score: 8.2/10.
 * Prompt de robot score refinado: se desaconseja explícitamente el valor 8.2 y valores redondos, se anima a usar decimales (7.3, 8.7…) y el comentario debe citar algo concreto del vídeo de hoy.
