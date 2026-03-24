@@ -1,5 +1,12 @@
 # Changelog
 
+### 24/03/2026
+* Añadidos `AGENTS.md` y `copilot-instructions.md` en la raíz para documentar el flujo diario, el uso de la venv local y la regla de previsualizar el mensaje antes de enviarlo cuando el usuario lo pida.
+* Generada una previsualización del mensaje del nuevo vídeo de hoy sin enviarlo todavía a Telegram, para revisión manual previa.
+* Actualizada la plantilla del mensaje de Telegram: la cabecera ahora incluye visión macro explícita y el spoiler resume de forma adaptativa las secciones típicas de Beecthor (macro, conteo actual, liquidaciones, Fibonacci, Value Area/POC, EMAs, AVWAP y conclusión operativa).
+* El `robot score` deja de depender de una segunda llamada a Groq y pasa a calcularse localmente desde la transcripción, con justificación breve incluida en el mensaje.
+* Eliminado Groq del flujo por completo: ya no se usa ni para resumir ni para transcribir audio. El script queda como recolector de transcripción/precios y el resumen final pasa a redactarse manualmente en chat por el agente.
+
 ### 16/03/2026
 * Procesado vídeo tb-EC3nhdfM (entry #13, BTC $74,239). Robot score 8.7/10.
 * Añadido Tier 2.5 al fallback de transcripción: yt-dlp descarga audio directo de YouTube + Groq Whisper transcribe. Se activa cuando el vídeo es tan reciente que YouTube aún no ha generado subtítulos automáticos.
