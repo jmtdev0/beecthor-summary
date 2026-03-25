@@ -1,5 +1,8 @@
 # Changelog
 
+### 25/03/2026
+* Rutina diaria: vídeo `rZ7c6g8mXF0` analizado y enviado a Telegram. BTC: 70.897$ / 61.304€ — SOL: 91.77$. Robot score: 8.4/10.
+
 ### 24/03/2026
 * Añadidos `AGENTS.md` y `copilot-instructions.md` en la raíz para documentar el flujo diario, el uso de la venv local y la regla de previsualizar el mensaje antes de enviarlo cuando el usuario lo pida.
 * Generada una previsualización del mensaje del nuevo vídeo de hoy sin enviarlo todavía a Telegram, para revisión manual previa.
