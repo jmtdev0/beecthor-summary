@@ -1,0 +1,3 @@
+23/03/2026 - Estaba ahí rondando los 70k y no lo he visto claro. Le meto un dolarillo a que Will Bitcoin reach $72,000 on March 23? y efectivamente se cumplió.
+24/03/2026 - Me dicen Claude y GPT que ven claro un Will Bitcoin dip to $68,000 on March 24? YES que tiene un 10% de probabilidad. Está en 69k y no tira para arriba, así que podría ser. "Ante tan baja probabilidad" (lol), solo meto 1 USDC a esta apuesta. Beechtor decía que el POC está en 68k, así que podría bajar a visitarlo. Mañana si tira para arriba, habría que decir YES a 71 y a 72. 
+Parece que remonta un poquito, le metí a las 22:10 a ↑ 72,000 YES en What price will Bitcoin hit March 23-29?

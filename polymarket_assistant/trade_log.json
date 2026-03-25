@@ -1,0 +1,71 @@
+[
+  {
+    "timestamp": "2026-03-25T00:00:00Z",
+    "type": "account_initialized",
+    "account_name": "polymarket_manual_account_v1",
+    "starting_bankroll": 1.0,
+    "cash_available": 1.0,
+    "notes": "Tracking initialized for the manual Polymarket workflow."
+  },
+  {
+    "timestamp": "2026-03-25T21:41:14Z",
+    "type": "trade_opened",
+    "review_window": "manual_chat",
+    "latest_video_id": "rZ7c6g8mXF0",
+    "transcript_file": "transcripts/rZ7c6g8mXF0_2026-03-25.txt",
+    "event_slug": "what-price-will-bitcoin-hit-on-march-25",
+    "market_slug": "will-bitcoin-reach-73k-on-march-25",
+    "market_title": "Will Bitcoin reach $73,000 on March 25?",
+    "position_side": "No",
+    "token_id": "88821783797655448609491468121750138250514497992966472913421326337193538307933",
+    "binance_btc_usdt": 71068.15,
+    "entry_probability": 0.978999,
+    "entry_cost_usd": 0.999879090672,
+    "shares": 1.021328,
+    "current_probability": 0.9755,
+    "current_value_usd": 0.996305464,
+    "cash_pnl_usd": -0.003573626672,
+    "status": "open",
+    "thesis_summary": "Beecthor seguia viendo la zona 72.6k-74k como referencia de rechazo y corto, con sesgo de visita a resistencias antes de giro. La apuesta toma el lado conservador: No a un toque de 73k el 25 de marzo.",
+    "notes": "Order executed manually by user from prepared local command. Position confirmed via Polymarket Data API."
+  },
+  {
+    "timestamp": "2026-03-25T22:13:01Z",
+    "type": "cycle_run",
+    "dry_run": true,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.61,
+      "summary": "Dry-run fixture: no valid unattended action.",
+      "rationale": "Fixture decision used to verify the unattended workflow path without invoking Copilot CLI.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 71006.73,
+    "positions_before": 1,
+    "positions_after": 1
+  }
+]

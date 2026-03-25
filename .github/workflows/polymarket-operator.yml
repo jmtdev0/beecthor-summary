@@ -1,0 +1,72 @@
+name: Polymarket Operator
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-operator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Run unattended operator cycle
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          POLY_SIGNER_ADDRESS: ${{ secrets.POLY_SIGNER_ADDRESS }}
+          POLY_FUNDER: ${{ secrets.POLY_FUNDER }}
+          POLY_SIGNATURE_TYPE: ${{ secrets.POLY_SIGNATURE_TYPE }}
+          POLY_PRIVATE_KEY: ${{ secrets.POLY_PRIVATE_KEY }}
+          POLY_API_KEY: ${{ secrets.POLY_API_KEY }}
+          POLY_API_SECRET: ${{ secrets.POLY_API_SECRET }}
+          POLY_API_PASSPHRASE: ${{ secrets.POLY_API_PASSPHRASE }}
+        run: |
+          python polymarket_assistant/run_cycle.py --model "${{ vars.POLY_COPILOT_MODEL || 'gpt-5.4' }}"
+
+      - name: Publish workflow summary
+        if: always()
+        run: |
+          if [ -f polymarket_assistant/last_run_summary.md ]; then
+            cat polymarket_assistant/last_run_summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload run artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: polymarket-operator-run
+          path: |
+            polymarket_assistant/last_run_summary.json
+            polymarket_assistant/last_run_summary.md
+
+      - name: Commit operator state
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add polymarket_assistant/account_state.json polymarket_assistant/trade_log.json polymarket_assistant/last_run_summary.json polymarket_assistant/last_run_summary.md
+          git diff --staged --quiet || git commit -m "chore: update polymarket operator state [skip ci]"
+          git push

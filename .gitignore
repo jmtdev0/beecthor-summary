@@ -17,3 +17,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# Polymarket assistant secrets
+polymarket_assistant/.env
+polymarket_assistant/derived_credentials.env
+polymarket_assistant/credentials_snapshot.json
+

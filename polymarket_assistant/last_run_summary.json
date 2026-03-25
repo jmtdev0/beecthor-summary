@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-03-25T22:13:01Z",
+  "dry_run": true,
+  "decision": {
+    "action": "NO_ACTION",
+    "confidence": 0.61,
+    "summary": "Dry-run fixture: no valid unattended action.",
+    "rationale": "Fixture decision used to verify the unattended workflow path without invoking Copilot CLI.",
+    "position_management": {
+      "should_manage_existing": false,
+      "target_market_slug": "",
+      "target_outcome": "",
+      "reason": "none",
+      "reduce_fraction": 0.5
+    },
+    "new_position": {
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
+    }
+  },
+  "validation": {
+    "ok": true,
+    "message": "ok"
+  },
+  "execution": {
+    "performed": false,
+    "details": null
+  },
+  "binance_spot_price": 71006.73,
+  "positions_before": 1,
+  "positions_after": 1
+}
