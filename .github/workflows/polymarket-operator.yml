@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: '0 */4 * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run without placing real orders'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 permissions:
   contents: write
@@ -44,7 +53,11 @@ jobs:
           POLY_API_SECRET: ${{ secrets.POLY_API_SECRET }}
           POLY_API_PASSPHRASE: ${{ secrets.POLY_API_PASSPHRASE }}
         run: |
-          python polymarket_assistant/run_cycle.py --model "${{ vars.POLY_COPILOT_MODEL || 'gpt-5.4' }}"
+          EXTRA_ARGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+          python polymarket_assistant/run_cycle.py --model "${{ vars.POLY_COPILOT_MODEL || 'gpt-5.4' }}" $EXTRA_ARGS
 
       - name: Publish workflow summary
         if: always()
