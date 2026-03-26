@@ -1,5 +1,8 @@
 # Changelog
 
+### 26/03/2026
+* Rutina diaria: preparado el envío del vídeo `ev14kX8L4Ww` con sesgo de rebote correctivo desde la zona 67.9K-68.4K hacia 73.26K-74.04K y vigilancia de cortos en 73.5K+.
+
 ### 25/03/2026
 * Rutina diaria: vídeo `rZ7c6g8mXF0` analizado y enviado a Telegram. BTC: 70.897$ / 61.304€ — SOL: 91.77$. Robot score: 8.4/10.
 
