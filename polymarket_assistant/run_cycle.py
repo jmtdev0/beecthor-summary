@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -187,18 +187,37 @@ def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _fetch_daily_event_slugs(days_ahead: int = 2) -> list[str]:
+    slugs: list[str] = []
+    now = datetime.now(UTC)
+    for delta in range(days_ahead):
+        d = now + timedelta(days=delta)
+        month = d.strftime('%B').lower()
+        day = d.day
+        slugs.append(f'what-price-will-bitcoin-hit-on-{month}-{day}')
+    return slugs
+
+
 def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
-    response = requests.get(
-        f'{GAMMA_HOST}/markets',
-        params={'active': 'true', 'closed': 'false', 'limit': 500},
-        timeout=30,
-    )
-    response.raise_for_status()
-    raw = response.json()
-    parsed = [parse_market(item) for item in raw]
-    filtered = [item for item in parsed if item and item['accepting_orders'] and not item['closed']]
-    filtered.sort(key=lambda item: (item['end_date'] or '', item['family'], item['strike']))
-    return filtered[:limit]
+    all_markets: list[dict[str, Any]] = []
+    for event_slug in _fetch_daily_event_slugs():
+        try:
+            response = requests.get(
+                f'{GAMMA_HOST}/events/slug/{event_slug}',
+                timeout=30,
+            )
+            if response.status_code == 404:
+                continue
+            response.raise_for_status()
+            event = response.json()
+            for item in event.get('markets', []):
+                parsed = parse_market(item)
+                if parsed and parsed['accepting_orders'] and not parsed['closed']:
+                    all_markets.append(parsed)
+        except requests.RequestException:
+            continue
+    all_markets.sort(key=lambda item: (item['end_date'] or '', item['family'], item['strike']))
+    return all_markets[:limit]
 
 
 def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
@@ -281,11 +300,13 @@ def extract_json(text: str) -> dict[str, Any]:
 
 def run_copilot(prompt: str, model: str) -> dict[str, Any]:
     env = os.environ.copy()
-    token = env.get('COPILOT_GITHUB_TOKEN')
-    if not token:
-        raise RuntimeError('COPILOT_GITHUB_TOKEN is required to run copilot -p')
+    has_token = env.get('COPILOT_GITHUB_TOKEN') or env.get('GH_TOKEN') or env.get('GITHUB_TOKEN')
+    has_gh_auth = subprocess.run(['gh', 'auth', 'status'], capture_output=True, env=env).returncode == 0
+    if not has_token and not has_gh_auth:
+        raise RuntimeError('No Copilot authentication found. Set COPILOT_GITHUB_TOKEN or run gh auth login')
     cmd = [
         'copilot',
+        '--continue',
         '-p',
         prompt,
         '--model',
@@ -348,6 +369,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         cash_available = polymarket['cash_balance_usdc']
         if stake_usd <= 0 or stake_usd > cash_available:
             return False, 'Stake is invalid or exceeds available cash'
+        portfolio_value = cash_available + safe_float(account_state.get('open_exposure'))
+        early_stage_cap = safe_float(account_state.get('early_stage_max_stake', 1.0))
+        early_stage_threshold = safe_float(account_state.get('early_stage_threshold', 15.0))
+        if portfolio_value < early_stage_threshold and stake_usd > early_stage_cap:
+            return False, f'Early-stage cap: max stake ${early_stage_cap} while portfolio < ${early_stage_threshold}'
         if len(positions) >= int(account_state.get('max_open_positions', 2)):
             return False, 'Maximum number of open positions reached'
         duplicate = any(
@@ -482,6 +508,11 @@ def main() -> None:
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--decision-file', help='Use a local JSON file instead of calling copilot')
     args = parser.parse_args()
+
+    subprocess.run(
+        ['git', '-C', str(REPO_ROOT), 'pull', '--ff-only', 'origin', 'main'],
+        capture_output=True, timeout=30,
+    )
 
     config = load_env()
     required = [
