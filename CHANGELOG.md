@@ -6,7 +6,7 @@
 * Corregido `fetch_active_btc_markets`: ahora busca por slug de evento diario (`what-price-will-bitcoin-hit-on-{month}-{day}`) en vez de la API genérica de Gamma que no devolvía estos mercados.
 * PLAYBOOK.md actualizado: pasos del ciclo definidos (stop-loss → take-profit → analizar → buscar → apostar), probabilidad mínima subida a 50%, cap de $1 por apuesta mientras el portfolio < $15.
 * Auto-commit + push tras cada ciclo con resumen de la decisión en el mensaje del commit.
-* Rutina diaria: vídeo `F1Sxj6esnqo` preparado para Telegram con soporte clave en 65K, posible rebote táctico a 68-70K y sesgo principal aún bajista mientras no recupere estructura.
+* Rutina diaria: vídeo `F1Sxj6esnqo` analizado y enviado a Telegram. Soporte clave en 65K, posible rebote táctico a 68-70K y sesgo principal aún bajista mientras no recupere estructura.
 
 ### 26/03/2026
 * Rutina diaria: vídeo `ev14kX8L4Ww` analizado y enviado a Telegram. Sesgo de rebote correctivo desde la zona 67.9K-68.4K hacia 73.26K-74.04K y vigilancia de cortos en 73.5K+.
