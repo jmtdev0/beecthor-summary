@@ -184,5 +184,122 @@
     "binance_spot_price": 68950.1,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-26T23:08:51Z",
+    "type": "cycle_run",
+    "dry_run": true,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.61,
+      "summary": "Dry-run fixture: no valid unattended action.",
+      "rationale": "Fixture decision used to verify the unattended workflow path without invoking Copilot CLI.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 68888.01,
+    "positions_before": 0,
+    "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-26T23:13:30Z",
+    "type": "cycle_run",
+    "dry_run": true,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.93,
+      "summary": "No open position requires management and no active BTC market offers a playbook-compliant edge.",
+      "rationale": "Account state and Polymarket both show no current open positions, so no stop-loss or take-profit action applies. Recent transcripts and summaries keep Beecthor’s latest thesis intact: a final sweep around 67.9k-68.4k followed by a possible rebound toward 73.26k-74.04k, while Binance still shows weak short-term structure with BTC at 68847.97 after a 24h low of 68153. The nearest downside market aligned with the sweep thesis is 68k, but its Yes probability is only 22.5%, below the playbook minimum 50%; upside Yes markets are also far below 50%, and taking the opposite side would conflict with the thesis. The 69k dip market is already effectively resolved by current price, so it is too close/obvious to enter.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 68847.97,
+    "positions_before": 0,
+    "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-27T22:56:56Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.94,
+      "summary": "No existing position needs action and no active BTC market offers a valid playbook-compliant entry.",
+      "rationale": "Current account state and Polymarket both show no open positions, so no stop-loss or take-profit management applies. The latest transcript and 2026-03-27 summary shift Beecthor to a more clearly bearish continuation thesis, with 65k as decisive support, possible downside toward 62.7k and 59k, and only a tactical rebound risk toward 68k-69.5k or 70k. Binance confirms weak execution reality with BTC at 66058.46 after a 24h low of 65548.25. Under nearest-strike-first, the first bearish market is 65k dip, but its Yes probability is only 9.5%, below the required 50%; upside reach markets above price are also far below 50%, while high-probability No sides are already priced too aggressively and conflict with the rebound risk Beecthor still allows.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 66058.46,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
