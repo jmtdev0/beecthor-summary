@@ -1,6 +1,16 @@
 # Changelog
 
+### 28/03/2026
+* Horario del operador cambiado a 4 ejecuciones diarias: 01:00, 07:30, 13:30 y 20:00 UTC.
+* Rutina diaria de Beecthor automatizada: el ciclo de las 20:00 UTC ahora ejecuta `summarize_beecthor.py --auto` antes del ciclo de Polymarket. Genera el resumen via Copilot CLI, lo envía a Telegram y hace commit, dejando el contexto fresco para el análisis de mercado.
+* Añadido `--auto` flag a `scripts/summarize_beecthor.py`: nueva función `generate_summary_via_copilot()` llama a Copilot CLI (sin `--continue`) y rellena los campos `macro_summary`, `resumen` y `full_analysis` del mensaje de Telegram.
+
 ### 27/03/2026
+* Diagnosticado y corregido fallo silencioso del operador de Polymarket: `systemd` no exponía `HOME=/root`, por lo que `gh auth status` fallaba en cada ciclo. Solución: `GH_TOKEN` añadido al `.env` del servidor + `Environment=HOME=/root` en el servicio.
+* Añadido logging local por ciclo en el servidor: cada ejecución genera `/var/log/polymarket-operator/cycle-<timestamp>.log` con el JSON completo de la decisión.
+* Primer ciclo autónomo exitoso confirmado: NO_ACTION (BTC $66,058), commiteado y pusheado a main.
+
+
 * Servidor Hetzner (168.119.231.76) configurado desde cero: Ubuntu + XFCE + xrdp + VS Code + Firefox. Seguridad: firewall (ufw), SSH solo con clave, fail2ban.
 * Operador de Polymarket desplegado de forma autónoma en el servidor con systemd timer (cada 4 horas). LLM: Copilot CLI (GPT-5.4) con `--continue` para contexto persistente entre ciclos.
 * Corregido `fetch_active_btc_markets`: ahora busca por slug de evento diario (`what-price-will-bitcoin-hit-on-{month}-{day}`) en vez de la API genérica de Gamma que no devolvía estos mercados.

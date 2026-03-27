@@ -188,9 +188,12 @@ def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _fetch_daily_event_slugs(days_ahead: int = 2) -> list[str]:
+    # Start from yesterday in UTC: Polymarket daily events close at 11:59 PM ET (~05:00 UTC
+    # the following day), so the previous UTC day's markets may still be open and accepting
+    # orders in the early hours of the next UTC day.
     slugs: list[str] = []
     now = datetime.now(UTC)
-    for delta in range(days_ahead):
+    for delta in range(-1, days_ahead):
         d = now + timedelta(days=delta)
         month = d.strftime('%B').lower()
         day = d.day
