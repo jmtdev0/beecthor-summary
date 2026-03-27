@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-03-27T22:56:56Z
+- Timestamp: 2026-03-27T23:31:47Z
 - Dry run: False
-- BTC price: 66058.46
+- BTC price: 66198.3
 - Decision action: NO_ACTION
-- Decision summary: No existing position needs action and no active BTC market offers a valid playbook-compliant entry.
+- Decision summary: No position management is needed and no BTC market meets the playbook entry rules.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
