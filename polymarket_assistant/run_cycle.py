@@ -404,6 +404,82 @@ def token_id_for_outcome(market: dict[str, Any], outcome: str) -> str:
     return token_id
 
 
+def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str, stake: float) -> None:
+    """Place a direct bet bypassing GPT. Used for testing execution and manual overrides."""
+    event_slug = f'what-price-will-bitcoin-hit-on-{event_date}'
+    print(f'[force-bet] Fetching event: {event_slug}')
+    response = requests.get(f'{GAMMA_HOST}/events/slug/{event_slug}', timeout=30)
+    response.raise_for_status()
+    event = response.json()
+
+    market = None
+    for raw in event.get('markets', []):
+        parsed = parse_market(raw)
+        if parsed and parsed['strike'] == strike and parsed['accepting_orders'] and not parsed['closed']:
+            market = parsed
+            break
+
+    if not market:
+        raise SystemExit(f'No open market found for strike ${strike:,} in {event_slug}')
+    if outcome not in market['outcomes']:
+        raise SystemExit(f'Outcome "{outcome}" not found. Available: {list(market["outcomes"].keys())}')
+
+    prob = safe_float(market['outcomes'][outcome].get('probability'))
+    print(f'[force-bet] Market  : {market["question"]}')
+    print(f'[force-bet] Outcome : {outcome}  probability={prob:.1%}')
+    print(f'[force-bet] Stake   : ${stake}')
+
+    decision = {
+        'action': 'OPEN_POSITION',
+        'confidence': 1.0,
+        'summary': f'Force bet: {outcome} on {market["question"]} stake=${stake}',
+        'rationale': '--force-bet manual override, no GPT analysis',
+        'position_management': {
+            'should_manage_existing': False,
+            'target_market_slug': '',
+            'target_outcome': '',
+            'reason': 'none',
+            'reduce_fraction': 0.5,
+        },
+        'new_position': {
+            'should_open': True,
+            'event_slug': event_slug,
+            'market_slug': market['market_slug'],
+            'outcome': outcome,
+            'direction': 'bearish' if outcome == 'No' else 'bullish',
+            'strike': strike,
+            'stake_usd': stake,
+            'max_entry_probability': 1.0,
+        },
+    }
+
+    client = build_private_client(config)
+    print('[force-bet] Placing order...')
+    execution = execute_open_position(client, decision, [market])
+    print(f'[force-bet] Response: {json.dumps(execution, ensure_ascii=False, indent=2)}')
+
+    refreshed_positions = fetch_positions(config)
+    refreshed_balance = fetch_balance_allowance(client, config)
+    balance_usdc = safe_float(refreshed_balance.get('balance')) / 1_000_000
+    account_state = sync_account_state(load_json(ACCOUNT_STATE_PATH, {}), balance_usdc, refreshed_positions)
+    save_json(ACCOUNT_STATE_PATH, account_state)
+
+    run_summary = {
+        'timestamp': now_utc(),
+        'dry_run': False,
+        'decision': decision,
+        'validation': {'ok': True, 'message': 'force-bet bypass'},
+        'execution': {'performed': True, 'details': execution},
+        'binance_spot_price': None,
+        'positions_before': 0,
+        'positions_after': len(refreshed_positions),
+    }
+    append_trade_log({'timestamp': now_utc(), 'type': 'force_bet', **run_summary})
+    save_json(LAST_RUN_SUMMARY_PATH, run_summary)
+    write_summary_markdown(run_summary)
+    print(json.dumps(run_summary, ensure_ascii=False, indent=2))
+
+
 def execute_open_position(client: ClobClient, decision: dict[str, Any], markets: list[dict[str, Any]]) -> dict[str, Any]:
     new_position = decision['new_position']
     market = find_market_by_slug(markets, new_position['market_slug'])
@@ -510,6 +586,10 @@ def main() -> None:
     parser.add_argument('--model', default='gpt-5.4')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--decision-file', help='Use a local JSON file instead of calling copilot')
+    parser.add_argument(
+        '--force-bet', nargs=4, metavar=('EVENT_DATE', 'STRIKE', 'OUTCOME', 'STAKE'),
+        help='Bypass GPT and place a direct bet. Example: --force-bet march-27 69000 No 1.0',
+    )
     args = parser.parse_args()
 
     subprocess.run(
@@ -526,6 +606,11 @@ def main() -> None:
     missing = [key for key in required if not config.get(key)]
     if missing:
         raise SystemExit(f'Missing required Polymarket configuration: {", ".join(missing)}')
+
+    if args.force_bet:
+        event_date, strike_str, outcome, stake_str = args.force_bet
+        force_bet(config, event_date, int(strike_str), outcome, float(stake_str))
+        return
 
     context = build_context_snapshot(config)
     prompt = render_prompt(context)
