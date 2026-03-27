@@ -354,6 +354,80 @@ def generate_robot_score(transcript: str) -> tuple[float, str]:
 
 
 # ---------------------------------------------------------------------------
+# Copilot CLI summary generation
+# ---------------------------------------------------------------------------
+
+MAX_COPILOT_TRANSCRIPT_CHARS = 6_000
+
+
+def generate_summary_via_copilot(
+    transcript: str,
+    robot_score: float,
+    robot_comment: str,
+) -> tuple[str, str, str]:
+    """Call Copilot CLI to generate the Beecthor summary fields.
+
+    Returns (macro_summary, resumen, full_analysis) — all in Spanish.
+    Raises RuntimeError if Copilot auth is missing or output cannot be parsed.
+    """
+    excerpt = transcript[:MAX_COPILOT_TRANSCRIPT_CHARS]
+    if len(transcript) > MAX_COPILOT_TRANSCRIPT_CHARS:
+        excerpt += "\n[transcript truncated]"
+
+    prompt = (
+        "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
+        "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
+        f"(robot score: {robot_score:.1f}/10 — {robot_comment}).\n\n"
+        "Return ONLY a valid JSON object with exactly these three fields (all content in Spanish):\n"
+        '  "macro_summary": 1-2 sentences on the macro BTC outlook (direction, key levels, bias)\n'
+        '  "resumen": 3-5 bullet lines covering macro view, Elliott count/structure, key levels, '
+        "liquidations, and the operational conclusion. Each bullet starts with •\n"
+        '  "full_analysis": a detailed paragraph covering all technical aspects: Elliott wave count, '
+        "Fibonacci levels, liquidations, Value Area/POC, EMAs, AVWAP, supports/resistances, "
+        "and the operational conclusion\n\n"
+        "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
+        f"TRANSCRIPT:\n{excerpt}"
+    )
+
+    env = os.environ.copy()
+    has_token = env.get("COPILOT_GITHUB_TOKEN") or env.get("GH_TOKEN") or env.get("GITHUB_TOKEN")
+    has_gh_auth = (
+        subprocess.run(["gh", "auth", "status"], capture_output=True, env=env).returncode == 0
+    )
+    if not has_token and not has_gh_auth:
+        raise RuntimeError(
+            "No Copilot authentication found. Set COPILOT_GITHUB_TOKEN or run gh auth login"
+        )
+
+    result = subprocess.run(
+        ["copilot", "-p", prompt, "-s", "--no-ask-user"],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=120,
+        check=True,
+    )
+
+    raw = result.stdout.strip()
+    # Strip markdown fences if present
+    raw = re.sub(r"^```(?:json)?", "", raw).strip()
+    raw = re.sub(r"```$", "", raw).strip()
+    # Find first JSON object in the output
+    match = re.search(r"\{[\s\S]*\}", raw)
+    if not match:
+        raise RuntimeError(f"Copilot output did not contain valid JSON:\n{raw[:500]}")
+    data = json.loads(match.group())
+
+    macro_summary = data.get("macro_summary", "")
+    resumen = data.get("resumen", "")
+    full_analysis = data.get("full_analysis", "")
+    if not macro_summary or not resumen or not full_analysis:
+        raise RuntimeError(f"Copilot JSON missing required fields: {list(data.keys())}")
+
+    return macro_summary, resumen, full_analysis
+
+
+# ---------------------------------------------------------------------------
 # Message builder
 # ---------------------------------------------------------------------------
 
@@ -596,6 +670,38 @@ def run_daily(video_id: str, send_telegram: bool = True) -> None:
     )
 
 
+def run_auto(video_id: str) -> None:
+    """Fully automated flow: collect context, generate summary via Copilot CLI, send and commit."""
+    context = collect_video_context(video_id, save_to_disk=True)
+
+    print("Generating summary via Copilot CLI...")
+    macro_summary, resumen, full_analysis = generate_summary_via_copilot(
+        context["transcript"],
+        context["robot_score"],
+        context["robot_comment"],
+    )
+    print("Summary generated.")
+
+    message = build_message(
+        video_id=context["video_id"],
+        prices_now=context["prices_now"],
+        prices_yesterday=context["prices_yesterday"],
+        robot_score=context["robot_score"],
+        robot_comment=context["robot_comment"],
+        resumen=resumen,
+        macro_summary=macro_summary,
+        full_analysis=full_analysis,
+    )
+
+    print("Sending message to Telegram...")
+    send_telegram_message(message)
+
+    save_last_processed_id(video_id)
+    append_log_entry(video_id, context["prices_now"], context["robot_score"], message)
+    git_commit_and_push(video_id)
+    print("Done.")
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Beecthor Bitcoin Summary Bot")
@@ -605,6 +711,14 @@ def main() -> None:
         help=(
             "Collect transcript and prices for a past video without attempting "
             "automatic Telegram delivery."
+        ),
+    )
+    parser.add_argument(
+        "--auto",
+        action="store_true",
+        help=(
+            "Fully automated mode: generate summary via Copilot CLI, send to Telegram, "
+            "and commit without manual intervention."
         ),
     )
     args = parser.parse_args()
@@ -628,7 +742,10 @@ def main() -> None:
         sys.exit(0)
 
     print(f"New video detected: {latest_id}")
-    run_daily(latest_id, send_telegram=True)
+    if args.auto:
+        run_auto(latest_id)
+    else:
+        run_daily(latest_id, send_telegram=True)
 
 
 if __name__ == "__main__":
