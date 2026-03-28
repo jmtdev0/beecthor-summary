@@ -589,6 +589,19 @@ def prepare_close_or_reduce_via_phone(
     fraction = 1.0 if decision['action'] == 'CLOSE_POSITION' else min(max(safe_float(management.get('reduce_fraction', 0.5)), 0.05), 0.95)
     amount = target['size'] * fraction
 
+    # Update conditional token allowance on-chain (Polygon) so the exchange
+    # contract can move the CTF tokens on behalf of the funder.
+    # This is a blockchain tx — no CLOB geoblock applies here.
+    try:
+        client.update_balance_allowance(BalanceAllowanceParams(
+            asset_type=AssetType.CONDITIONAL,
+            token_id=target['asset'],
+            signature_type=int(client.signer._signature_type),
+        ))
+        print(f'[execution] Conditional token allowance updated for {target["asset"][:16]}...')
+    except Exception as exc:
+        print(f'[execution] WARN: could not update conditional allowance: {exc}')
+
     signed_order = client.create_market_order(
         MarketOrderArgs(
             token_id=target['asset'],
