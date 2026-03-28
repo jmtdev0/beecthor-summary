@@ -465,7 +465,9 @@ def prepare_and_send_order_via_phone(
 
 def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str, stake: float) -> None:
     """Place a direct bet bypassing GPT. Used for testing execution and manual overrides."""
-    event_slug = f'what-price-will-bitcoin-hit-on-{event_date}'
+    from datetime import datetime as _dt
+    _d = _dt.strptime(event_date, '%Y-%m-%d')
+    event_slug = f'what-price-will-bitcoin-hit-on-{_d.strftime("%B").lower()}-{_d.day}'
     print(f'[force-bet] Fetching event: {event_slug}')
     response = requests.get(f'{GAMMA_HOST}/events/slug/{event_slug}', timeout=30)
     response.raise_for_status()
