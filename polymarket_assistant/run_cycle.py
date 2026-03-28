@@ -819,6 +819,29 @@ def main() -> None:
     save_json(LAST_RUN_SUMMARY_PATH, run_summary)
     write_summary_markdown(run_summary)
 
+    # Send cycle summary to personal Telegram chat
+    _token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+    _chat = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
+    if _token and _chat and not args.dry_run:
+        action = decision.get('action', 'UNKNOWN')
+        summary_text = decision.get('summary', '')
+        btc = context['binance']['spot_price']
+        action_emoji = {
+            'NO_ACTION': '\U0001f7e1',
+            'OPEN_POSITION': '\U0001f7e2',
+            'CLOSE_POSITION': '\U0001f534',
+            'REDUCE_POSITION': '\U0001f7e0',
+        }.get(action, '\u2139\ufe0f')
+        msg = f'{action_emoji} {action}\nBTC ${btc:,.0f}\n\n{summary_text}'
+        try:
+            requests.post(
+                f'https://api.telegram.org/bot{_token}/sendMessage',
+                json={'chat_id': _chat, 'text': msg},
+                timeout=15,
+            )
+        except Exception as exc:
+            print(f'[telegram] Failed to send cycle summary: {exc}')
+
     print(json.dumps(run_summary, ensure_ascii=False, indent=2))
 
 
