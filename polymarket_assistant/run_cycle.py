@@ -519,9 +519,9 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
 
     client = build_private_client(config)
     telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
-    telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+    telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
     if not telegram_token or not telegram_chat_id:
-        raise SystemExit('TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set for phone execution')
+        raise SystemExit('TELEGRAM_BOT_TOKEN and TELEGRAM_PERSONAL_CHAT_ID must be set for phone execution')
 
     print('[force-bet] Signing order and sending to phone via Telegram...')
     execution_details = prepare_and_send_order_via_phone(
@@ -729,7 +729,7 @@ def main() -> None:
     if ok and not args.dry_run and decision.get('action') != 'NO_ACTION':
         if decision['action'] == 'OPEN_POSITION':
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
-            telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+            telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = prepare_and_send_order_via_phone(
                 client, decision, context['polymarket']['active_btc_markets'],
                 telegram_token, telegram_chat_id, context['binance']['spot_price'],
@@ -737,7 +737,7 @@ def main() -> None:
             execution['performed'] = True
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
-            telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+            telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = prepare_close_or_reduce_via_phone(
                 client, decision, context['polymarket']['positions'],
                 telegram_token, telegram_chat_id, context['binance']['spot_price'],
