@@ -1,11 +1,11 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-03-27T23:31:47Z
+- Timestamp: 2026-03-28T00:52:13Z
 - Dry run: False
-- BTC price: 66198.3
-- Decision action: NO_ACTION
-- Decision summary: No position management is needed and no BTC market meets the playbook entry rules.
-- Validation: True (ok)
+- BTC price: None
+- Decision action: OPEN_POSITION
+- Decision summary: Force bet: No on Will Bitcoin dip to $65,000 on March 27? stake=$1.0
+- Validation: True (force-bet bypass)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -13,7 +13,13 @@
 
 ```json
 {
-  "performed": false,
-  "details": null
+  "performed": true,
+  "details": {
+    "status": "pending_phone_execution",
+    "market": "Will Bitcoin dip to $65,000 on March 27?",
+    "outcome": "No",
+    "stake_usd": 1.0,
+    "order_payload": "{\"order\": {\"salt\": 1274695927, \"maker\": \"0xCaE5D5cEd23992118d53eb1e7AE32D14d7c5b6aD\", \"signer\": \"0x3f051D4CB43cEc2d211721847E7b3FfE20479e71\", \"taker\": \"0x0000000000000000000000000000000000000000\", \"tokenId\": \"68575577825895403269716429991256865583561344045369143099075744746100327111414\", \"makerAmount\": \"1000000\", \"takerAmount\": \"1014190\", \"expiration\": \"0\", \"nonce\": \"0\", \"feeRateBps\": \"1000\", \"side\": \"BUY\", \"signatureType\": 1, \"signature\": \"0x5fc7787c361c70f859e4f7b647c6727e6045ff1f98b0fa0298e0630875933a603f794369d2d955a216840cba0c0aca335c21fec3b4efdb234e1c0994b7154ce71b\"}, \"orderType\": \"FOK\"}"
+  }
 }
 ```
