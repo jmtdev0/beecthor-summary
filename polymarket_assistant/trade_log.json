@@ -513,5 +513,44 @@
     "binance_spot_price": 66360.98,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-03-28T06:01:16Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.95,
+      "summary": "Hold the near-certain 69k No position and do not open any new BTC position.",
+      "rationale": "The existing open position, No on 'Will Bitcoin reach $69,000 on March 27?', is already at 99.95% with BTC spot at 66383.39, so it is in the take-profit zone; under the playbook exception, it can be held to resolve naturally because the outcome is near-certain. Beecthor’s latest thesis remains bearish overall but still allows a tactical rebound, with 65k as the decisive support and 62.7k/59k below if it fails. For new trades, nearest-strike-first points to the March 28 $66k dip market, but at 74% Yes the move is already too close to target and too aggressively priced; the next bearish strike, $65k dip, is only 24% Yes and below the 50% minimum. Upside reach markets are also below the minimum or conflict with the broader bearish thesis.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 66383.39,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
