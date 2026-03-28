@@ -444,10 +444,9 @@ def prepare_and_send_order_via_phone(
     order_payload = json.dumps({'order': order_dict, 'orderType': 'FOK'}, ensure_ascii=False)
 
     message = (
-        f'\U0001f514 POLYMARKET_ORDER\n'
-        f'{market["question"]} \u2192 {new_pos["outcome"]} @ ${new_pos["stake_usd"]} '
-        f'(BTC ${btc_price:,.0f})\n'
-        f'ORDER_JSON:{order_payload}'
+        f'\U0001f514 OPEN \u2192 {new_pos["outcome"]}\n'
+        f'{market["question"]}\n'
+        f'Stake: ${new_pos["stake_usd"]} | BTC ${btc_price:,.0f}'
     )
     requests.post(
         f'https://api.telegram.org/bot{telegram_token}/sendMessage',
@@ -608,10 +607,9 @@ def prepare_close_or_reduce_via_phone(
 
     action_label = 'CLOSE' if decision['action'] == 'CLOSE_POSITION' else f'REDUCE {fraction:.0%}'
     message = (
-        f'\U0001f514 POLYMARKET_ORDER\n'
-        f'{action_label}: {target["market_slug"]} → {target["outcome"]} '
-        f'size={amount:.4f} (BTC ${btc_price:,.0f})\n'
-        f'ORDER_JSON:{order_payload}'
+        f'\U0001f514 {action_label} \u2192 {target["outcome"]}\n'
+        f'{target["market_slug"]}\n'
+        f'Size: {amount:.4f} | BTC ${btc_price:,.0f}'
     )
     requests.post(
         f'https://api.telegram.org/bot{telegram_token}/sendMessage',
