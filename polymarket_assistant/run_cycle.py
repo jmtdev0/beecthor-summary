@@ -482,6 +482,9 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
 
     if not market:
         raise SystemExit(f'No open market found for strike ${strike:,} in {event_slug}')
+    # Normalize outcome to match the market's casing (e.g. "NO" → "No", "YES" → "Yes")
+    outcome_map = {k.upper(): k for k in market['outcomes']}
+    outcome = outcome_map.get(outcome.upper(), outcome)
     if outcome not in market['outcomes']:
         raise SystemExit(f'Outcome "{outcome}" not found. Available: {list(market["outcomes"].keys())}')
 
