@@ -4,6 +4,11 @@
 * Horario del operador cambiado a 4 ejecuciones diarias: 01:00, 07:30, 13:30 y 20:00 UTC.
 * Rutina diaria de Beecthor automatizada: el ciclo de las 20:00 UTC ahora ejecuta `summarize_beecthor.py --auto` antes del ciclo de Polymarket. Genera el resumen via Copilot CLI, lo envía a Telegram y hace commit, dejando el contexto fresco para el análisis de mercado.
 * Añadido `--auto` flag a `scripts/summarize_beecthor.py`: nueva función `generate_summary_via_copilot()` llama a Copilot CLI (sin `--continue`) y rellena los campos `macro_summary`, `resumen` y `full_analysis` del mensaje de Telegram.
+* Pipeline de ejecución en móvil validado end-to-end: 2 trades confirmados on-chain en Polygon. Flujo completo: servidor firma la orden (py-clob-client) → commit a GitHub → móvil (Termux) lee via GitHub API y hace POST al CLOB con IP residencial.
+* Corregido `POLY_ADDRESS` en `polymarket_executor.py`: usaba `POLY_FUNDER` en lugar de `POLY_SIGNER_ADDRESS` en las cabeceras L2 HMAC (causaba 400 "order signer address has to be the address of the API KEY").
+* API key de Polymarket re-derivada (la anterior había expirado): nueva key `ca7621b0-...` actualizada en el `.env` del servidor y del móvil.
+* `polymarket_executor.py` actualizado para usar el endpoint de GitHub Contents API en lugar de `raw.githubusercontent.com` (la CDN de raw tiene caché de varios minutos).
+* Corregidos dos bugs en `--force-bet`: slug con año en lugar de nombre del mes (`2026-03-27` → `march-27`), y outcome case-insensitive (`NO` → `No`).
 
 ### 27/03/2026
 * Diagnosticado y corregido fallo silencioso del operador de Polymarket: `systemd` no exponía `HOME=/root`, por lo que `gh auth status` fallaba en cada ciclo. Solución: `GH_TOKEN` añadido al `.env` del servidor + `Environment=HOME=/root` en el servicio.
