@@ -568,7 +568,19 @@ def execute_open_position(client: ClobClient, decision: dict[str, Any], markets:
     }
 
 
-def execute_close_or_reduce(client: ClobClient, decision: dict[str, Any], positions: list[dict[str, Any]]) -> dict[str, Any]:
+def prepare_close_or_reduce_via_phone(
+    client: ClobClient,
+    decision: dict[str, Any],
+    positions: list[dict[str, Any]],
+    telegram_token: str,
+    telegram_chat_id: str,
+    btc_price: float,
+) -> dict[str, Any]:
+    """Sign a SELL order on the server and delegate the CLOB POST to the phone.
+
+    Mirrors prepare_and_send_order_via_phone but for CLOSE/REDUCE actions.
+    The server cannot POST directly due to the datacenter IP geoblock.
+    """
     management = decision['position_management']
     target = next(
         pos for pos in positions
@@ -576,7 +588,8 @@ def execute_close_or_reduce(client: ClobClient, decision: dict[str, Any], positi
     )
     fraction = 1.0 if decision['action'] == 'CLOSE_POSITION' else min(max(safe_float(management.get('reduce_fraction', 0.5)), 0.05), 0.95)
     amount = target['size'] * fraction
-    order = client.create_market_order(
+
+    signed_order = client.create_market_order(
         MarketOrderArgs(
             token_id=target['asset'],
             amount=amount,
@@ -584,13 +597,35 @@ def execute_close_or_reduce(client: ClobClient, decision: dict[str, Any], positi
             order_type=OrderType.FOK,
         )
     )
-    response = client.post_order(order, OrderType.FOK)
+
+    try:
+        order_dict = signed_order.model_dump()
+    except AttributeError:
+        order_dict = signed_order.dict()
+
+    order_payload = json.dumps({'order': order_dict, 'orderType': 'FOK'}, ensure_ascii=False)
+
+    action_label = 'CLOSE' if decision['action'] == 'CLOSE_POSITION' else f'REDUCE {fraction:.0%}'
+    message = (
+        f'\U0001f514 POLYMARKET_ORDER\n'
+        f'{action_label}: {target["market_slug"]} → {target["outcome"]} '
+        f'size={amount:.4f} (BTC ${btc_price:,.0f})\n'
+        f'ORDER_JSON:{order_payload}'
+    )
+    requests.post(
+        f'https://api.telegram.org/bot{telegram_token}/sendMessage',
+        json={'chat_id': telegram_chat_id, 'text': message},
+        timeout=30,
+    )
+    print(f'[execution] Signed SELL order sent to phone via Telegram notification + last_run_summary.json.')
     return {
+        'status': 'pending_phone_execution',
         'type': decision['action'],
         'market_slug': target['market_slug'],
         'outcome': target['outcome'],
         'fraction': fraction,
-        'response': response,
+        'amount': amount,
+        'order_payload': order_payload,
     }
 
 
@@ -701,7 +736,12 @@ def main() -> None:
             )
             execution['performed'] = True
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
-            execution['details'] = execute_close_or_reduce(client, decision, context['polymarket']['positions'])
+            telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+            telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+            execution['details'] = prepare_close_or_reduce_via_phone(
+                client, decision, context['polymarket']['positions'],
+                telegram_token, telegram_chat_id, context['binance']['spot_price'],
+            )
             execution['performed'] = True
     elif not ok:
         execution['details'] = {'rejected': message}
