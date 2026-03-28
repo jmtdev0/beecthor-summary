@@ -11,6 +11,7 @@
 * Corregidos dos bugs en `--force-bet`: slug con año en lugar de nombre del mes (`2026-03-27` → `march-27`), y outcome case-insensitive (`NO` → `No`).
 * Horario del operador ajustado a 00:00 / 06:00 / 12:00 / 18:00 UTC tras analizar las horas reales de subida de los últimos 10 vídeos de Beecthor (rango 15:00–17:17 UTC). El ciclo de Beecthor se movió de las 20:00 a las 18:00 UTC (~1h tras el vídeo en lugar de ~4h).
 * Notificaciones de órdenes redirigidas al chat personal de Telegram (ID 6104762145) en lugar del grupo; el resumen diario de Beecthor sigue yendo al grupo.
+* Rutina diaria: vídeo `FVN4f7I-fMA` preparado para Telegram con rebote táctico probable hacia 68.0K-68.6K, continuación bajista como escenario principal y objetivo técnico de 59K mientras no recupere 72K.
 
 ### 27/03/2026
 * Diagnosticado y corregido fallo silencioso del operador de Polymarket: `systemd` no exponía `HOME=/root`, por lo que `gh auth status` fallaba en cada ciclo. Solución: `GH_TOKEN` añadido al `.env` del servidor + `Environment=HOME=/root` en el servicio.
