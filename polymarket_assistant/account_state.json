@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 7.863514,
+  "cash_available": 6.863523,
   "realized_pnl": 0.0,
-  "open_exposure": 0,
+  "open_exposure": 0.996982,
   "max_open_positions": 2,
   "base_stake_fraction": 0.33,
   "min_entry_probability": 0.5,
@@ -13,7 +13,22 @@
   "stop_loss_probability": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-march-27",
+      "market_slug": "will-bitcoin-reach-69k-on-march-27",
+      "market_title": "Will Bitcoin reach $69,000 on March 27?",
+      "position_side": "No",
+      "token_id": "63130716808458786968796615388571505930910921149662171790839040816235261285431",
+      "shares": 1.003,
+      "avg_price": 0.997,
+      "entry_cost_usd": 0.999991,
+      "current_price": 0.994,
+      "current_value_usd": 0.996982,
+      "cash_pnl_usd": -0.003009,
+      "status": "open"
+    }
+  ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-03-27T23:31:47Z"
+  "last_synced_at": "2026-03-28T01:02:29Z"
 }
