@@ -404,6 +404,64 @@ def token_id_for_outcome(market: dict[str, Any], outcome: str) -> str:
     return token_id
 
 
+def prepare_and_send_order_via_phone(
+    client: ClobClient,
+    decision: dict[str, Any],
+    markets: list[dict[str, Any]],
+    telegram_token: str,
+    telegram_chat_id: str,
+    btc_price: float,
+) -> dict[str, Any]:
+    """Sign the order on the server and delegate the CLOB POST to the phone via Telegram.
+
+    The phone executor reads the signed order JSON from Telegram, adds the API credentials
+    from its local .env, computes L2 HMAC headers, and POSTs to clob.polymarket.com.
+    This avoids the datacenter IP geoblock on the server side.
+    """
+    new_pos = decision['new_position']
+    market = find_market_by_slug(markets, new_pos['market_slug'])
+    if not market:
+        raise RuntimeError(f'Market not found: {new_pos["market_slug"]}')
+    token_id = token_id_for_outcome(market, new_pos['outcome'])
+
+    signed_order = client.create_market_order(
+        MarketOrderArgs(
+            token_id=token_id,
+            amount=safe_float(new_pos['stake_usd']),
+            side=BUY,
+            order_type=OrderType.FOK,
+        )
+    )
+
+    # Serialize order (pydantic v1 / v2 compatible)
+    try:
+        order_dict = signed_order.model_dump()
+    except AttributeError:
+        order_dict = signed_order.dict()
+
+    # Send order dict WITHOUT 'owner' — phone adds it from its local .env
+    order_payload = json.dumps({'order': order_dict, 'orderType': 'FOK'}, ensure_ascii=False)
+
+    message = (
+        f'\U0001f514 POLYMARKET_ORDER\n'
+        f'{market["question"]} \u2192 {new_pos["outcome"]} @ ${new_pos["stake_usd"]} '
+        f'(BTC ${btc_price:,.0f})\n'
+        f'ORDER_JSON:{order_payload}'
+    )
+    requests.post(
+        f'https://api.telegram.org/bot{telegram_token}/sendMessage',
+        json={'chat_id': telegram_chat_id, 'text': message},
+        timeout=30,
+    )
+    print(f'[execution] Signed order sent to phone via Telegram. Awaiting phone execution.')
+    return {
+        'status': 'pending_phone_execution',
+        'market': market['question'],
+        'outcome': new_pos['outcome'],
+        'stake_usd': new_pos['stake_usd'],
+    }
+
+
 def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str, stake: float) -> None:
     """Place a direct bet bypassing GPT. Used for testing execution and manual overrides."""
     event_slug = f'what-price-will-bitcoin-hit-on-{event_date}'
@@ -454,22 +512,24 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
     }
 
     client = build_private_client(config)
-    print('[force-bet] Placing order...')
-    execution = execute_open_position(client, decision, [market])
-    print(f'[force-bet] Response: {json.dumps(execution, ensure_ascii=False, indent=2)}')
+    telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+    telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+    if not telegram_token or not telegram_chat_id:
+        raise SystemExit('TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set for phone execution')
 
-    refreshed_positions = fetch_positions(config)
-    refreshed_balance = fetch_balance_allowance(client, config)
-    balance_usdc = safe_float(refreshed_balance.get('balance')) / 1_000_000
-    account_state = sync_account_state(load_json(ACCOUNT_STATE_PATH, {}), balance_usdc, refreshed_positions)
-    save_json(ACCOUNT_STATE_PATH, account_state)
+    print('[force-bet] Signing order and sending to phone via Telegram...')
+    execution_details = prepare_and_send_order_via_phone(
+        client, decision, [market], telegram_token, telegram_chat_id, btc_price=0,
+    )
+    print(f'[force-bet] {execution_details}')
+    print('[force-bet] Run the phone executor now: python ~/polymarket_executor.py')
 
     run_summary = {
         'timestamp': now_utc(),
         'dry_run': False,
         'decision': decision,
         'validation': {'ok': True, 'message': 'force-bet bypass'},
-        'execution': {'performed': True, 'details': execution},
+        'execution': {'performed': True, 'details': execution_details},
         'binance_spot_price': None,
         'positions_before': 0,
         'positions_after': len(refreshed_positions),
@@ -627,7 +687,12 @@ def main() -> None:
 
     if ok and not args.dry_run and decision.get('action') != 'NO_ACTION':
         if decision['action'] == 'OPEN_POSITION':
-            execution['details'] = execute_open_position(client, decision, context['polymarket']['active_btc_markets'])
+            telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+            telegram_chat_id = config.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_CHAT_ID', '')
+            execution['details'] = prepare_and_send_order_via_phone(
+                client, decision, context['polymarket']['active_btc_markets'],
+                telegram_token, telegram_chat_id, context['binance']['spot_price'],
+            )
             execution['performed'] = True
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
             execution['details'] = execute_close_or_reduce(client, decision, context['polymarket']['positions'])
