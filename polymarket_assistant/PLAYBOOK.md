@@ -5,7 +5,7 @@
 1. Beecthor provides the thesis, but Binance provides execution reality.
 2. No new Beecthor video means no bet.
 3. The latest transcript is mandatory context.
-4. Recent transcripts and recent entries in `analyses_log.json` must be reviewed before any bet.
+4. Recent transcripts and recent entries i `analyses_log.json`n must be reviewed before any bet.
 5. Prefer conservative BTC `What price will Bitcoin hit...` markets.
 
 ## Cycle steps (in order)
@@ -41,10 +41,10 @@ Each automated cycle must follow these steps strictly in order:
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
 - Do not skip to the more ambitious target just because Beecthor believes price can extend there. Go step by step: first the nearest strike, then the next one if the first is going well.
 - Only move to the next farther strike if the nearest strike is already too discounted or offers poor value.
-- Accept markets with a Polymarket probability between `45%` and `85%` when the direction is clearly aligned with Beecthor's thesis. **This is a hard rule: if the probability is within this range and the thesis is aligned, open the position. Do not invent additional reasons to reject it.**
-- Proximity of the current BTC price to the strike is NOT a valid rejection reason on its own. The market price already reflects that proximity. If the probability is within range and the thesis is aligned, that is sufficient.
-- Reject the trade if Polymarket probability is below `45%` — not enough market consensus.
-- Reject the trade if Polymarket probability is above `85%` — risk/reward is too poor (paying $0.85 to win $0.15).
+- **Polymarket probabilities are guidelines, not hard rules.** They move in real time with the BTC spot price — a market at 70% today may drop to 40% tomorrow simply because price moved away from the strike, with no change in the underlying thesis. Polymarket probabilities carry noise and should never be trusted more than Beecthor's directional analysis. When the two conflict, favor Beecthor's thesis.
+- As a general guide, prefer markets with a Polymarket probability between `45%` and `85%` when the direction is aligned with Beecthor's thesis. If the probability is within this range and the thesis is aligned, there should be a strong reason to skip — do not invent vague excuses to avoid the trade.
+- Proximity of the current BTC price to the strike is NOT a valid rejection reason on its own. The market price already reflects that proximity. If the thesis is aligned, that is sufficient.
+- Be cautious below `45%` (limited market consensus) and above `85%` (poor risk/reward). Apply these as soft filters, not absolute cutoffs — a slightly out-of-range market with a very clear thesis is still worth considering.
 - Prefer higher-probability conservative setups when they still align with the thesis.
 - Maximum simultaneous exposure: `2` open positions.
 - Base stake per entry: `33%` of currently available cash.
