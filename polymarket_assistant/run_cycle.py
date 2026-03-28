@@ -532,7 +532,7 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
         'execution': {'performed': True, 'details': execution_details},
         'binance_spot_price': None,
         'positions_before': 0,
-        'positions_after': len(refreshed_positions),
+        'positions_after': 0,
     }
     append_trade_log({'timestamp': now_utc(), 'type': 'force_bet', **run_summary})
     save_json(LAST_RUN_SUMMARY_PATH, run_summary)
