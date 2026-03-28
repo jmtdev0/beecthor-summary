@@ -41,7 +41,8 @@ Each automated cycle must follow these steps strictly in order:
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
 - Do not skip to the more ambitious target just because Beecthor believes price can extend there. Go step by step: first the nearest strike, then the next one if the first is going well.
 - Only move to the next farther strike if the nearest strike is already too discounted or offers poor value.
-- Accept markets with a Polymarket probability between `45%` and `85%` when the direction is clearly aligned with Beecthor's thesis.
+- Accept markets with a Polymarket probability between `45%` and `85%` when the direction is clearly aligned with Beecthor's thesis. **This is a hard rule: if the probability is within this range and the thesis is aligned, open the position. Do not invent additional reasons to reject it.**
+- Proximity of the current BTC price to the strike is NOT a valid rejection reason on its own. The market price already reflects that proximity. If the probability is within range and the thesis is aligned, that is sufficient.
 - Reject the trade if Polymarket probability is below `45%` — not enough market consensus.
 - Reject the trade if Polymarket probability is above `85%` — risk/reward is too poor (paying $0.85 to win $0.15).
 - Prefer higher-probability conservative setups when they still align with the thesis.
