@@ -18,7 +18,7 @@ Each automated cycle must follow these steps strictly in order:
 4. **Scout opportunities** — If fewer than `2` positions are open, scan active BTC price-hit markets on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
-   - Preferably already above `50%` probability on Polymarket.
+   - Preferably between `45%` and `85%` probability on Polymarket.
 5. **Place bet (if valid)** — If a viable market is found, open a position following the entry rules below. Only one new position per cycle.
 
 ## Market scope
@@ -41,8 +41,9 @@ Each automated cycle must follow these steps strictly in order:
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
 - Do not skip to the more ambitious target just because Beecthor believes price can extend there. Go step by step: first the nearest strike, then the next one if the first is going well.
 - Only move to the next farther strike if the nearest strike is already too discounted or offers poor value.
-- Reject the trade if the move is already too close to the target or obviously too discounted.
-- Reject the trade if Polymarket probability is below `50%`.
+- Accept markets with a Polymarket probability between `45%` and `85%` when the direction is clearly aligned with Beecthor's thesis.
+- Reject the trade if Polymarket probability is below `45%` — not enough market consensus.
+- Reject the trade if Polymarket probability is above `85%` — risk/reward is too poor (paying $0.85 to win $0.15).
 - Prefer higher-probability conservative setups when they still align with the thesis.
 - Maximum simultaneous exposure: `2` open positions.
 - Base stake per entry: `33%` of currently available cash.
