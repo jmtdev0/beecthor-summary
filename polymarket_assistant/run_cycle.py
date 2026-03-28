@@ -27,6 +27,7 @@ ACCOUNT_STATE_PATH = ASSISTANT_DIR / 'account_state.json'
 TRADE_LOG_PATH = ASSISTANT_DIR / 'trade_log.json'
 LAST_RUN_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.json'
 WORKFLOW_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.md'
+NOTIFIED_CLAIMS_PATH = ASSISTANT_DIR / 'notified_claims.json'
 HOST = 'https://clob.polymarket.com'
 CHAIN_ID = 137
 GAMMA_HOST = 'https://gamma-api.polymarket.com'
@@ -654,6 +655,45 @@ def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions:
     return state
 
 
+def notify_claimable_positions(positions: list[dict[str, Any]], config: dict[str, str]) -> None:
+    """Send a Telegram notification for any won positions that haven't been notified yet."""
+    token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+    chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
+    if not token or not chat_id:
+        return
+
+    already_notified: list[str] = load_json(NOTIFIED_CLAIMS_PATH, [])
+    new_notified = list(already_notified)
+
+    for pos in positions:
+        if safe_float(pos.get('cur_price')) < 0.99:
+            continue
+        key = f"{pos.get('market_slug')}:{pos.get('outcome')}"
+        if key in already_notified:
+            continue
+        pnl = safe_float(pos.get('cash_pnl'))
+        msg = (
+            f'\U0001f3c6 CLAIM AVAILABLE\n'
+            f'{pos.get("market_title", pos.get("market_slug"))}\n'
+            f'Outcome: {pos.get("outcome")} \u2192 WON\n'
+            f'PnL: +${pnl:.4f}\n'
+            f'Go to Polymarket to redeem.'
+        )
+        try:
+            requests.post(
+                f'https://api.telegram.org/bot{token}/sendMessage',
+                json={'chat_id': chat_id, 'text': msg},
+                timeout=15,
+            )
+            new_notified.append(key)
+            print(f'[claim] Notified: {key}')
+        except Exception as exc:
+            print(f'[claim] Telegram error: {exc}')
+
+    if new_notified != already_notified:
+        save_json(NOTIFIED_CLAIMS_PATH, new_notified)
+
+
 def append_trade_log(entry: dict[str, Any]) -> None:
     log = load_json(TRADE_LOG_PATH, [])
     log.append(entry)
@@ -714,6 +754,7 @@ def main() -> None:
         return
 
     context = build_context_snapshot(config)
+    notify_claimable_positions(context['polymarket']['positions'], config)
     prompt = render_prompt(context)
 
     if args.decision_file:
