@@ -453,12 +453,13 @@ def prepare_and_send_order_via_phone(
         json={'chat_id': telegram_chat_id, 'text': message},
         timeout=30,
     )
-    print(f'[execution] Signed order sent to phone via Telegram. Awaiting phone execution.')
+    print(f'[execution] Signed order sent to phone via Telegram notification + last_run_summary.json.')
     return {
         'status': 'pending_phone_execution',
         'market': market['question'],
         'outcome': new_pos['outcome'],
         'stake_usd': new_pos['stake_usd'],
+        'order_payload': order_payload,
     }
 
 
