@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 6.863523,
+  "cash_available": 6.866524,
   "realized_pnl": 0.0,
-  "open_exposure": 1.003,
+  "open_exposure": 0.79443051,
   "max_open_positions": 2,
   "base_stake_fraction": 0.33,
   "min_entry_probability": 0.5,
@@ -15,20 +15,20 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [
     {
-      "event_slug": "what-price-will-bitcoin-hit-on-march-27",
-      "market_slug": "will-bitcoin-reach-69k-on-march-27",
-      "market_title": "Will Bitcoin reach $69,000 on March 27?",
-      "position_side": "No",
-      "token_id": "63130716808458786968796615388571505930910921149662171790839040816235261285431",
-      "shares": 1.003,
-      "avg_price": 0.997,
-      "entry_cost_usd": 0.999991,
-      "current_price": 1.0,
-      "current_value_usd": 1.003,
-      "cash_pnl_usd": 0.003009,
+      "event_slug": "what-price-will-bitcoin-hit-on-march-28",
+      "market_slug": "will-bitcoin-dip-to-66k-on-march-28",
+      "market_title": "Will Bitcoin dip to $66,000 on March 28?",
+      "position_side": "Yes",
+      "token_id": "114917445704065834902276711368994375262756331229653132513409186237228567904845",
+      "shares": 1.212871,
+      "avg_price": 0.819999,
+      "entry_cost_usd": 0.994553007129,
+      "current_price": 0.655,
+      "current_value_usd": 0.794430505,
+      "cash_pnl_usd": -0.20012250212900004,
       "status": "open"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-03-28T09:45:32Z"
+  "last_synced_at": "2026-03-28T12:01:23Z"
 }

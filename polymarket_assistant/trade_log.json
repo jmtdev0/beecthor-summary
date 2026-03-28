@@ -636,5 +636,44 @@
     "binance_spot_price": 66262.02,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-03-28T12:01:23Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.94,
+      "summary": "Keep current positions as-is and do not open a new one.",
+      "rationale": "Current open positions are a resolved 69k March 27 No at 1.0, which can continue to natural settlement, and a March 28 66k dip Yes now priced at 65.5%, still well above the 20% stop-loss threshold and below take-profit. Beecthor’s latest thesis remains broadly bearish with 65k as the key support and 62.7k/59k as downside targets if weakness resumes; Binance at 66342.26 still reflects soft structure rather than a clean bullish reversal. With two positions already open, no additional entry is allowed under the playbook’s maximum simultaneous exposure rule.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 66342.26,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]

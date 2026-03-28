@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-28T09:45:32Z",
+  "timestamp": "2026-03-28T12:01:23Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 0.91,
-    "summary": "Hold the near-certain 69k No position and open a new bearish-aligned 66k dip Yes position for March 28.",
-    "rationale": "The existing No on 'Will Bitcoin reach $69,000 on March 27?' is already at 1.0 and qualifies for the take-profit exception to be held into natural resolution. Beecthor’s latest transcript and summary remain bearish overall, with 65k as decisive support and further downside favored if weakness persists, while Binance still shows negative 24h structure with BTC at 66262.02. Under the updated playbook hard rule and nearest-strike-first order, the closest bearish market below price is 'Will Bitcoin dip to $66,000 on March 28?' and its Yes probability is 76%, which is within the mandatory 45%-85% range and aligned with the thesis, so it must be opened.",
+    "action": "NO_ACTION",
+    "confidence": 0.94,
+    "summary": "Keep current positions as-is and do not open a new one.",
+    "rationale": "Current open positions are a resolved 69k March 27 No at 1.0, which can continue to natural settlement, and a March 28 66k dip Yes now priced at 65.5%, still well above the 20% stop-loss threshold and below take-profit. Beecthor’s latest thesis remains broadly bearish with 65k as the key support and 62.7k/59k as downside targets if weakness resumes; Binance at 66342.26 still reflects soft structure rather than a clean bullish reversal. With two positions already open, no additional entry is allowed under the playbook’s maximum simultaneous exposure rule.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -14,14 +14,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
+      "should_open": false,
       "event_slug": "",
-      "market_slug": "will-bitcoin-dip-to-66k-on-march-28",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 66000,
-      "stake_usd": 1,
-      "max_entry_probability": 0.76
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
@@ -29,16 +29,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": {
-      "status": "pending_phone_execution",
-      "market": "Will Bitcoin dip to $66,000 on March 28?",
-      "outcome": "Yes",
-      "stake_usd": 1,
-      "order_payload": "{\"order\": {\"salt\": 1754549691, \"maker\": \"0xCaE5D5cEd23992118d53eb1e7AE32D14d7c5b6aD\", \"signer\": \"0x3f051D4CB43cEc2d211721847E7b3FfE20479e71\", \"taker\": \"0x0000000000000000000000000000000000000000\", \"tokenId\": \"114917445704065834902276711368994375262756331229653132513409186237228567904845\", \"makerAmount\": \"1000000\", \"takerAmount\": \"1219500\", \"expiration\": \"0\", \"nonce\": \"0\", \"feeRateBps\": \"1000\", \"side\": \"BUY\", \"signatureType\": 1, \"signature\": \"0x8f508af07e40d44825b56336354847d39965de78fe6065fa8dfe5220f0e54f295201c9402cb030e88f5ed9230c354d988be6ad8bc82e607ff0d793e5bf3ab14c1b\"}, \"orderType\": \"FOK\"}"
-    }
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 66262.02,
+  "binance_spot_price": 66342.26,
   "positions_before": 1,
   "positions_after": 1
 }
