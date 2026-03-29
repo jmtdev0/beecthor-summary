@@ -139,27 +139,36 @@ def main() -> None:
     }
     body_str = json.dumps(body, separators=(',', ':'), ensure_ascii=False)
 
-    headers = build_l2_headers('POST', ORDER_PATH, body_str)
+    max_attempts = 5
+    retry_delay = 20  # seconds between attempts
 
-    print('[monitor-executor] Posting SELL order to Polymarket CLOB...')
-    resp = requests.post(
-        f'{CLOB_HOST}{ORDER_PATH}',
-        headers=headers,
-        data=body_str.encode('utf-8'),
-        timeout=30,
-    )
-
-    if resp.ok:
-        print(f'[monitor-executor] SUCCESS: {resp.text}')
-        save_last_executed_ts(order_ts)
-        send_telegram(
-            f'\u2705 {action} executed from phone:\n'
-            f'{outcome} @ {prob:.0%}\n'
-            f'{market_slug} sold {amount}'
+    for attempt in range(1, max_attempts + 1):
+        # Rebuild headers each attempt (timestamp in HMAC must be fresh)
+        headers = build_l2_headers('POST', ORDER_PATH, body_str)
+        print(f'[monitor-executor] Posting SELL order to Polymarket CLOB (attempt {attempt}/{max_attempts})...')
+        resp = requests.post(
+            f'{CLOB_HOST}{ORDER_PATH}',
+            headers=headers,
+            data=body_str.encode('utf-8'),
+            timeout=30,
         )
-    else:
-        print(f'[monitor-executor] FAILED {resp.status_code}: {resp.text}')
-        send_telegram(f'\u274c Monitor order failed from phone ({action}):\n{resp.status_code} {resp.text}')
+
+        if resp.ok:
+            print(f'[monitor-executor] SUCCESS: {resp.text}')
+            save_last_executed_ts(order_ts)
+            send_telegram(
+                f'\u2705 {action} executed from phone:\n'
+                f'{outcome} @ {prob:.0%}\n'
+                f'{market_slug} sold {amount}'
+            )
+            return
+
+        print(f'[monitor-executor] Attempt {attempt} FAILED {resp.status_code}: {resp.text}')
+        if attempt < max_attempts:
+            print(f'[monitor-executor] Retrying in {retry_delay}s...')
+            time.sleep(retry_delay)
+
+    send_telegram(f'\u274c Monitor order failed after {max_attempts} attempts ({action}):\n{resp.status_code} {resp.text}')
 
 
 if __name__ == '__main__':
