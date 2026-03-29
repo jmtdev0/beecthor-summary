@@ -4,6 +4,8 @@
 * Monitor ligero de posiciones implementado: `polymarket_assistant/run_monitor.py` se ejecuta cada 2 horas (horas impares UTC), evalúa stop-loss (≤20%) y take-profit (≥88%) sin GPT, firma orden SELL on-chain y hace commit a GitHub para que el móvil la ejecute.
 * Scripts del móvil movidos al repositorio bajo `phone/`: `polymarket_executor.py` y nuevo `polymarket_monitor_executor.py` (lee `last_monitor_action.json` en lugar de `last_run_summary.json`).
 * Ficheros systemd del monitor añadidos a `server/`: `polymarket-monitor.service` y `polymarket-monitor.timer` (horas impares UTC, intercalado con el ciclo completo en horas pares).
+* Añadida interfaz web de chat con Copilot (`server/copilot_chat.py`): Flask app con login por contraseña, historial persistente y acceso desde el móvil vía VS Code Port Forwarding (puerto 5050).
+* Playbook: hard rule ≥85% → no entrar nunca. Cartera ampliada a 5 posiciones (1 diaria + 2 semanales + 2 mensuales), con instrucción de entrar pronto en semanales y mensuales.
 * Rutina diaria: vídeo `S9Rla5wtsJE` analizado y enviado a Telegram. Sesgo principal bajista, posible barrido hacia 67K-70K y objetivo técnico de fondo en 59K mientras no recupere 72K.
 
 ### 28/03/2026
