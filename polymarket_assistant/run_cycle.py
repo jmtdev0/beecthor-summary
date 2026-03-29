@@ -230,20 +230,23 @@ def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
         return []
     response = requests.get(
         f'{DATA_API_HOST}/positions',
-        params={'user': user, 'sizeThreshold': 0, 'limit': 100, 'offset': 0},
+        params={'user': user, 'sizeThreshold': 0.01, 'limit': 100, 'offset': 0},
         timeout=30,
     )
     response.raise_for_status()
     positions = response.json()
     normalized = []
     for item in positions:
+        size = safe_float(item.get('size'))
+        if size <= 0:
+            continue
         normalized.append({
             'market_slug': item.get('slug'),
             'market_title': item.get('title'),
             'event_slug': item.get('eventSlug'),
             'outcome': item.get('outcome'),
             'asset': item.get('asset'),
-            'size': safe_float(item.get('size')),
+            'size': size,
             'avg_price': safe_float(item.get('avgPrice')),
             'initial_value': safe_float(item.get('initialValue')),
             'current_value': safe_float(item.get('currentValue')),
