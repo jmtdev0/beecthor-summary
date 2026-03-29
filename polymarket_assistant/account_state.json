@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 7.06516,
   "realized_pnl": 0.0,
-  "open_exposure": 0.00721482,
+  "open_exposure": 0,
   "max_open_positions": 2,
   "base_stake_fraction": 0.33,
   "min_entry_probability": 0.5,
@@ -13,50 +13,7 @@
   "stop_loss_probability": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "bitcoin-best-month-in-2026",
-      "market_slug": "will-december-be-the-best-month-for-bitcoin-in-2026",
-      "market_title": "Will December be the best month for Bitcoin in 2026?",
-      "position_side": "No",
-      "token_id": "89679799350676429197202267383756158560468857694158523138042292724235005797675",
-      "shares": 0.006466,
-      "avg_price": 0.849999,
-      "entry_cost_usd": 0.005496093534,
-      "current_price": 0.84,
-      "current_value_usd": 0.005431439999999999,
-      "cash_pnl_usd": -6.465353400000004e-05,
-      "status": "open"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-march-29",
-      "market_slug": "will-bitcoin-reach-67k-on-march-29",
-      "market_title": "Will Bitcoin reach $67,000 on March 29?",
-      "position_side": "Yes",
-      "token_id": "23067167803245853195208501794755713228707574115821858010146488946159357728772",
-      "shares": 0.003321,
-      "avg_price": 0.748999,
-      "entry_cost_usd": 0.002487425679,
-      "current_price": 0.537,
-      "current_value_usd": 0.0017833770000000003,
-      "cash_pnl_usd": -0.0007040486789999998,
-      "status": "open"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-march-28",
-      "market_slug": "will-bitcoin-dip-to-66k-on-march-28",
-      "market_title": "Will Bitcoin dip to $66,000 on March 28?",
-      "position_side": "Yes",
-      "token_id": "114917445704065834902276711368994375262756331229653132513409186237228567904845",
-      "shares": 0.002871,
-      "avg_price": 0.819999,
-      "entry_cost_usd": 0.002354217129,
-      "current_price": 0.0,
-      "current_value_usd": 0.0,
-      "cash_pnl_usd": -0.002354217129,
-      "status": "open"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-03-29T18:32:14Z"
+  "last_synced_at": "2026-03-29T18:37:27Z"
 }
