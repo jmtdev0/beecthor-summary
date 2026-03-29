@@ -85,9 +85,10 @@ def sign_order(order: Order) -> str:
     struct_hash = keccak(order.signable_bytes(domain=DOMAIN))
     pk = eth_keys.PrivateKey(bytes.fromhex(POLY_PRIVATE_KEY.lstrip('0x')))
     sig = pk.sign_msg_hash(struct_hash)
-    # eth_keys returns (r, s, v) — Polymarket expects r+s+v hex
-    sig_bytes = sig.to_bytes()
-    return '0x' + sig_bytes.hex()
+    # eth_keys produces v ∈ {0, 1}; Ethereum expects v ∈ {27, 28}
+    sig_bytes = bytearray(sig.to_bytes())
+    sig_bytes[64] += 27
+    return '0x' + bytes(sig_bytes).hex()
 
 
 def get_market_price(token_id: str, side: str, amount: float) -> float:
