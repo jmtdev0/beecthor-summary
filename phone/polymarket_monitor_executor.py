@@ -148,8 +148,10 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
     )
     signature = sign_order(order)
 
+    # Types must match SignedOrder.dict() from py_order_utils exactly:
+    # salt → int, tokenId/amounts/expiration/nonce/feeRateBps → str, signatureType → int
     return {
-        'salt': str(salt),
+        'salt': salt,
         'maker': POLY_FUNDER,
         'signer': POLY_SIGNER_ADDRESS,
         'taker': '0x0000000000000000000000000000000000000000',
