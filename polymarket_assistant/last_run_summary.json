@@ -1,27 +1,27 @@
 {
-  "timestamp": "2026-03-29T10:47:01Z",
+  "timestamp": "2026-03-29T12:02:08Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 0.84,
-    "summary": "Close the stopped-out 66k dip Yes remainder and open a new 67k reach Yes position for the corrective rebound thesis.",
-    "rationale": "The existing `will-bitcoin-dip-to-66k-on-march-28` `Yes` position is now at 13.5% probability, below the playbook stop-loss threshold, so the remaining position should be closed. Updated Beecthor context keeps the broader bias bearish but favors a short-term wave 2/corrective rebound first, with upside targets around 67.890, 68.653, 69.424, and potentially higher before the larger drop resumes; Binance supports that execution reality with BTC at 66566.17 and positive short-term structure. Under nearest-strike-first, the closest upside market is `will-bitcoin-reach-67k-on-march-29`, and its 72.4% probability sits in the preferred range while aligning with the current corrective-bounce thesis.",
+    "action": "CLOSE_POSITION",
+    "confidence": 0.86,
+    "summary": "Take profit on the 67k reach Yes position; no new trade has a clean edge right now.",
+    "rationale": "Polymarket shows the meaningful open position is `will-bitcoin-reach-67k-on-march-29` on `Yes`, now priced at 90.0%, which is in the playbook take-profit zone. Beecthor’s latest thesis remains macro bearish but with a corrective rebound first, and Binance confirms that rebound is underway with BTC at 66839.61 and a 24h high of 67288.94. After managing existing exposure, the nearest bearish market below price is `will-bitcoin-dip-to-66k-on-march-29` at 52%, but the current thesis favors near-term corrective strength toward 68k-68.6k and possibly 70k-71k before the larger downside resumes, so there is not a strong enough edge to open a new position now.",
     "position_management": {
       "should_manage_existing": true,
-      "target_market_slug": "will-bitcoin-dip-to-66k-on-march-28",
+      "target_market_slug": "will-bitcoin-reach-67k-on-march-29",
       "target_outcome": "Yes",
-      "reason": "stop_loss",
+      "reason": "take_profit",
       "reduce_fraction": 1.0
     },
     "new_position": {
-      "should_open": true,
+      "should_open": false,
       "event_slug": "",
-      "market_slug": "will-bitcoin-reach-67k-on-march-29",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 67000,
-      "stake_usd": 1,
-      "max_entry_probability": 0.724
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
@@ -32,13 +32,15 @@
     "performed": true,
     "details": {
       "status": "pending_phone_execution",
-      "market": "Will Bitcoin reach $67,000 on March 29?",
+      "type": "CLOSE_POSITION",
+      "market_slug": "will-bitcoin-reach-67k-on-march-29",
       "outcome": "Yes",
-      "stake_usd": 1,
-      "order_payload": "{\"order\": {\"salt\": 137567328, \"maker\": \"0xCaE5D5cEd23992118d53eb1e7AE32D14d7c5b6aD\", \"signer\": \"0x3f051D4CB43cEc2d211721847E7b3FfE20479e71\", \"taker\": \"0x0000000000000000000000000000000000000000\", \"tokenId\": \"23067167803245853195208501794755713228707574115821858010146488946159357728772\", \"makerAmount\": \"1000000\", \"takerAmount\": \"1280400\", \"expiration\": \"0\", \"nonce\": \"0\", \"feeRateBps\": \"1000\", \"side\": \"BUY\", \"signatureType\": 1, \"signature\": \"0xe646af2d87e95ac12ee5c2d216153ebe0eef3b733380b9fe65314fc27ade66401a7fa573c1f1c293ed02e29f6860c441d2d78e676fe10f441aa4ac35c15ba3b91c\"}, \"orderType\": \"FOK\"}"
+      "fraction": 1.0,
+      "amount": 1.323321,
+      "order_payload": "{\"order\": {\"salt\": 815461098, \"maker\": \"0xCaE5D5cEd23992118d53eb1e7AE32D14d7c5b6aD\", \"signer\": \"0x3f051D4CB43cEc2d211721847E7b3FfE20479e71\", \"taker\": \"0x0000000000000000000000000000000000000000\", \"tokenId\": \"23067167803245853195208501794755713228707574115821858010146488946159357728772\", \"makerAmount\": \"1320000\", \"takerAmount\": \"1172160\", \"expiration\": \"0\", \"nonce\": \"0\", \"feeRateBps\": \"1000\", \"side\": \"SELL\", \"signatureType\": 1, \"signature\": \"0x0e4ea8fd22505af3dd34ac55c69726510d0118df63644d8dcd6e2cf185504feb195041e05e3d8e6c56f1066cfb32c1c2c483002414d94fa51ca4de5bf1a7bff51b\"}, \"orderType\": \"FOK\"}"
     }
   },
-  "binance_spot_price": 66566.17,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 66839.61,
+  "positions_before": 2,
+  "positions_after": 2
 }
