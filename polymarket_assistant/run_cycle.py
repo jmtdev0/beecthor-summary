@@ -602,14 +602,21 @@ def prepare_close_or_reduce_via_phone(
     except Exception as exc:
         print(f'[execution] WARN: could not update conditional allowance: {exc}')
 
-    signed_order = client.create_market_order(
-        MarketOrderArgs(
-            token_id=target['asset'],
-            amount=amount,
-            side=SELL,
-            order_type=OrderType.FOK,
+    try:
+        signed_order = client.create_market_order(
+            MarketOrderArgs(
+                token_id=target['asset'],
+                amount=amount,
+                side=SELL,
+                order_type=OrderType.FOK,
+            )
         )
-    )
+    except Exception as exc:
+        err = str(exc)
+        if '404' in err or 'No orderbook' in err:
+            print(f'[execution] Market already resolved or closed — no orderbook for {target["market_slug"]}. Skipping.')
+            return {'status': 'skipped_market_resolved', 'market_slug': target['market_slug'], 'reason': err}
+        raise
 
     try:
         order_dict = signed_order.model_dump()
