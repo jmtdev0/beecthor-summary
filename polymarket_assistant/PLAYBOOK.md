@@ -15,17 +15,24 @@ Each automated cycle must follow these steps strictly in order:
 1. **Stop-loss check** — Review all open positions. Exit any position where the market probability has dropped to `20%` or below.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
-4. **Scout opportunities** — If fewer than `2` positions are open, scan active BTC price-hit markets on Polymarket. Look for markets that are:
+4. **Scout opportunities** — For each market type (daily / weekly / monthly), check if the slot is already filled. If not, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
-   - Preferably between `45%` and `85%` probability on Polymarket.
+   - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
+   - For weekly and monthly markets: prioritize entering early in the period with the most obvious strike.
 5. **Place bet (if valid)** — If a viable market is found, open a position following the entry rules below. Only one new position per cycle.
 
 ## Market scope
 
-- Allowed:
-  - BTC daily price-hit markets
-  - BTC weekly price-hit markets only when the recent thesis is unusually clear
+Three allowed market types, each tracked separately:
+
+| Slot | Type | Example URL pattern |
+|------|------|---------------------|
+| 1 daily | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
+| 2 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
+| 2 monthly | `what-price-will-bitcoin-hit-in-{month}-{year}` | monthly expiry |
+
+- The goal for weekly and monthly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
 - Not allowed:
   - non-BTC markets
   - vague narrative markets
@@ -42,11 +49,12 @@ Each automated cycle must follow these steps strictly in order:
 - Do not skip to the more ambitious target just because Beecthor believes price can extend there. Go step by step: first the nearest strike, then the next one if the first is going well.
 - Only move to the next farther strike if the nearest strike is already too discounted or offers poor value.
 - **Polymarket probabilities are guidelines, not hard rules.** They move in real time with the BTC spot price — a market at 70% today may drop to 40% tomorrow simply because price moved away from the strike, with no change in the underlying thesis. Polymarket probabilities carry noise and should never be trusted more than Beecthor's directional analysis. When the two conflict, favor Beecthor's thesis.
-- As a general guide, prefer markets with a Polymarket probability between `45%` and `85%` when the direction is aligned with Beecthor's thesis. If the probability is within this range and the thesis is aligned, there should be a strong reason to skip — do not invent vague excuses to avoid the trade.
+- As a general guide, prefer markets with a Polymarket probability between `45%` and `84%` when the direction is aligned with Beecthor's thesis. If the probability is within this range and the thesis is aligned, there should be a strong reason to skip — do not invent vague excuses to avoid the trade.
 - Proximity of the current BTC price to the strike is NOT a valid rejection reason on its own. The market price already reflects that proximity. If the thesis is aligned, that is sufficient.
-- Be cautious below `45%` (limited market consensus) and above `85%` (poor risk/reward). Apply these as soft filters, not absolute cutoffs — a slightly out-of-range market with a very clear thesis is still worth considering.
-- Prefer higher-probability conservative setups when they still align with the thesis.
-- Maximum simultaneous exposure: `2` open positions.
+- Be cautious below `45%` (limited market consensus). Apply this as a soft filter, not an absolute cutoff — a slightly out-of-range market with a very clear thesis is still worth considering.
+- **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
+- Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
+- Maximum simultaneous exposure: **5 open positions** — 1 daily, 2 weekly, 2 monthly (one slot per market type; do not exceed the cap per type).
 - Base stake per entry: `33%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 33% rule.
 
