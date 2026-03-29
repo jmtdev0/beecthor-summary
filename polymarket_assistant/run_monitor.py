@@ -7,27 +7,23 @@ No GPT/Copilot — hard-coded thresholds only:
   - Stop-loss:  cur_price <= 0.20
   - Take-profit: cur_price >= 0.88
 
-On trigger: updates conditional token allowance on-chain (no geoblock),
-signs a SELL order, writes last_monitor_action.json, commits to GitHub,
-and sends a Telegram notification. The phone executor picks it up 5 min later.
+On trigger: writes order params to last_monitor_action.json, commits to GitHub,
+and sends a Telegram notification. The phone executor picks it up 5 min later,
+queries the live order book, signs the SELL order, and POSTs to the CLOB.
 """
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 import requests
-from py_clob_client.clob_types import AssetType, BalanceAllowanceParams, MarketOrderArgs, OrderType
-from py_clob_client.order_builder.constants import SELL
 
 # Reuse utilities from run_cycle in the same package
 from polymarket_assistant.run_cycle import (
     ASSISTANT_DIR,
     REPO_ROOT,
-    build_private_client,
     fetch_positions,
     load_env,
     now_utc,
@@ -88,12 +84,11 @@ def main() -> None:
     print(f'[monitor] Starting at {now_utc()}')
 
     config = load_env()
-    required = ['POLY_PRIVATE_KEY', 'POLY_FUNDER', 'POLY_SIGNATURE_TYPE']
+    required = ['POLY_FUNDER']
     missing = [k for k in required if not config.get(k)]
     if missing:
         raise SystemExit(f'Missing required config: {missing}')
 
-    client = build_private_client(config)
     telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
     telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
 
@@ -118,31 +113,7 @@ def main() -> None:
 
         print(f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | size={size:.4f}')
 
-        # Update conditional allowance on-chain (Polygon tx, no geoblock)
-        try:
-            client.update_balance_allowance(BalanceAllowanceParams(
-                asset_type=AssetType.CONDITIONAL,
-                token_id=pos['asset'],
-                signature_type=int(client.signer._signature_type),
-            ))
-            print(f'[monitor] Conditional allowance updated for {pos["asset"][:16]}...')
-        except Exception as exc:
-            print(f'[monitor] WARN: allowance update failed: {exc}')
-
-        # Sign SELL order
-        signed_order = client.create_market_order(MarketOrderArgs(
-            token_id=pos['asset'],
-            amount=size,
-            side=SELL,
-            order_type=OrderType.FOK,
-        ))
-        try:
-            order_dict = signed_order.model_dump()
-        except AttributeError:
-            order_dict = signed_order.dict()
-
-        order_payload = json.dumps({'order': order_dict, 'orderType': 'FOK'}, ensure_ascii=False)
-
+        # Write order params — phone will sign and execute
         monitor_action = {
             'timestamp': now_utc(),
             'action': action,
@@ -151,8 +122,9 @@ def main() -> None:
             'market_title': title,
             'outcome': outcome,
             'prob': prob,
+            'token_id': pos['asset'],
+            'side': 'SELL',
             'amount': size,
-            'order_payload': order_payload,
         }
         save_json(MONITOR_ACTION_PATH, monitor_action)
 
