@@ -214,9 +214,10 @@ def run_copilot(message: str) -> str:
             ['copilot', '-p', message, '--continue', '-s', '--allow-all'],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=120,
             cwd=str(REPO_ROOT),
-            env={**os.environ, 'HOME': '/root'},
+            env={**os.environ, 'HOME': '/root', 'LANG': 'en_US.UTF-8', 'PYTHONIOENCODING': 'utf-8'},
         )
         output = result.stdout.strip()
         if not output:
