@@ -1,0 +1,14 @@
+[Unit]
+Description=Polymarket Position Monitor (stop-loss / take-profit)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/beecthor-summary
+EnvironmentFile=/root/beecthor-summary/polymarket_assistant/.env
+Environment=HOME=/root
+ExecStart=/root/beecthor-summary/.venv/bin/python -m polymarket_assistant.run_monitor
+StandardOutput=append:/var/log/polymarket-operator/monitor.log
+StandardError=append:/var/log/polymarket-operator/monitor.log

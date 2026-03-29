@@ -1,5 +1,10 @@
 # Changelog
 
+### 29/03/2026
+* Monitor ligero de posiciones implementado: `polymarket_assistant/run_monitor.py` se ejecuta cada 2 horas (horas impares UTC), evalúa stop-loss (≤20%) y take-profit (≥88%) sin GPT, firma orden SELL on-chain y hace commit a GitHub para que el móvil la ejecute.
+* Scripts del móvil movidos al repositorio bajo `phone/`: `polymarket_executor.py` y nuevo `polymarket_monitor_executor.py` (lee `last_monitor_action.json` en lugar de `last_run_summary.json`).
+* Ficheros systemd del monitor añadidos a `server/`: `polymarket-monitor.service` y `polymarket-monitor.timer` (horas impares UTC, intercalado con el ciclo completo en horas pares).
+
 ### 28/03/2026
 * Horario del operador cambiado a 4 ejecuciones diarias: 01:00, 07:30, 13:30 y 20:00 UTC.
 * Rutina diaria de Beecthor automatizada: el ciclo de las 20:00 UTC ahora ejecuta `summarize_beecthor.py --auto` antes del ciclo de Polymarket. Genera el resumen via Copilot CLI, lo envía a Telegram y hace commit, dejando el contexto fresco para el análisis de mercado.
