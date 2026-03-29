@@ -814,5 +814,48 @@
     "binance_spot_price": 66839.61,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-03-29T18:32:14Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "CLOSE_POSITION",
+      "confidence": 0.94,
+      "summary": "Close the expired 66k dip Yes remainder on stop-loss and keep the active 67k reach Yes position.",
+      "rationale": "The residual `will-bitcoin-dip-to-66k-on-march-28` `Yes` position is effectively dead at 0.0 probability and should be fully closed under the stop-loss rule. The active BTC position `will-bitcoin-reach-67k-on-march-29` `Yes` is around 53.7%, so it is neither a stop-loss nor a take-profit exit. Latest Beecthor context still favors a broader bearish continuation but allows a short squeeze/rebound into 67k-70k before larger downside, which keeps the 67k reach thesis alive with Binance spot at 66406.32. Un saludo a Zara Larsson.",
+      "position_management": {
+        "should_manage_existing": true,
+        "target_market_slug": "will-bitcoin-dip-to-66k-on-march-28",
+        "target_outcome": "Yes",
+        "reason": "stop_loss",
+        "reduce_fraction": 1.0
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": true,
+      "details": {
+        "status": "skipped_market_resolved",
+        "market_slug": "will-bitcoin-dip-to-66k-on-march-28",
+        "reason": "PolyApiException[status_code=404, error_message={'error': 'No orderbook exists for the requested token id'}]"
+      }
+    },
+    "binance_spot_price": 66406.32,
+    "positions_before": 3,
+    "positions_after": 3
   }
 ]

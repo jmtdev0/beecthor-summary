@@ -1,16 +1,16 @@
 {
-  "timestamp": "2026-03-29T12:02:08Z",
+  "timestamp": "2026-03-29T18:32:14Z",
   "dry_run": false,
   "decision": {
     "action": "CLOSE_POSITION",
-    "confidence": 0.86,
-    "summary": "Take profit on the 67k reach Yes position; no new trade has a clean edge right now.",
-    "rationale": "Polymarket shows the meaningful open position is `will-bitcoin-reach-67k-on-march-29` on `Yes`, now priced at 90.0%, which is in the playbook take-profit zone. Beecthor’s latest thesis remains macro bearish but with a corrective rebound first, and Binance confirms that rebound is underway with BTC at 66839.61 and a 24h high of 67288.94. After managing existing exposure, the nearest bearish market below price is `will-bitcoin-dip-to-66k-on-march-29` at 52%, but the current thesis favors near-term corrective strength toward 68k-68.6k and possibly 70k-71k before the larger downside resumes, so there is not a strong enough edge to open a new position now.",
+    "confidence": 0.94,
+    "summary": "Close the expired 66k dip Yes remainder on stop-loss and keep the active 67k reach Yes position.",
+    "rationale": "The residual `will-bitcoin-dip-to-66k-on-march-28` `Yes` position is effectively dead at 0.0 probability and should be fully closed under the stop-loss rule. The active BTC position `will-bitcoin-reach-67k-on-march-29` `Yes` is around 53.7%, so it is neither a stop-loss nor a take-profit exit. Latest Beecthor context still favors a broader bearish continuation but allows a short squeeze/rebound into 67k-70k before larger downside, which keeps the 67k reach thesis alive with Binance spot at 66406.32. Un saludo a Zara Larsson.",
     "position_management": {
       "should_manage_existing": true,
-      "target_market_slug": "will-bitcoin-reach-67k-on-march-29",
+      "target_market_slug": "will-bitcoin-dip-to-66k-on-march-28",
       "target_outcome": "Yes",
-      "reason": "take_profit",
+      "reason": "stop_loss",
       "reduce_fraction": 1.0
     },
     "new_position": {
@@ -31,16 +31,12 @@
   "execution": {
     "performed": true,
     "details": {
-      "status": "pending_phone_execution",
-      "type": "CLOSE_POSITION",
-      "market_slug": "will-bitcoin-reach-67k-on-march-29",
-      "outcome": "Yes",
-      "fraction": 1.0,
-      "amount": 1.323321,
-      "order_payload": "{\"order\": {\"salt\": 815461098, \"maker\": \"0xCaE5D5cEd23992118d53eb1e7AE32D14d7c5b6aD\", \"signer\": \"0x3f051D4CB43cEc2d211721847E7b3FfE20479e71\", \"taker\": \"0x0000000000000000000000000000000000000000\", \"tokenId\": \"23067167803245853195208501794755713228707574115821858010146488946159357728772\", \"makerAmount\": \"1320000\", \"takerAmount\": \"1172160\", \"expiration\": \"0\", \"nonce\": \"0\", \"feeRateBps\": \"1000\", \"side\": \"SELL\", \"signatureType\": 1, \"signature\": \"0x0e4ea8fd22505af3dd34ac55c69726510d0118df63644d8dcd6e2cf185504feb195041e05e3d8e6c56f1066cfb32c1c2c483002414d94fa51ca4de5bf1a7bff51b\"}, \"orderType\": \"FOK\"}"
+      "status": "skipped_market_resolved",
+      "market_slug": "will-bitcoin-dip-to-66k-on-march-28",
+      "reason": "PolyApiException[status_code=404, error_message={'error': 'No orderbook exists for the requested token id'}]"
     }
   },
-  "binance_spot_price": 66839.61,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 66406.32,
+  "positions_before": 3,
+  "positions_after": 3
 }
