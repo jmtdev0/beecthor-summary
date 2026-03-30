@@ -221,10 +221,6 @@ def git_commit_and_push(video_id: str, transcript: str) -> None:
 
     env = git_env()
     subprocess.run(
-        ['git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', 'main'],
-        check=True, capture_output=True, env=env,
-    )
-    subprocess.run(
         ['git', '-C', str(REPO_DIR), 'add', str(ANALYSES_LOG), str(transcript_path)],
         check=True, env=env,
     )
@@ -282,6 +278,16 @@ def main() -> None:
     print(f'[summarizer] Calling Copilot ({COPILOT_MODEL})...')
     prompt = build_prompt(transcript, examples, prices, prev_prices, video_id)
     result = run_copilot(prompt)
+    print('[summarizer] Copilot done. Pulling latest repo state before writing...')
+
+    # Pull before modifying any tracked file to avoid unstaged-changes conflict
+    env = git_env()
+    subprocess.run(
+        ['git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', 'main'],
+        check=True, capture_output=True, env=env,
+    )
+    # Reload log after pull (another process may have pushed in the meantime)
+    log = json.loads(ANALYSES_LOG.read_text(encoding='utf-8')) if ANALYSES_LOG.exists() else []
 
     entry = {
         'timestamp': now_utc(),
