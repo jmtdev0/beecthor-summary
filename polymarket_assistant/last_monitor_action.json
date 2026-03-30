@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-30T17:41:01Z",
+  "action": "TAKE_PROFIT",
+  "status": "pending_phone_execution",
+  "market_slug": "will-bitcoin-dip-to-67k-on-march-30",
+  "market_title": "Will Bitcoin dip to $67,000 on March 30?",
+  "outcome": "Yes",
+  "prob": 0.9995,
+  "token_id": "22251957378952428363935530960816215878629596590072424278182644667567966125531",
+  "side": "SELL",
+  "amount": 2.089508
+}
