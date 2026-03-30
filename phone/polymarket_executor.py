@@ -256,6 +256,8 @@ def execute_order(pending: dict) -> bool:
 
     max_attempts = 5
     retry_delay = 20
+    resp = None
+    last_error = ''
 
     for attempt in range(1, max_attempts + 1):
         print(f'[executor] Attempt {attempt}/{max_attempts} — querying order book...')
@@ -264,6 +266,7 @@ def execute_order(pending: dict) -> bool:
             print(f'[executor] Market price: {price}')
             order_dict = build_order_dict(token_id, side, amount, price)
         except Exception as exc:
+            last_error = str(exc)
             print(f'[executor] Failed to build order: {exc}')
             if attempt < max_attempts:
                 print(f'[executor] Retrying in {retry_delay}s...')
@@ -277,12 +280,13 @@ def execute_order(pending: dict) -> bool:
             send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
             return True
 
-        print(f'[executor] Attempt {attempt} FAILED {resp.status_code}: {resp.text}')
+        last_error = f'{resp.status_code}: {resp.text}'
+        print(f'[executor] Attempt {attempt} FAILED {last_error}')
         if attempt < max_attempts:
             print(f'[executor] Retrying in {retry_delay}s...')
             time.sleep(retry_delay)
 
-    send_telegram(f'\u274c Order failed after {max_attempts} attempts:\n{market} {outcome}\n{resp.status_code} {resp.text}')
+    send_telegram(f'\u274c Order failed after {max_attempts} attempts:\n{market} {outcome}\n{last_error}')
     return False
 
 
