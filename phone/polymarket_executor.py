@@ -2,10 +2,10 @@
 """
 Polymarket Phone Executor
 
-Runs 5 minutes after each server cycle (cron: 01:05, 07:35, 13:35, 20:05 UTC).
-Reads order params from last_run_summary.json in the GitHub repo, queries the
-live order book, builds and signs the EIP-712 order with the private key, and
-POSTs to the Polymarket CLOB API using the phone's residential IP.
+Runs 5 minutes after each server cycle (cron: 01:05, 07:05, 13:05, 19:05 UTC).
+Reads all pending orders from pending_orders.json in the GitHub repo, executes
+each one sequentially (sign EIP-712, POST to CLOB), and tracks executed order IDs
+locally to avoid duplicates.
 
 Dependencies: requests, python-dotenv, eth-keys, poly-eip712-structs (no Rust)
 """
@@ -27,12 +27,12 @@ from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 from eth_utils import keccak
 
 ENV_FILE = Path.home() / '.polymarket.env'
-LAST_EXECUTED_FILE = Path.home() / '.polymarket_last_executed_ts'
+EXECUTED_ORDERS_FILE = Path.home() / '.polymarket_executed_order_ids'
 CLOB_HOST = 'https://clob.polymarket.com'
 ORDER_PATH = '/order'
-SUMMARY_API_URL = (
+PENDING_ORDERS_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
-    '/polymarket_assistant/last_run_summary.json'
+    '/polymarket_assistant/pending_orders.json'
 )
 
 # Polymarket CTF Exchange on Polygon
@@ -103,11 +103,9 @@ def get_market_price(token_id: str, side: str, amount: float) -> float:
 
     if side == 'BUY':
         levels = book.get('asks', [])
-        # asks are sorted ascending — walk from cheapest
         levels = sorted(levels, key=lambda x: float(x['price']))
     else:
         levels = book.get('bids', [])
-        # bids are sorted descending — walk from highest
         levels = sorted(levels, key=lambda x: float(x['price']), reverse=True)
 
     total = 0.0
@@ -121,7 +119,6 @@ def get_market_price(token_id: str, side: str, amount: float) -> float:
         if total >= amount:
             return price
 
-    # If not fully fillable, return best available price (FOK will fail if insufficient)
     if levels:
         return float(levels[-1]['price'])
     raise RuntimeError('Empty order book')
@@ -143,11 +140,9 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
     side_int = 0 if side == 'BUY' else 1
 
     if side == 'BUY':
-        # makerAmount = USDC spent, takerAmount = shares received
         maker_amount = to_usdc(round_down(amount, 2))
         taker_amount = to_usdc(round_down(amount / price, 4))
     else:
-        # makerAmount = shares sold, takerAmount = USDC received
         maker_amount = to_usdc(round_down(amount, 2))
         taker_amount = to_usdc(round_down(amount * price, 4))
 
@@ -167,8 +162,6 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
     )
     signature = sign_order(order)
 
-    # Types must match SignedOrder.dict() from py_order_utils exactly:
-    # salt → int, tokenId/amounts/expiration/nonce/feeRateBps → str, signatureType → int
     return {
         'salt': salt,
         'maker': POLY_FUNDER,
@@ -219,15 +212,17 @@ def send_telegram(text: str) -> None:
         pass
 
 
-def get_last_executed_ts() -> str:
+def load_executed_order_ids() -> set:
     try:
-        return LAST_EXECUTED_FILE.read_text().strip()
+        return set(EXECUTED_ORDERS_FILE.read_text().splitlines())
     except Exception:
-        return ''
+        return set()
 
 
-def save_last_executed_ts(ts: str) -> None:
-    LAST_EXECUTED_FILE.write_text(ts)
+def save_executed_order_id(order_id: str) -> None:
+    ids = load_executed_order_ids()
+    ids.add(order_id)
+    EXECUTED_ORDERS_FILE.write_text('\n'.join(sorted(ids)))
 
 
 def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
@@ -247,45 +242,17 @@ def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
     )
 
 
-def main() -> None:
-    ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-    print(f'[executor] {ts}')
+def execute_order(pending: dict) -> bool:
+    """Execute a single pending order. Returns True on success."""
+    order_id = pending.get('order_id', '')
+    token_id = pending.get('token_id', '')
+    side = pending.get('side', '')
+    order_type = pending.get('type', 'OPEN_POSITION')
+    market = pending.get('market') or pending.get('market_slug', '')
+    outcome = pending.get('outcome', '')
+    amount = float(pending.get('stake_usd') or pending.get('amount', 0))
 
-    missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
-                           'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
-               if not os.environ.get(v)]
-    if missing:
-        print(f'[executor] Missing env vars: {missing}. Check {ENV_FILE}')
-        sys.exit(1)
-
-    resp = requests.get(SUMMARY_API_URL, timeout=15, headers={'Cache-Control': 'no-cache'})
-    resp.raise_for_status()
-    summary = json.loads(base64.b64decode(resp.json()['content']))
-
-    execution = summary.get('execution', {})
-    details = execution.get('details') or {}
-
-    if details.get('status') != 'pending_phone_execution':
-        print(f'[executor] No pending order. Last action: {summary.get("decision", {}).get("action")}')
-        return
-
-    token_id = details.get('token_id', '')
-    side = details.get('side', '')
-    if not token_id or not side:
-        print('[executor] Missing token_id or side in order params.')
-        return
-
-    order_ts = summary.get('timestamp', '')
-    if order_ts == get_last_executed_ts():
-        print(f'[executor] Order at {order_ts} already executed. Nothing to do.')
-        return
-
-    order_type = details.get('type', 'OPEN_POSITION')
-    market = details.get('market') or details.get('market_slug', '')
-    outcome = details.get('outcome', '')
-    amount = float(details.get('stake_usd') or details.get('amount', 0))
-    print(f'[executor] Pending: {order_type} {side} {outcome} on "{market}" amount={amount}')
-    print(f'[executor] Order timestamp: {order_ts}')
+    print(f'[executor] Order: {order_type} {side} {outcome} on "{market}" amount={amount}')
 
     max_attempts = 5
     retry_delay = 20
@@ -306,16 +273,54 @@ def main() -> None:
         resp = post_order(order_dict)
         if resp.ok:
             print(f'[executor] SUCCESS: {resp.text}')
-            save_last_executed_ts(order_ts)
+            save_executed_order_id(order_id)
             send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
-            return
+            return True
 
         print(f'[executor] Attempt {attempt} FAILED {resp.status_code}: {resp.text}')
         if attempt < max_attempts:
             print(f'[executor] Retrying in {retry_delay}s...')
             time.sleep(retry_delay)
 
-    send_telegram(f'\u274c Order failed after {max_attempts} attempts:\n{resp.status_code} {resp.text}')
+    send_telegram(f'\u274c Order failed after {max_attempts} attempts:\n{market} {outcome}\n{resp.status_code} {resp.text}')
+    return False
+
+
+def main() -> None:
+    ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    print(f'[executor] {ts}')
+
+    missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
+                           'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
+               if not os.environ.get(v)]
+    if missing:
+        print(f'[executor] Missing env vars: {missing}. Check {ENV_FILE}')
+        sys.exit(1)
+
+    resp = requests.get(PENDING_ORDERS_API_URL, timeout=15, headers={'Cache-Control': 'no-cache'})
+    if resp.status_code == 404:
+        print('[executor] pending_orders.json not found in repo. Nothing to do.')
+        return
+    resp.raise_for_status()
+    queue = json.loads(base64.b64decode(resp.json()['content']))
+
+    if not queue:
+        print('[executor] No pending orders in queue.')
+        return
+
+    executed_ids = load_executed_order_ids()
+    pending = [o for o in queue if o.get('status') == 'pending_phone_execution' and o.get('order_id') not in executed_ids]
+
+    if not pending:
+        print(f'[executor] {len(queue)} order(s) in queue, all already executed.')
+        return
+
+    print(f'[executor] {len(pending)} pending order(s) to execute.')
+    for i, order in enumerate(pending, 1):
+        print(f'[executor] --- Order {i}/{len(pending)} (id={order.get("order_id")}) ---')
+        execute_order(order)
+        if i < len(pending):
+            time.sleep(3)  # small pause between orders
 
 
 if __name__ == '__main__':

@@ -28,6 +28,7 @@ TRADE_LOG_PATH = ASSISTANT_DIR / 'trade_log.json'
 LAST_RUN_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.json'
 WORKFLOW_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.md'
 NOTIFIED_CLAIMS_PATH = ASSISTANT_DIR / 'notified_claims.json'
+PENDING_ORDERS_PATH = ASSISTANT_DIR / 'pending_orders.json'
 HOST = 'https://clob.polymarket.com'
 CHAIN_ID = 137
 GAMMA_HOST = 'https://gamma-api.polymarket.com'
@@ -475,8 +476,8 @@ def prepare_and_send_order_via_phone(
         json={'chat_id': telegram_chat_id, 'text': message},
         timeout=30,
     )
-    print(f'[execution] Order params sent to phone via last_run_summary.json (phone will sign and execute).')
-    return {
+    order = {
+        'order_id': now_utc(),
         'status': 'pending_phone_execution',
         'type': 'OPEN_POSITION',
         'token_id': token_id,
@@ -486,6 +487,9 @@ def prepare_and_send_order_via_phone(
         'market_slug': new_pos['market_slug'],
         'outcome': new_pos['outcome'],
     }
+    enqueue_pending_order(order)
+    print(f'[execution] Order enqueued in pending_orders.json for phone execution.')
+    return order
 
 
 def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str, stake: float) -> None:
@@ -624,8 +628,8 @@ def prepare_close_or_reduce_via_phone(
         json={'chat_id': telegram_chat_id, 'text': message},
         timeout=30,
     )
-    print(f'[execution] SELL order params sent to phone via last_run_summary.json (phone will sign and execute).')
-    return {
+    order = {
+        'order_id': now_utc(),
         'status': 'pending_phone_execution',
         'type': decision['action'],
         'token_id': target['asset'],
@@ -635,6 +639,9 @@ def prepare_close_or_reduce_via_phone(
         'outcome': target['outcome'],
         'fraction': fraction,
     }
+    enqueue_pending_order(order)
+    print(f'[execution] SELL order enqueued in pending_orders.json for phone execution.')
+    return order
 
 
 def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions: list[dict[str, Any]]) -> dict[str, Any]:
@@ -705,6 +712,15 @@ def append_trade_log(entry: dict[str, Any]) -> None:
     log = load_json(TRADE_LOG_PATH, [])
     log.append(entry)
     save_json(TRADE_LOG_PATH, log)
+
+
+def enqueue_pending_order(order: dict[str, Any]) -> None:
+    """Append an order to pending_orders.json. Prunes entries older than 12 hours."""
+    queue: list[dict[str, Any]] = load_json(PENDING_ORDERS_PATH, [])
+    cutoff = (datetime.now(UTC) - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    queue = [o for o in queue if o.get('order_id', '') >= cutoff]
+    queue.append(order)
+    save_json(PENDING_ORDERS_PATH, queue)
 
 
 def write_summary_markdown(summary: dict[str, Any]) -> None:
