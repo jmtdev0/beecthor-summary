@@ -78,12 +78,13 @@ def get_latest_video_id(channel_id: str) -> str:
 
 def get_transcript(video_id: str) -> str:
     from youtube_transcript_api import YouTubeTranscriptApi
-    # Try Spanish first (Beecthor's native language), fall back to auto-generated
+    api = YouTubeTranscriptApi()
+    # Try Spanish first (Beecthor's native language), fall back to any available
     try:
-        segments = YouTubeTranscriptApi.get_transcript(video_id, languages=['es', 'es-ES'])
+        fetched = api.fetch(video_id, languages=['es', 'es-ES'])
     except Exception:
-        segments = YouTubeTranscriptApi.get_transcript(video_id)
-    return ' '.join(s['text'] for s in segments)
+        fetched = api.fetch(video_id)
+    return ' '.join(s.text for s in fetched)
 
 
 # ---------------------------------------------------------------------------
