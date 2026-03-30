@@ -1156,5 +1156,44 @@
     "binance_spot_price": 67825.32,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-30T12:21:05Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.93,
+      "summary": "No open position needs management, and no new trade is allowed without a new Beecthor video.",
+      "rationale": "There are no existing BTC positions to close or reduce. Recent transcripts and summaries still imply a macro-bearish thesis after a rebound/squeeze, and Binance at 67900.12 shows that rebound has extended, so some weekly markets look directionally interesting; however, the binding playbook says 'No new Beecthor video means no bet,' and the provided context includes no new 2026-03-30 Beecthor transcript/video. Under the playbook, that forces NO_ACTION. Un saludo a Zara Larsson.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 67900.12,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
