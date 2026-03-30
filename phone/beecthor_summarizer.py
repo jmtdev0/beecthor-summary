@@ -192,46 +192,51 @@ def run_copilot(prompt: str) -> dict:
 # Git
 # ---------------------------------------------------------------------------
 
-def ensure_git_credentials() -> None:
-    if not GH_TOKEN:
-        raise RuntimeError('GH_TOKEN not set — cannot push to GitHub')
-    cred_file = Path.home() / '.git-credentials'
-    cred_line = f'https://x-access-token:{GH_TOKEN}@github.com\n'
-    existing = cred_file.read_text() if cred_file.exists() else ''
-    if 'github.com' not in existing:
-        with open(cred_file, 'a') as f:
-            f.write(cred_line)
-    subprocess.run(
-        ['git', 'config', '--global', 'credential.helper', 'store'],
-        check=True, capture_output=True,
-    )
+def git_env() -> dict:
+    """Return env dict with GH_TOKEN injected for git credential helper."""
+    env = {**os.environ}
+    if GH_TOKEN:
+        # Write credentials file and set helper — works regardless of global gitconfig
+        cred_file = Path.home() / '.git-credentials'
+        cred_line = f'https://x-access-token:{GH_TOKEN}@github.com\n'
+        existing = cred_file.read_text() if cred_file.exists() else ''
+        if 'github.com' not in existing:
+            with open(cred_file, 'a') as f:
+                f.write(cred_line)
+        # Force credential.helper=store via env — overrides any broken global config
+        env['GIT_CONFIG_COUNT'] = '1'
+        env['GIT_CONFIG_KEY_0'] = 'credential.helper'
+        env['GIT_CONFIG_VALUE_0'] = 'store'
+    return env
 
 
 def git_commit_and_push(video_id: str, transcript: str) -> None:
-    ensure_git_credentials()
+    if not GH_TOKEN:
+        raise RuntimeError('GH_TOKEN not set — cannot push to GitHub')
 
     TRANSCRIPTS_DIR.mkdir(exist_ok=True)
     date_str = datetime.now(UTC).strftime('%Y-%m-%d')
     transcript_path = TRANSCRIPTS_DIR / f'{video_id}_{date_str}.txt'
     transcript_path.write_text(transcript, encoding='utf-8')
 
+    env = git_env()
     subprocess.run(
         ['git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', 'main'],
-        check=True, capture_output=True,
+        check=True, capture_output=True, env=env,
     )
     subprocess.run(
         ['git', '-C', str(REPO_DIR), 'add', str(ANALYSES_LOG), str(transcript_path)],
-        check=True,
+        check=True, env=env,
     )
     subprocess.run(
         ['git', '-C', str(REPO_DIR), '-c', 'user.name=beecthor-summarizer[bot]',
          '-c', 'user.email=beecthor-summarizer[bot]@users.noreply.github.com',
          'commit', '-m', f'feat: Beecthor summary {video_id} ({date_str})'],
-        check=True, capture_output=True,
+        check=True, capture_output=True, env=env,
     )
     subprocess.run(
         ['git', '-C', str(REPO_DIR), 'push', 'origin', 'main'],
-        check=True, capture_output=True,
+        check=True, capture_output=True, env=env,
     )
 
 
