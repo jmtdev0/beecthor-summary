@@ -36,7 +36,7 @@ NUM_EXAMPLES = 2  # entries from analyses_log used as format examples
 
 load_dotenv(ENV_FILE)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 GH_TOKEN = os.environ.get('GH_TOKEN', '')
 
 
