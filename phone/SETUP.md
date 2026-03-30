@@ -45,6 +45,39 @@ From your PC:
 ssh-copy-id -p 8022 <phone-ip>
 ```
 
+### How to discover the SSH connection details
+
+On the phone (inside Termux):
+
+```bash
+# SSH username
+whoami
+
+# Confirm Termux SSH is running
+sshd
+
+# Confirm the device IP on your local network
+ip addr show wlan0
+```
+
+On your PC (PowerShell):
+
+```powershell
+# List your local public SSH keys
+Get-ChildItem -Force $HOME\.ssh -Filter *.pub
+
+# Read the public key you want to install on the phone or server
+Get-Content $HOME\.ssh\id_ed25519.pub
+
+# Optional: test whether the phone SSH port is reachable
+Test-NetConnection <phone-ip> -Port 8022
+
+# Optional: test whether a server SSH port is reachable
+Test-NetConnection <server-ip> -Port 22
+```
+
+Keep the discovered values private. Do not commit IPs, usernames, private keys, or live credentials into the repository.
+
 ---
 
 ## 4. Clone the repo

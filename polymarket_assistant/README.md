@@ -22,6 +22,7 @@ The assistant should:
 - `account_state.json` — bankroll, cash, open positions, realized PnL
 - `trade_log.json` — daily decisions, entries, exits, and no-bet days
 - `context_helper.py` — optional helper script for quick context snapshots
+- `activity_summary.py` — public Polymarket activity/positions summary for any wallet
 
 ## Suggested manual workflow
 
