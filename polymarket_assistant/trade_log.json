@@ -1195,5 +1195,46 @@
     "binance_spot_price": 67900.12,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-30T18:01:25Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "OPEN_POSITION",
+      "confidence": 0.86,
+      "summary": "Keep the existing weekly 66k dip position and open a second weekly bearish position on the 64k dip market.",
+      "rationale": "The live weekly `will-bitcoin-dip-to-66k-march-30-april-5` Yes position at 84.0% is above stop-loss and below take-profit, so it does not need management. The latest Beecthor transcript and recent summaries keep the thesis bearish after a corrective rebound, with continuation favored toward 65.9k, 64k and potentially much lower, and Binance spot at 66840.0 after rejection from the 68k area fits that execution reality. The daily nearest bearish market is already too aggressively priced, while the nearest weekly bearish strike is already held and near the upper end of acceptable pricing, so the next weekly strike `will-bitcoin-dip-to-64k-march-30-april-5` at 50.0% is the cleanest second-slot entry. Un saludo a Zara Larsson.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "what-price-will-bitcoin-hit-march-30-april-5",
+        "market_slug": "will-bitcoin-dip-to-64k-march-30-april-5",
+        "outcome": "Yes",
+        "direction": "bearish",
+        "strike": 64000,
+        "stake_usd": 1,
+        "max_entry_probability": 0.5
+      }
+    },
+    "validation": {
+      "ok": false,
+      "message": "Nearest-strike-first rule rejected the proposed market"
+    },
+    "execution": {
+      "performed": false,
+      "details": {
+        "rejected": "Nearest-strike-first rule rejected the proposed market"
+      }
+    },
+    "binance_spot_price": 66840.0,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
