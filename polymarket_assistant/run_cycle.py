@@ -202,9 +202,39 @@ def _fetch_daily_event_slugs(days_ahead: int = 2) -> list[str]:
     return slugs
 
 
+def _fetch_weekly_monthly_event_slugs() -> list[str]:
+    # Query Gamma API for active BTC events using the tags Polymarket assigns to these markets:
+    # - weekly: tag_slug="weekly"  (e.g. what-price-will-bitcoin-hit-march-30-april-5)
+    # - monthly: tag_slug="bitcoin" without "-on-" in slug (e.g. what-price-will-bitcoin-hit-in-march-2026)
+    seen: set[str] = set()
+    slugs: list[str] = []
+    for tag in ('weekly', 'bitcoin'):
+        try:
+            response = requests.get(
+                f'{GAMMA_HOST}/events',
+                params={'tag_slug': tag, 'active': 'true', 'closed': 'false', 'limit': 100},
+                timeout=30,
+            )
+            response.raise_for_status()
+            events = response.json()
+            for event in events:
+                slug = event.get('slug', '')
+                if not slug.startswith('what-price-will-bitcoin-hit'):
+                    continue
+                if '-on-' in slug:
+                    continue
+                if slug not in seen:
+                    seen.add(slug)
+                    slugs.append(slug)
+        except requests.RequestException:
+            pass
+    return slugs
+
+
 def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
     all_markets: list[dict[str, Any]] = []
-    for event_slug in _fetch_daily_event_slugs():
+    event_slugs = _fetch_daily_event_slugs() + _fetch_weekly_monthly_event_slugs()
+    for event_slug in event_slugs:
         try:
             response = requests.get(
                 f'{GAMMA_HOST}/events/slug/{event_slug}',
