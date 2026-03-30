@@ -1,5 +1,14 @@
 # Changelog
 
+### 30/03/2026
+* Copilot CLI instalado en Termux (Android ARM64): fix con symlink `node-pty/build/Release/pty.node → prebuilds/android-arm64/pty.node`. Autenticado con GH_TOKEN del servidor.
+* Sistema de cola de órdenes (`pending_orders.json`): el servidor acumula órdenes pendientes en lugar de sobreescribir `last_run_summary.json`. El móvil ejecuta todas las pendientes en una pasada con deduplicación por `order_id`.
+* Descubrimiento de mercados semanales: `fetch_active_btc_markets()` ahora consulta el tag `weekly` de Gamma API además de los slugs diarios. Scope reducido a daily + weekly (mensuales y anuales excluidos).
+* Fix `nearest_strike_ok`: la regla de strike más cercano primero ahora se aplica por tipo de mercado (daily vs weekly) independientemente, evitando que un diario más cercano bloquee un semanal.
+* Dos posiciones abiertas hoy desde el móvil: `will-bitcoin-dip-to-67k-on-march-30` YES @ 0.47 y `will-bitcoin-dip-to-66k-march-30-april-5` YES @ 0.65.
+* Script `phone/beecthor_summarizer.py`: obtiene el último vídeo via RSS del canal, descarga transcript con `youtube-transcript-api`, llama a Copilot CLI con los últimos 2 ejemplos del log como formato de referencia, y hace commit+push a `analyses_log.json`. Cron diario a las 19:45 UTC.
+* `phone/SETUP.md` actualizado con instrucciones completas y correctas para reinstalar desde cero.
+
 ### 29/03/2026
 * Monitor ligero de posiciones implementado: `polymarket_assistant/run_monitor.py` se ejecuta cada 2 horas (horas impares UTC), evalúa stop-loss (≤20%) y take-profit (≥88%) sin GPT, firma orden SELL on-chain y hace commit a GitHub para que el móvil la ejecute.
 * Scripts del móvil movidos al repositorio bajo `phone/`: `polymarket_executor.py` y nuevo `polymarket_monitor_executor.py` (lee `last_monitor_action.json` en lugar de `last_run_summary.json`).
