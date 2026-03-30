@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-03-30T06:02:41Z
+- Timestamp: 2026-03-30T12:01:42Z
 - Dry run: False
-- BTC price: 67527.6
+- BTC price: 67676.0
 - Decision action: NO_ACTION
-- Decision summary: Hold the resolved-style 67k daily long into settlement and do not open any new BTC position this cycle.
+- Decision summary: Hold the resolved 67k daily Yes position into settlement and do not open any new BTC position this cycle.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 

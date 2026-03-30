@@ -1028,5 +1028,44 @@
     "binance_spot_price": 67527.6,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-03-30T12:01:42Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.9,
+      "summary": "Hold the resolved 67k daily Yes position into settlement and do not open any new BTC position this cycle.",
+      "rationale": "The only open BTC position, `will-bitcoin-reach-67k-on-march-29` on `Yes`, is already at 100% with BTC spot at 67676.0, so under the playbook take-profit exception it can be left to resolve naturally. Beecthor’s latest transcript and summaries still point to a macro-bearish structure after a rebound/squeeze, and Binance confirms that squeeze has already extended into the 67k-68k area. No new trade is warranted because the daily slot is already occupied, the nearest upside market for March 30 (`reach 68k`) is above the hard 85% cap, and no weekly or monthly BTC markets are provided here. Un saludo a Zara Larsson.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 67676.0,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
