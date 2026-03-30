@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-29T19:38:32Z",
+  "timestamp": "2026-03-30T00:02:14Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 0.84,
-    "summary": "No hay posiciones que gestionar y se abre un largo táctico en el 67k diario.",
-    "rationale": "No hay posiciones BTC abiertas que cerrar o reducir. El último transcript, los resúmenes recientes y la actualización de Discord mantienen intacta la tesis de Beecthor: sesgo macro bajista, pero con rebote/wave 2 probable antes de seguir cayendo, con barrido posible hacia 67k-70k. Binance marca BTC en 66392.49, así que por nearest-strike-first el primer objetivo alcista razonable es 67k; en Polymarket, `will-bitcoin-reach-67k-on-march-29` Yes cotiza al 51.6%, dentro del rango preferido y alineado con la tesis inmediata. Un saludo a Zara Larsson.",
+    "action": "NO_ACTION",
+    "confidence": 0.79,
+    "summary": "Hold the existing 67k daily long for now and do not open any new BTC position.",
+    "rationale": "Live Polymarket shows one meaningful BTC position, `will-bitcoin-reach-67k-on-march-29` on `Yes`, now at 22.6% probability: it is weak, but still above the playbook stop-loss threshold of 20% and far from take-profit. The latest transcript and recent summaries keep Beecthor macro-bearish, yet still allow a tactical rebound/short squeeze into 67k-70k before larger downside resumes; Binance at 66052.7 after a 24h low of 65000 keeps that rebound path alive, though weaker than before. No new trade is justified because the daily slot is already occupied and no weekly/monthly BTC markets are provided here. Un saludo a Zara Larsson.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -14,14 +14,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-march-29",
-      "market_slug": "will-bitcoin-reach-67k-on-march-29",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 67000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.516
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
@@ -29,19 +29,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": {
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "23067167803245853195208501794755713228707574115821858010146488946159357728772",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "market": "Will Bitcoin reach $67,000 on March 29?",
-      "market_slug": "will-bitcoin-reach-67k-on-march-29",
-      "outcome": "Yes"
-    }
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 66392.49,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 66052.7,
+  "positions_before": 1,
+  "positions_after": 1
 }

@@ -950,5 +950,44 @@
     "binance_spot_price": 66392.49,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-03-30T00:02:14Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.79,
+      "summary": "Hold the existing 67k daily long for now and do not open any new BTC position.",
+      "rationale": "Live Polymarket shows one meaningful BTC position, `will-bitcoin-reach-67k-on-march-29` on `Yes`, now at 22.6% probability: it is weak, but still above the playbook stop-loss threshold of 20% and far from take-profit. The latest transcript and recent summaries keep Beecthor macro-bearish, yet still allow a tactical rebound/short squeeze into 67k-70k before larger downside resumes; Binance at 66052.7 after a 24h low of 65000 keeps that rebound path alive, though weaker than before. No new trade is justified because the daily slot is already occupied and no weekly/monthly BTC markets are provided here. Un saludo a Zara Larsson.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 66052.7,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
