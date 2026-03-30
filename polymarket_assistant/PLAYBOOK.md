@@ -54,7 +54,11 @@ Two allowed market types, each tracked separately:
 - Be cautious below `45%` (limited market consensus). Apply this as a soft filter, not an absolute cutoff — a slightly out-of-range market with a very clear thesis is still worth considering.
 - **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
 - Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
-- Maximum simultaneous exposure: **3 open positions** — 1 daily, 2 weekly (one slot per market type; do not exceed the cap per type).
+- Maximum simultaneous exposure: **3 open positions total**.
+- Position cap by type:
+  - **1 daily** position maximum
+  - **2 weekly** positions maximum
+- Monthly or longer-dated positions are not allowed, so they do not count toward the cap.
 - Base stake per entry: `33%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 33% rule.
 
