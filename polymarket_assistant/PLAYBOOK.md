@@ -24,19 +24,19 @@ Each automated cycle must follow these steps strictly in order:
 
 ## Market scope
 
-Three allowed market types, each tracked separately:
+Two allowed market types, each tracked separately:
 
 | Slot | Type | Example URL pattern |
 |------|------|---------------------|
 | 1 daily | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
 | 2 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
-| 2 monthly | `what-price-will-bitcoin-hit-in-{month}-{year}` | monthly expiry |
 
-- The goal for weekly and monthly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
+- The goal for weekly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
 - Not allowed:
   - non-BTC markets
   - vague narrative markets
   - bets that require ignoring current price structure
+  - monthly or long-term markets (e.g. `what-price-will-bitcoin-hit-in-{month}-{year}`, `before-{year}`)
 
 ## Entry rules
 
@@ -54,7 +54,7 @@ Three allowed market types, each tracked separately:
 - Be cautious below `45%` (limited market consensus). Apply this as a soft filter, not an absolute cutoff — a slightly out-of-range market with a very clear thesis is still worth considering.
 - **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
 - Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
-- Maximum simultaneous exposure: **5 open positions** — 1 daily, 2 weekly, 2 monthly (one slot per market type; do not exceed the cap per type).
+- Maximum simultaneous exposure: **3 open positions** — 1 daily, 2 weekly (one slot per market type; do not exceed the cap per type).
 - Base stake per entry: `33%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 33% rule.
 
