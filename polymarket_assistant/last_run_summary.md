@@ -1,11 +1,11 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-03-30T12:15:23Z
+- Timestamp: 2026-03-30T12:18:52Z
 - Dry run: False
-- BTC price: 67845.83
+- BTC price: 67825.32
 - Decision action: OPEN_POSITION
-- Decision summary: No open position needs management; open the March 30 BTC $67k dip Yes market.
-- Validation: True (ok)
+- Decision summary: Open a new weekly bearish BTC position on the 66k dip market.
+- Validation: False (Nearest-strike-first rule rejected the proposed market)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -13,16 +13,9 @@
 
 ```json
 {
-  "performed": true,
+  "performed": false,
   "details": {
-    "status": "pending_phone_execution",
-    "type": "OPEN_POSITION",
-    "token_id": "22251957378952428363935530960816215878629596590072424278182644667567966125531",
-    "side": "BUY",
-    "stake_usd": 1,
-    "market": "Will Bitcoin dip to $67,000 on March 30?",
-    "market_slug": "will-bitcoin-dip-to-67k-on-march-30",
-    "outcome": "Yes"
+    "rejected": "Nearest-strike-first rule rejected the proposed market"
   }
 }
 ```
