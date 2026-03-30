@@ -29,7 +29,7 @@ ANALYSES_LOG = REPO_DIR / 'analyses_log.json'
 TRANSCRIPTS_DIR = REPO_DIR / 'transcripts'
 LAST_PROCESSED_FILE = Path.home() / '.beecthor_last_processed_video_id'
 
-BEECTHOR_CHANNEL_URL = 'https://www.youtube.com/@Beecthor'
+BEECTHOR_CHANNEL_ID = 'UCO5MrB8OoQ_nRzeB_ehPbFw'  # youtube.com/@Beecthor
 BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price'
 COPILOT_MODEL = 'gpt-5.4'
 NUM_EXAMPLES = 2  # entries from analyses_log used as format examples
@@ -60,20 +60,6 @@ def send_telegram(text: str) -> None:
 # ---------------------------------------------------------------------------
 # YouTube helpers
 # ---------------------------------------------------------------------------
-
-def get_channel_id(channel_url: str) -> str:
-    resp = requests.get(
-        channel_url,
-        headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'},
-        timeout=20,
-    )
-    resp.raise_for_status()
-    for pattern in [r'"channelId":"(UC[^"]+)"', r'"externalId":"(UC[^"]+)"']:
-        m = re.search(pattern, resp.text)
-        if m:
-            return m.group(1)
-    raise RuntimeError('Could not extract channel ID from page')
-
 
 def get_latest_video_id(channel_id: str) -> str:
     rss_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
@@ -267,8 +253,7 @@ def main() -> None:
     print(f'[summarizer] {now_utc()}')
 
     print('[summarizer] Fetching latest Beecthor video ID...')
-    channel_id = get_channel_id(BEECTHOR_CHANNEL_URL)
-    video_id = get_latest_video_id(channel_id)
+    video_id = get_latest_video_id(BEECTHOR_CHANNEL_ID)
     print(f'[summarizer] Latest video: {video_id}')
 
     if video_id == load_last_processed_id():
