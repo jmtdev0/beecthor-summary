@@ -170,12 +170,18 @@ def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
             'probability': outcome_prices[idx] if idx < len(outcome_prices) else None,
             'token_id': token_ids[idx] if idx < len(token_ids) else None,
         }
+    event_slug = record.get('eventSlug', '')
+    if '-on-' in event_slug:
+        market_type = 'daily'
+    else:
+        market_type = 'weekly'
     return {
         'event_id': record.get('eventId'),
-        'event_slug': record.get('eventSlug'),
+        'event_slug': event_slug,
         'market_slug': record.get('slug'),
         'question': question,
         'family': family,
+        'market_type': market_type,
         'strike': strike,
         'best_bid': safe_float(record.get('bestBid')),
         'best_ask': safe_float(record.get('bestAsk')),
@@ -366,11 +372,14 @@ def find_market_by_slug(markets: list[dict[str, Any]], slug: str) -> dict[str, A
 
 
 def nearest_strike_ok(market: dict[str, Any], markets: list[dict[str, Any]], spot_price: float) -> bool:
+    # Nearest-strike-first applies only within the same market_type (daily vs weekly).
     family = market['family']
+    mtype = market.get('market_type', 'daily')
+    peers = [m for m in markets if m['family'] == family and m.get('market_type') == mtype]
     if family == 'reach':
-        candidates = sorted([m['strike'] for m in markets if m['family'] == 'reach' and m['strike'] > spot_price])
+        candidates = sorted([m['strike'] for m in peers if m['strike'] > spot_price])
         return not candidates or market['strike'] == candidates[0]
-    candidates = sorted([m['strike'] for m in markets if m['family'] == 'dip' and m['strike'] < spot_price], reverse=True)
+    candidates = sorted([m['strike'] for m in peers if m['strike'] < spot_price], reverse=True)
     return not candidates or market['strike'] == candidates[0]
 
 
