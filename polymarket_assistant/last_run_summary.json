@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-30T18:01:25Z",
+  "timestamp": "2026-03-31T00:01:24Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 0.86,
-    "summary": "Keep the existing weekly 66k dip position and open a second weekly bearish position on the 64k dip market.",
-    "rationale": "The live weekly `will-bitcoin-dip-to-66k-march-30-april-5` Yes position at 84.0% is above stop-loss and below take-profit, so it does not need management. The latest Beecthor transcript and recent summaries keep the thesis bearish after a corrective rebound, with continuation favored toward 65.9k, 64k and potentially much lower, and Binance spot at 66840.0 after rejection from the 68k area fits that execution reality. The daily nearest bearish market is already too aggressively priced, while the nearest weekly bearish strike is already held and near the upper end of acceptable pricing, so the next weekly strike `will-bitcoin-dip-to-64k-march-30-april-5` at 50.0% is the cleanest second-slot entry. Un saludo a Zara Larsson.",
+    "action": "NO_ACTION",
+    "confidence": 0.9,
+    "summary": "Hold the open weekly 66k dip position and skip any new BTC entry this cycle.",
+    "rationale": "Beecthor’s latest transcript and recent summaries keep the thesis bearish after a corrective rebound, and Binance at 66786.01 still fits that view, but the existing weekly `will-bitcoin-dip-to-66k-march-30-april-5` Yes position is only at 86.0%, so it is not yet in the 90-95% take-profit zone and does not need management. For new entries, the daily nearest bearish strike already resolved too aggressively above the hard cap, the next daily downside strike is weakly priced, and the second weekly step-down has already been rejected by nearest-strike-first logic while the 66k weekly is the active first-step position. Un saludo a Zara Larsson.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -14,27 +14,25 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-march-30-april-5",
-      "market_slug": "will-bitcoin-dip-to-64k-march-30-april-5",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 64000,
-      "stake_usd": 1,
-      "max_entry_probability": 0.5
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
-    "ok": false,
-    "message": "Nearest-strike-first rule rejected the proposed market"
+    "ok": true,
+    "message": "ok"
   },
   "execution": {
     "performed": false,
-    "details": {
-      "rejected": "Nearest-strike-first rule rejected the proposed market"
-    }
+    "details": null
   },
-  "binance_spot_price": 66840.0,
+  "binance_spot_price": 66786.01,
   "positions_before": 1,
   "positions_after": 1
 }
