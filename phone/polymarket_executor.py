@@ -2,7 +2,6 @@
 """
 Polymarket Phone Executor
 
-Runs 5 minutes after each server cycle (cron: 01:05, 07:05, 13:05, 19:05 UTC).
 Reads all pending orders from pending_orders.json in the GitHub repo, executes
 each one sequentially (sign EIP-712, POST to CLOB), and tracks executed order IDs
 locally to avoid duplicates.
@@ -10,6 +9,7 @@ locally to avoid duplicates.
 Dependencies: requests, python-dotenv, eth-keys, poly-eip712-structs (no Rust)
 """
 
+import argparse
 import base64
 import hashlib
 import hmac
@@ -30,6 +30,9 @@ ENV_FILE = Path.home() / '.polymarket.env'
 EXECUTED_ORDERS_FILE = Path.home() / '.polymarket_executed_order_ids'
 CLOB_HOST = 'https://clob.polymarket.com'
 ORDER_PATH = '/order'
+DATA_API_HOST = 'https://data-api.polymarket.com'
+RECENT_ACTIVITY_LIMIT = 20
+RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
 PENDING_ORDERS_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
     '/polymarket_assistant/pending_orders.json'
@@ -51,6 +54,41 @@ POLY_API_PASSPHRASE = os.environ.get('POLY_API_PASSPHRASE', '')
 POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
 POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
 POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+
+
+def refresh_runtime_config() -> None:
+    global TELEGRAM_BOT_TOKEN
+    global TELEGRAM_CHAT_ID
+    global POLY_API_KEY
+    global POLY_API_SECRET
+    global POLY_API_PASSPHRASE
+    global POLY_FUNDER
+    global POLY_SIGNER_ADDRESS
+    global POLY_PRIVATE_KEY
+
+    TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+    TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
+    POLY_API_KEY = os.environ.get('POLY_API_KEY', '')
+    POLY_API_SECRET = os.environ.get('POLY_API_SECRET', '')
+    POLY_API_PASSPHRASE = os.environ.get('POLY_API_PASSPHRASE', '')
+    POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
+    POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
+    POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='Phone executor for Polymarket orders.')
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Build and print the live order payloads without posting them.',
+    )
+    parser.add_argument(
+        '--env-file',
+        default=str(ENV_FILE),
+        help='Path to the .env file to load before executing.',
+    )
+    return parser.parse_args()
 
 
 # ---------------------------------------------------------------------------
@@ -212,6 +250,86 @@ def send_telegram(text: str) -> None:
         pass
 
 
+def fetch_live_positions() -> list[dict]:
+    user = POLY_FUNDER or POLY_SIGNER_ADDRESS
+    if not user:
+        return []
+    resp = requests.get(
+        f'{DATA_API_HOST}/positions',
+        params={'user': user, 'sizeThreshold': 0.01, 'limit': 100, 'offset': 0},
+        timeout=20,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict]:
+    user = POLY_FUNDER or POLY_SIGNER_ADDRESS
+    if not user:
+        return []
+    resp = requests.get(
+        f'{DATA_API_HOST}/activity',
+        params={'user': user, 'limit': limit, 'offset': 0},
+        timeout=20,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def find_recent_matching_trade(pending: dict) -> dict | None:
+    side = pending.get('side', '')
+    market_slug = pending.get('market') or pending.get('market_slug', '')
+    outcome = pending.get('outcome', '')
+    token_id = str(pending.get('token_id', ''))
+    now_ts = int(time.time())
+
+    for item in fetch_recent_activity():
+        if item.get('type') != 'TRADE':
+            continue
+        if item.get('side') != side:
+            continue
+        if item.get('slug') != market_slug:
+            continue
+        if item.get('outcome') != outcome:
+            continue
+        item_token = str(item.get('asset', ''))
+        if token_id and item_token and item_token != token_id:
+            continue
+        item_ts = item.get('timestamp')
+        try:
+            item_ts = int(item_ts)
+        except (TypeError, ValueError):
+            continue
+        if now_ts - item_ts <= RECENT_TRADE_WINDOW_SECONDS:
+            return item
+    return None
+
+
+def resolve_live_position(pending: dict) -> dict | None:
+    market_slug = pending.get('market') or pending.get('market_slug', '')
+    outcome = pending.get('outcome', '')
+    token_id = str(pending.get('token_id', ''))
+
+    positions = fetch_live_positions()
+    exact = [
+        pos for pos in positions
+        if pos.get('slug') == market_slug and pos.get('outcome') == outcome
+    ]
+    if exact:
+        exact.sort(key=lambda pos: float(pos.get('size') or 0), reverse=True)
+        return exact[0]
+
+    hinted = [
+        pos for pos in positions
+        if str(pos.get('asset', '')) == token_id
+    ]
+    if hinted:
+        hinted.sort(key=lambda pos: float(pos.get('size') or 0), reverse=True)
+        return hinted[0]
+
+    return None
+
+
 def load_executed_order_ids() -> set:
     try:
         return set(EXECUTED_ORDERS_FILE.read_text().splitlines())
@@ -242,7 +360,7 @@ def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
     )
 
 
-def execute_order(pending: dict) -> bool:
+def execute_order(pending: dict, dry_run: bool = False) -> bool:
     """Execute a single pending order. Returns True on success."""
     order_id = pending.get('order_id', '')
     token_id = pending.get('token_id', '')
@@ -253,6 +371,35 @@ def execute_order(pending: dict) -> bool:
     amount = float(pending.get('stake_usd') or pending.get('amount', 0))
 
     print(f'[executor] Order: {order_type} {side} {outcome} on "{market}" amount={amount}')
+
+    if side == 'BUY':
+        recent_trade = find_recent_matching_trade(pending)
+        if recent_trade:
+            print('[executor] Recent matching BUY found in activity; marking order as already handled.')
+            save_executed_order_id(order_id)
+            if not dry_run:
+                send_telegram(
+                    f'\u26a0\ufe0f OPEN_POSITION ya parece ejecutada:\n'
+                    f'{market}\n'
+                    f'{outcome}\n'
+                    'He visto una compra reciente en la actividad de la cuenta. '
+                    'Probablemente te adelantaste, impaciente.'
+                )
+            return True
+
+        live_position = resolve_live_position(pending)
+        if live_position:
+            print('[executor] Matching live position already open; marking order as already handled.')
+            save_executed_order_id(order_id)
+            if not dry_run:
+                send_telegram(
+                    f'\u26a0\ufe0f OPEN_POSITION ya no aplica:\n'
+                    f'{market}\n'
+                    f'{outcome}\n'
+                    'La posición ya aparece abierta en Polymarket. '
+                    'Probablemente entraste tú antes, impaciente.'
+                )
+            return True
 
     max_attempts = 5
     retry_delay = 20
@@ -273,6 +420,17 @@ def execute_order(pending: dict) -> bool:
                 time.sleep(retry_delay)
             continue
 
+        body = {
+            'order': order_dict,
+            'owner': POLY_API_KEY,
+            'orderType': 'FOK',
+            'postOnly': False,
+        }
+        if dry_run:
+            print('[executor] DRY RUN payload:')
+            print(json.dumps(body, indent=2))
+            return True
+
         resp = post_order(order_dict)
         if resp.ok:
             print(f'[executor] SUCCESS: {resp.text}')
@@ -291,8 +449,12 @@ def execute_order(pending: dict) -> bool:
 
 
 def main() -> None:
+    args = parse_args()
+    load_dotenv(args.env_file, override=True)
+    refresh_runtime_config()
+
     ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-    print(f'[executor] {ts}')
+    print(f'[executor] {ts} dry_run={args.dry_run}')
 
     missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
                            'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
@@ -322,7 +484,7 @@ def main() -> None:
     print(f'[executor] {len(pending)} pending order(s) to execute.')
     for i, order in enumerate(pending, 1):
         print(f'[executor] --- Order {i}/{len(pending)} (id={order.get("order_id")}) ---')
-        execute_order(order)
+        execute_order(order, dry_run=args.dry_run)
         if i < len(pending):
             time.sleep(3)  # small pause between orders
 

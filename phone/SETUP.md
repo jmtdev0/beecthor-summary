@@ -167,6 +167,8 @@ crontab -e
 Add:
 
 ```cron
+CRON_TZ=UTC
+
 # Polymarket executor — 5 min after each server cycle (cycles at 00/06/12/18 UTC)
 5 0 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
 5 6 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
