@@ -1,5 +1,8 @@
 # Changelog
 
+### 31/03/2026
+* Rutina diaria: vídeo `z2bD36xFFz0` preparado para Telegram con sesgo principal bajista, resistencia clave en 67.8K-69K, posible extensión hacia 71K y objetivo de caída todavía orientado a 59.9K / 57K-58K si la corrección termina.
+
 ### 30/03/2026
 * Copilot CLI instalado en Termux (Android ARM64): fix con symlink `node-pty/build/Release/pty.node → prebuilds/android-arm64/pty.node`. Autenticado con GH_TOKEN del servidor.
 * Sistema de cola de órdenes (`pending_orders.json`): el servidor acumula órdenes pendientes en lugar de sobreescribir `last_run_summary.json`. El móvil ejecuta todas las pendientes en una pasada con deduplicación por `order_id`.
@@ -11,7 +14,7 @@
 
 ### 29/03/2026
 * Monitor ligero de posiciones implementado: `polymarket_assistant/run_monitor.py` se ejecuta cada 2 horas (horas impares UTC), evalúa stop-loss (≤20%) y take-profit (≥88%) sin GPT, firma orden SELL on-chain y hace commit a GitHub para que el móvil la ejecute.
-* Scripts del móvil movidos al repositorio bajo `phone/`: `polymarket_executor.py` y nuevo `polymarket_monitor_executor.py` (lee `last_monitor_action.json` en lugar de `last_run_summary.json`).
+* Analizado y enviado a Telegram el resumen del vídeo z2bD36xFFz0 con la tesis bajista, resistencias en 67.8k-69k y objetivo de continuidad hacia 59.9k.
 * Ficheros systemd del monitor añadidos a `server/`: `polymarket-monitor.service` y `polymarket-monitor.timer` (horas impares UTC, intercalado con el ciclo completo en horas pares).
 * Añadida interfaz web de chat con Copilot (`server/copilot_chat.py`): Flask app con login por contraseña, historial persistente y acceso desde el móvil vía VS Code Port Forwarding (puerto 5050).
 * Playbook: hard rule ≥85% → no entrar nunca. Cartera ampliada a 5 posiciones (1 diaria + 2 semanales + 2 mensuales), con instrucción de entrar pronto en semanales y mensuales.
