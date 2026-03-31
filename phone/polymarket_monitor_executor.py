@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Polymarket Monitor Phone Executor
+Autonomous Polymarket phone monitor for exits.
 
-Runs 5 minutes after each monitor check (cron: every odd UTC hour + 5min).
-Reads order params from last_monitor_action.json in the GitHub repo, queries
-the live order book, builds and signs the EIP-712 SELL order with the private
-key, and POSTs to the Polymarket CLOB API using the phone's residential IP.
+Runs on the phone every odd UTC hour + 5 minutes, reads live open positions
+directly from the Polymarket Data API, applies hard-coded stop-loss / take-
+profit thresholds, validates against recent account activity, and if needed
+builds and signs a SELL order locally before posting it to the CLOB.
 
-Dependencies: requests, python-dotenv, eth-keys, poly-eip712-structs (no Rust)
+No server-side action file or LLM is required for exits.
 """
+
+from __future__ import annotations
 
 import argparse
 import base64
@@ -20,24 +22,22 @@ import random
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import requests
 from dotenv import load_dotenv
 from eth_keys import keys as eth_keys
-from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 from eth_utils import keccak
+from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 
 ENV_FILE = Path.home() / '.polymarket.env'
-LAST_EXECUTED_FILE = Path.home() / '.polymarket_last_monitor_ts'
 CLOB_HOST = 'https://clob.polymarket.com'
 ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
-RECENT_ACTIVITY_LIMIT = 20
+RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
-MONITOR_API_URL = (
-    'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
-    '/polymarket_assistant/last_monitor_action.json'
-)
+STOP_LOSS_THRESHOLD = 0.20
+TAKE_PROFIT_THRESHOLD = 0.88
 
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
 CHAIN_ID = 137
@@ -77,11 +77,11 @@ def refresh_runtime_config() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Phone monitor executor for Polymarket exits.')
+    parser = argparse.ArgumentParser(description='Autonomous phone monitor for Polymarket exits.')
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help='Build and print the live SELL payload without posting it.',
+        help='Select a target and print the SELL payload without posting it.',
     )
     parser.add_argument(
         '--env-file',
@@ -114,11 +114,17 @@ DOMAIN = make_domain(
 )
 
 
+def safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def sign_order(order: Order) -> str:
     struct_hash = keccak(order.signable_bytes(domain=DOMAIN))
     pk = eth_keys.PrivateKey(bytes.fromhex(POLY_PRIVATE_KEY.lstrip('0x')))
     sig = pk.sign_msg_hash(struct_hash)
-    # eth_keys produces v ∈ {0, 1}; Ethereum expects v ∈ {27, 28}
     sig_bytes = bytearray(sig.to_bytes())
     sig_bytes[64] += 27
     return '0x' + bytes(sig_bytes).hex()
@@ -160,7 +166,7 @@ def to_usdc(value: float) -> int:
     return int(round(value * 1_000_000))
 
 
-def build_order_dict(token_id: str, side: str, amount: float, price: float) -> dict:
+def build_order_dict(token_id: str, side: str, amount: float, price: float) -> dict[str, Any]:
     salt = random.randint(1, 2**32)
     side_int = 0 if side == 'BUY' else 1
 
@@ -187,8 +193,6 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
     )
     signature = sign_order(order)
 
-    # Types must match SignedOrder.dict() from py_order_utils exactly:
-    # salt → int, tokenId/amounts/expiration/nonce/feeRateBps → str, signatureType → int
     return {
         'salt': salt,
         'maker': POLY_FUNDER,
@@ -206,7 +210,7 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
     }
 
 
-def build_l2_headers(method: str, path: str, body_str: str) -> dict:
+def build_l2_headers(method: str, path: str, body_str: str) -> dict[str, str]:
     timestamp = str(int(time.time()))
     message = timestamp + method + path + body_str
     sig = base64.urlsafe_b64encode(
@@ -239,7 +243,7 @@ def send_telegram(text: str) -> None:
         pass
 
 
-def fetch_live_positions() -> list[dict]:
+def fetch_live_positions() -> list[dict[str, Any]]:
     user = POLY_FUNDER or POLY_SIGNER_ADDRESS
     if not user:
         return []
@@ -252,7 +256,7 @@ def fetch_live_positions() -> list[dict]:
     return resp.json()
 
 
-def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict]:
+def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict[str, Any]]:
     user = POLY_FUNDER or POLY_SIGNER_ADDRESS
     if not user:
         return []
@@ -265,11 +269,11 @@ def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict]:
     return resp.json()
 
 
-def find_recent_matching_sell(action_data: dict) -> dict | None:
+def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None:
     now_ts = int(time.time())
-    market_slug = action_data.get('market_slug', '')
-    outcome = action_data.get('outcome', '')
-    token_id = str(action_data.get('token_id', ''))
+    market_slug = position.get('slug', '')
+    outcome = position.get('outcome', '')
+    token_id = str(position.get('asset', ''))
 
     for item in fetch_recent_activity():
         if item.get('type') != 'TRADE':
@@ -293,44 +297,36 @@ def find_recent_matching_sell(action_data: dict) -> dict | None:
     return None
 
 
-def resolve_live_target(action_data: dict) -> dict | None:
-    market_slug = action_data.get('market_slug', '')
-    outcome = action_data.get('outcome', '')
-    token_id = action_data.get('token_id', '')
-
-    positions = fetch_live_positions()
-
-    exact = [
-        pos for pos in positions
-        if pos.get('slug') == market_slug and pos.get('outcome') == outcome
-    ]
-    if exact:
-        exact.sort(key=lambda pos: float(pos.get('size') or 0), reverse=True)
-        return exact[0]
-
-    hinted = [
-        pos for pos in positions
-        if str(pos.get('asset', '')) == str(token_id)
-    ]
-    if hinted:
-        hinted.sort(key=lambda pos: float(pos.get('size') or 0), reverse=True)
-        return hinted[0]
-
+def classify_action(position: dict[str, Any]) -> str | None:
+    prob = safe_float(position.get('curPrice'))
+    if prob <= STOP_LOSS_THRESHOLD:
+        return 'STOP_LOSS'
+    if prob >= TAKE_PROFIT_THRESHOLD:
+        return 'TAKE_PROFIT'
     return None
 
 
-def get_last_executed_ts() -> str:
-    try:
-        return LAST_EXECUTED_FILE.read_text().strip()
-    except Exception:
-        return ''
+def position_priority_key(position: dict[str, Any]) -> tuple[int, float]:
+    action = classify_action(position)
+    prob = safe_float(position.get('curPrice'))
+    if action == 'STOP_LOSS':
+        return (0, prob)
+    return (1, -prob)
 
 
-def save_last_executed_ts(ts: str) -> None:
-    LAST_EXECUTED_FILE.write_text(ts)
+def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, dict[str, Any]] | tuple[None, None]:
+    candidates: list[tuple[str, dict[str, Any]]] = []
+    for pos in positions:
+        action = classify_action(pos)
+        if action:
+            candidates.append((action, pos))
+    if not candidates:
+        return None, None
+    candidates.sort(key=lambda item: position_priority_key(item[1]))
+    return candidates[0]
 
 
-def post_order(order_dict: dict) -> requests.Response:
+def post_order(order_dict: dict[str, Any]) -> requests.Response:
     body = {
         'order': order_dict,
         'owner': POLY_API_KEY,
@@ -359,94 +355,53 @@ def main() -> None:
         if not args.dry_run:
             send_telegram(text)
 
-    missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
-                           'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
-               if not os.environ.get(v)]
+    missing = [
+        v
+        for v in (
+            'POLY_API_KEY',
+            'POLY_API_SECRET',
+            'POLY_API_PASSPHRASE',
+            'POLY_FUNDER',
+            'POLY_SIGNER_ADDRESS',
+            'POLY_PRIVATE_KEY',
+        )
+        if not os.environ.get(v)
+    ]
     if missing:
         print(f'[monitor-executor] Missing env vars: {missing}. Check {ENV_FILE}')
         sys.exit(1)
 
-    resp = requests.get(MONITOR_API_URL, timeout=15, headers={'Cache-Control': 'no-cache'})
-    if resp.status_code == 404:
-        print('[monitor-executor] last_monitor_action.json not found — no monitor action yet.')
-        return
-    resp.raise_for_status()
-    action_data = json.loads(base64.b64decode(resp.json()['content']))
-
-    if action_data.get('status') != 'pending_phone_execution':
-        print(f'[monitor-executor] No pending order. Status: {action_data.get("status")}')
+    positions = fetch_live_positions()
+    if not positions:
+        print('[monitor-executor] No open positions.')
         return
 
-    order_ts = action_data.get('timestamp', '')
-    if order_ts == get_last_executed_ts():
-        print(f'[monitor-executor] Order at {order_ts} already executed. Nothing to do.')
+    action, target = choose_target_position(positions)
+    if not target:
+        print('[monitor-executor] No stop-loss or take-profit trigger in live positions.')
         return
 
-    action = action_data.get('action', '')
-    market_slug = action_data.get('market_slug', '')
-    outcome = action_data.get('outcome', '')
-    side = action_data.get('side', 'SELL')
-    prob = action_data.get('prob', 0)
-    amount = float(action_data.get('amount', 0))
-    token_id = action_data.get('token_id', '')
-    print(f'[monitor-executor] Pending: {action} {side} {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}')
-    print(f'[monitor-executor] Order timestamp: {order_ts}')
+    market_slug = target.get('slug', '')
+    title = target.get('title', market_slug)
+    outcome = target.get('outcome', '')
+    prob = safe_float(target.get('curPrice'))
+    amount = safe_float(target.get('size'))
+    token_id = str(target.get('asset', ''))
+    print(f'[monitor-executor] Trigger: {action} SELL {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}')
 
-    recent_sell = find_recent_matching_sell(action_data)
+    recent_sell = find_recent_matching_sell(target)
     if recent_sell:
         print(
             '[monitor-executor] Recent matching SELL found in activity; '
             'marking monitor action as already handled.'
         )
-        save_last_executed_ts(order_ts)
-        message = (
+        maybe_send_telegram(
             f'\u26a0\ufe0f {action} ya parece ejecutado:\n'
             f'{market_slug}\n'
             f'{outcome} @ {prob:.0%}\n'
             'He visto una venta reciente en la actividad de la cuenta. '
             'Probablemente te adelantaste, impaciente.'
         )
-        maybe_send_telegram(message)
-        return
-
-    live_target = resolve_live_target(action_data)
-    if not live_target:
-        print('[monitor-executor] No matching live position found. Marking action as stale.')
-        save_last_executed_ts(order_ts)
-        if action == 'TAKE_PROFIT':
-            message = (
-                f'\u26a0\ufe0f TAKE_PROFIT ya no aplica:\n'
-                f'{market_slug}\n'
-                f'{outcome} @ {prob:.0%}\n'
-                'La posición ya no aparece abierta en Polymarket. '
-                'Probablemente la cerraste tú antes, impaciente.'
-            )
-        else:
-            message = (
-                f'\u26a0\ufe0f Monitor action skipped as stale:\n'
-                f'{market_slug}\n'
-                f'{outcome} @ {prob:.0%}\n'
-                'No live matching position found on Polymarket.'
-            )
-        maybe_send_telegram(
-            message
-        )
-        return
-
-    live_token_id = str(live_target.get('asset', ''))
-    live_amount = float(live_target.get('size') or 0)
-    live_outcome = live_target.get('outcome', outcome)
-    if live_outcome != outcome or live_token_id != str(token_id) or abs(live_amount - amount) > 0.0001:
-        print(
-            '[monitor-executor] Live position differs from queued action; '
-            f'using live values outcome={live_outcome} token={live_token_id} size={live_amount:.6f}'
-        )
-        outcome = live_outcome
-        token_id = live_token_id
-        amount = live_amount
-
-    if not token_id or amount <= 0:
-        print('[monitor-executor] Invalid live token/amount after reconciliation.')
         return
 
     max_attempts = 5
@@ -456,9 +411,9 @@ def main() -> None:
     for attempt in range(1, max_attempts + 1):
         print(f'[monitor-executor] Attempt {attempt}/{max_attempts} — querying order book...')
         try:
-            price = get_market_price(token_id, side, amount)
+            price = get_market_price(token_id, 'SELL', amount)
             print(f'[monitor-executor] Market price: {price}')
-            order_dict = build_order_dict(token_id, side, amount, price)
+            order_dict = build_order_dict(token_id, 'SELL', amount, price)
         except Exception as exc:
             print(f'[monitor-executor] Failed to build order: {exc}')
             if attempt < max_attempts:
@@ -480,11 +435,11 @@ def main() -> None:
         resp = post_order(order_dict)
         if resp.ok:
             print(f'[monitor-executor] SUCCESS: {resp.text}')
-            save_last_executed_ts(order_ts)
             maybe_send_telegram(
                 f'\u2705 {action} executed from phone:\n'
+                f'{title}\n'
                 f'{outcome} @ {prob:.0%}\n'
-                f'{market_slug} sold {amount}'
+                f'sold {amount:.4f}'
             )
             return
 
@@ -494,7 +449,10 @@ def main() -> None:
             time.sleep(retry_delay)
 
     if resp is not None:
-        maybe_send_telegram(f'\u274c Monitor order failed after {max_attempts} attempts ({action}):\n{resp.status_code} {resp.text}')
+        maybe_send_telegram(
+            f'\u274c Monitor order failed after {max_attempts} attempts ({action}):\n'
+            f'{title}\n{resp.status_code} {resp.text}'
+        )
 
 
 if __name__ == '__main__':
