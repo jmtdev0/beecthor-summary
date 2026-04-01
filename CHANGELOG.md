@@ -1,5 +1,8 @@
 # Changelog
 
+### 01/04/2026
+* Rutina diaria: vídeo `KpxFOusqi0g` analizado y enviado a Telegram. Rebote correctivo con resistencias en 69.6K-71.5K, sesgo principal aún bajista y objetivo técnico de continuidad hacia 58.9K mientras no invalide por arriba.
+
 ### 31/03/2026
 * Rutina diaria: vídeo `z2bD36xFFz0` preparado para Telegram con sesgo principal bajista, resistencia clave en 67.8K-69K, posible extensión hacia 71K y objetivo de caída todavía orientado a 59.9K / 57K-58K si la corrección termina.
 
