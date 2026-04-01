@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 8.482667,
+  "cash_available": 7.482667,
   "realized_pnl": 0.0,
-  "open_exposure": 0.50063338,
+  "open_exposure": 1.16203773,
   "max_open_positions": 2,
   "base_stake_fraction": 0.33,
   "min_entry_probability": 0.5,
@@ -23,12 +23,26 @@
       "shares": 1.925513,
       "avg_price": 0.509999,
       "entry_cost_usd": 0.982009704487,
-      "current_price": 0.26,
-      "current_value_usd": 0.50063338,
-      "cash_pnl_usd": -0.481376324487,
+      "current_price": 0.21,
+      "current_value_usd": 0.40435772999999997,
+      "cash_pnl_usd": -0.577651974487,
+      "status": "open"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-1",
+      "market_slug": "will-bitcoin-dip-to-68k-on-april-1",
+      "market_title": "Will Bitcoin dip to $68,000 on April 1?",
+      "position_side": "Yes",
+      "token_id": "80290965702101590006181259004651135189821511241445525068004136673697533158768",
+      "shares": 1.232,
+      "avg_price": 0.8,
+      "entry_cost_usd": 0.9856,
+      "current_price": 0.615,
+      "current_value_usd": 0.75768,
+      "cash_pnl_usd": -0.22792,
       "status": "open"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-01T06:01:14Z"
+  "last_synced_at": "2026-04-01T12:02:24Z"
 }
