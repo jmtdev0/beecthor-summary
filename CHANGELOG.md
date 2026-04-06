@@ -1,5 +1,13 @@
 # Changelog
 
+### 06/04/2026
+* Backfill completado de dos vídeos pendientes de Beecthor en el repo principal: `IGDvoXUCgAA` y `-ZXOMl3jFqw`, ambos añadidos a `analyses_log.json` sin reenvío a Telegram y con transcript guardado en `transcripts/`.
+* `phone/beecthor_summarizer.py` ampliado con `--video-id` y `--backfill`, detección portable del repo local y persistencia de entradas sin tocar `last_video_id.txt`.
+* Lógica de transcript del summarizer del móvil desacoplada del script principal: ahora resuelve transcript localmente con `youtube-transcript-api` y fallback `yt-dlp` sin depender de variables de entorno de Telegram.
+* Nuevo `CHAT.md` en la raíz como memoria conversacional desde 2026-04-06, con timestamps en Europe/Madrid y nota de contexto previo para continuidad con otros LLMs o agentes.
+* `server/copilot_chat.py` evolucionado a dashboard Flask único con galería pública de Beecthor, zona privada de Polymarket, visor de logs, APIs JSON y endpoint `/api/mobile-log` para ingesta de eventos estructurados del móvil.
+* Nuevo cliente ligero `phone/log_client.py` y emisión de eventos desde `polymarket_executor.py`, `polymarket_monitor_executor.py` y `beecthor_summarizer.py` para centralizar observabilidad en JSONL local del servidor.
+
 ### 01/04/2026
 * Rutina diaria: vídeo `KpxFOusqi0g` analizado y enviado a Telegram. Rebote correctivo con resistencias en 69.6K-71.5K, sesgo principal aún bajista y objetivo técnico de continuidad hacia 58.9K mientras no invalide por arriba.
 

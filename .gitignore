@@ -17,8 +17,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# Local runtime data
+server_runtime_logs/
 # Polymarket assistant secrets
 polymarket_assistant/.env
 polymarket_assistant/derived_credentials.env
 polymarket_assistant/credentials_snapshot.json
 
+CHAT.md
+.claude/settings.local.json

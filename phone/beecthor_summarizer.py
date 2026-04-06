@@ -14,8 +14,11 @@ Dependencies: requests, python-dotenv, youtube-transcript-api
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import argparse
+import tempfile
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,38 +26,136 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
+from log_client import refresh_log_client_config, send_server_log
+
 ENV_FILE = Path.home() / '.polymarket.env'
-REPO_DIR = Path.home() / 'beecthor-summary'
-ANALYSES_LOG = REPO_DIR / 'analyses_log.json'
-TRANSCRIPTS_DIR = REPO_DIR / 'transcripts'
 LAST_PROCESSED_FILE = Path.home() / '.beecthor_last_processed_video_id'
 
 BEECTHOR_CHANNEL_ID = 'UCO5MrB8OoQ_nRzeB_ehPbFw'  # youtube.com/@Beecthor
 BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price'
 COPILOT_MODEL = 'gpt-5.4'
 NUM_EXAMPLES = 2  # entries from analyses_log used as format examples
+TELEGRAM_MAX_MESSAGE_CHARS = 4000
 
 load_dotenv(ENV_FILE)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 GH_TOKEN = os.environ.get('GH_TOKEN', '')
+refresh_log_client_config()
+
+
+def detect_repo_dir() -> Path:
+    repo_from_script = Path(__file__).resolve().parent.parent
+    if (repo_from_script / 'analyses_log.json').exists():
+        return repo_from_script
+    return Path.home() / 'beecthor-summary'
+
+
+REPO_DIR = detect_repo_dir()
+ANALYSES_LOG = REPO_DIR / 'analyses_log.json'
+TRANSCRIPTS_DIR = REPO_DIR / 'transcripts'
+if str(REPO_DIR) not in sys.path:
+    sys.path.insert(0, str(REPO_DIR))
 
 
 def now_utc() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-def send_telegram(text: str) -> None:
+def split_telegram_message(text: str, max_chars: int = TELEGRAM_MAX_MESSAGE_CHARS) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    spoiler_match = re.search(r'<tg-spoiler>([\s\S]*)</tg-spoiler>', text)
+    if not spoiler_match:
+        return split_plain_html_text(text, max_chars)
+
+    spoiler_start = spoiler_match.start()
+    spoiler_end = spoiler_match.end()
+    spoiler_text = spoiler_match.group(1)
+    before_spoiler = text[:spoiler_start].rstrip()
+    after_spoiler = text[spoiler_end:].strip()
+
+    parts: list[str] = []
+    if before_spoiler:
+        parts.extend(split_plain_html_text(before_spoiler, max_chars))
+
+    spoiler_chunks = split_plain_html_text(spoiler_text, max_chars - len('<tg-spoiler></tg-spoiler>'))
+    for chunk in spoiler_chunks:
+        parts.append(f'<tg-spoiler>{chunk}</tg-spoiler>')
+
+    if after_spoiler:
+        parts.extend(split_plain_html_text(after_spoiler, max_chars))
+
+    return [part for part in parts if part.strip()]
+
+
+def split_plain_html_text(text: str, max_chars: int) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    paragraphs = text.split('\n\n')
+    parts: list[str] = []
+    current = ''
+
+    for paragraph in paragraphs:
+        candidate = f'{current}\n\n{paragraph}'.strip() if current else paragraph
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            parts.append(current)
+            current = ''
+        if len(paragraph) <= max_chars:
+            current = paragraph
+            continue
+        parts.extend(split_long_line(paragraph, max_chars))
+
+    if current:
+        parts.append(current)
+
+    return parts
+
+
+def split_long_line(text: str, max_chars: int) -> list[str]:
+    parts: list[str] = []
+    remaining = text.strip()
+    while len(remaining) > max_chars:
+        split_at = remaining.rfind('\n', 0, max_chars)
+        if split_at == -1:
+            split_at = remaining.rfind(' ', 0, max_chars)
+        if split_at == -1:
+            split_at = max_chars
+        parts.append(remaining[:split_at].strip())
+        remaining = remaining[split_at:].strip()
+    if remaining:
+        parts.append(remaining)
+    return parts
+
+
+def send_telegram_message(text: str) -> None:
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print('[summarizer] Telegram not configured. Skipping notification.')
         return
-    try:
-        requests.post(
-            f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
-            json={'chat_id': TELEGRAM_CHAT_ID, 'text': text, 'parse_mode': 'HTML'},
-            timeout=15,
+
+    if len(text) > 4096:
+        raise RuntimeError(
+            f'Telegram message too long ({len(text)} chars). Copilot must keep it within 4096.'
         )
-    except Exception:
-        pass
+
+    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
+    payload = {
+        'chat_id': TELEGRAM_CHAT_ID,
+        'text': text,
+        'parse_mode': 'HTML',
+        'disable_web_page_preview': False,
+    }
+    response = requests.post(url, json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    if not data.get('ok'):
+        raise RuntimeError(f'Telegram API rejected message: {data}')
+    print('[summarizer] Telegram message sent.')
 
 
 # ---------------------------------------------------------------------------
@@ -78,13 +179,59 @@ def get_latest_video_id(channel_id: str) -> str:
 
 def get_transcript(video_id: str) -> str:
     from youtube_transcript_api import YouTubeTranscriptApi
-    api = YouTubeTranscriptApi()
-    # Try Spanish first (Beecthor's native language), fall back to any available
+
     try:
-        fetched = api.fetch(video_id, languages=['es', 'es-ES'])
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        try:
+            transcript_obj = transcript_list.find_transcript(['es', 'es-ES', 'es-419'])
+        except Exception:
+            transcript_obj = transcript_list.find_generated_transcript(['es', 'es-ES', 'es-419', 'en'])
+        return ' '.join(entry['text'] for entry in transcript_obj.fetch())
     except Exception:
-        fetched = api.fetch(video_id)
-    return ' '.join(s.text for s in fetched)
+        return get_transcript_via_ytdlp(video_id)
+
+
+def parse_vtt(vtt_text: str) -> str:
+    lines = []
+    seen: set[str] = set()
+    for line in vtt_text.splitlines():
+        line = line.strip()
+        if not line or line.startswith('WEBVTT') or '-->' in line or line.isdigit():
+            continue
+        line = re.sub(r'<[^>]+>', '', line).strip()
+        if line and line not in seen:
+            seen.add(line)
+            lines.append(line)
+    return ' '.join(lines)
+
+
+def get_transcript_via_ytdlp(video_id: str) -> str:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = subprocess.run(
+            [
+                'yt-dlp',
+                '--write-auto-subs',
+                '--sub-lang', 'es',
+                '--skip-download',
+                '--js-runtimes', 'node',
+                '--output', os.path.join(tmpdir, '%(id)s'),
+                f'https://www.youtube.com/watch?v={video_id}',
+            ],
+            capture_output=True,
+            text=True,
+        )
+        vtt_files = list(Path(tmpdir).glob('*.vtt'))
+        if not vtt_files:
+            raise RuntimeError(f'yt-dlp produced no VTT file. stderr: {result.stderr[:300]}')
+        return parse_vtt(vtt_files[0].read_text(encoding='utf-8'))
+
+
+def save_transcript(video_id: str, transcript: str) -> Path:
+    TRANSCRIPTS_DIR.mkdir(exist_ok=True)
+    date_str = datetime.now(UTC).strftime('%Y-%m-%d')
+    path = TRANSCRIPTS_DIR / f'{video_id}_{date_str}.txt'
+    path.write_text(transcript, encoding='utf-8')
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +289,9 @@ Generate a JSON object following EXACTLY the format of the examples below. Pay c
 - The 📌 Resumen section: 2-3 direct lines with the key trade idea
 - The full detailed analysis inside <tg-spoiler>
 - Writing style: concise, uses <b> for key price levels and concepts, in Spanish
+- The final "message" must fit in a single Telegram message and must not exceed 4096 total characters
+- If you need to shorten something, shorten the <tg-spoiler> analysis first
+- Do not produce multiple parts, continuations, or references to a second message
 
 EXAMPLES (last {len(examples)} entries — learn the format from these):
 {examples_json}
@@ -175,8 +325,11 @@ Do not wrap the JSON in markdown code blocks.
 
 def run_copilot(prompt: str) -> dict:
     env = {**os.environ, 'LANG': 'en_US.UTF-8', 'PYTHONIOENCODING': 'utf-8'}
+    copilot_bin = shutil.which('copilot') or shutil.which('copilot.cmd')
+    if not copilot_bin:
+        raise RuntimeError('copilot CLI not found in PATH')
     result = subprocess.run(
-        ['copilot', '-p', prompt, '--model', COPILOT_MODEL, '-s', '--allow-all', '--no-ask-user'],
+        [copilot_bin, '-p', prompt, '--model', COPILOT_MODEL, '-s', '--allow-all', '--no-ask-user'],
         capture_output=True, text=True, timeout=300, env=env,
     )
     if result.returncode != 0:
@@ -247,21 +400,26 @@ def save_last_processed_id(video_id: str) -> None:
     LAST_PROCESSED_FILE.write_text(video_id)
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+def load_log() -> list:
+    return json.loads(ANALYSES_LOG.read_text(encoding='utf-8')) if ANALYSES_LOG.exists() else []
 
-def main() -> None:
-    print(f'[summarizer] {now_utc()}')
 
-    print('[summarizer] Fetching latest Beecthor video ID...')
-    video_id = get_latest_video_id(BEECTHOR_CHANNEL_ID)
-    print(f'[summarizer] Latest video: {video_id}')
-
-    if video_id == load_last_processed_id():
-        print(f'[summarizer] Already processed {video_id}. Nothing to do.')
+def git_pull_rebase_if_configured() -> None:
+    env = git_env()
+    if not (REPO_DIR / '.git').exists():
         return
+    try:
+        subprocess.run(
+            ['git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', 'main'],
+            check=True,
+            capture_output=True,
+            env=env,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f'[summarizer] git pull skipped: {exc}')
 
+
+def build_summary_entry(video_id: str) -> tuple[dict, str]:
     print('[summarizer] Downloading transcript...')
     transcript = get_transcript(video_id)
     print(f'[summarizer] Transcript length: {len(transcript)} chars')
@@ -270,7 +428,7 @@ def main() -> None:
     prices = get_prices()
     print(f'[summarizer] BTC ${prices["btc_usd"]} / €{prices["btc_eur"]} | SOL ${prices["sol_usd"]}')
 
-    log = json.loads(ANALYSES_LOG.read_text(encoding='utf-8')) if ANALYSES_LOG.exists() else []
+    log = load_log()
     examples = log[-NUM_EXAMPLES:] if len(log) >= NUM_EXAMPLES else log
     prev = log[-1] if log else {}
     prev_prices = {k: prev.get(k) for k in ('btc_usd', 'btc_eur', 'sol_usd', 'sol_eur')}
@@ -278,16 +436,7 @@ def main() -> None:
     print(f'[summarizer] Calling Copilot ({COPILOT_MODEL})...')
     prompt = build_prompt(transcript, examples, prices, prev_prices, video_id)
     result = run_copilot(prompt)
-    print('[summarizer] Copilot done. Pulling latest repo state before writing...')
-
-    # Pull before modifying any tracked file to avoid unstaged-changes conflict
-    env = git_env()
-    subprocess.run(
-        ['git', '-C', str(REPO_DIR), 'pull', '--rebase', 'origin', 'main'],
-        check=True, capture_output=True, env=env,
-    )
-    # Reload log after pull (another process may have pushed in the meantime)
-    log = json.loads(ANALYSES_LOG.read_text(encoding='utf-8')) if ANALYSES_LOG.exists() else []
+    print('[summarizer] Copilot done.')
 
     entry = {
         'timestamp': now_utc(),
@@ -301,18 +450,74 @@ def main() -> None:
         'robot_score': result.get('robot_score', 0.0),
         'message': result['message'],
     }
+    return entry, transcript
+
+
+def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_processed: bool) -> None:
+    git_pull_rebase_if_configured()
+    log = load_log()
+    if any(existing.get('video_id') == entry['video_id'] for existing in log):
+        print(f"[summarizer] Entry for {entry['video_id']} already exists. Skipping write.")
+        return
+
+    if send_telegram:
+        print('[summarizer] Sending message to Telegram...')
+        send_telegram_message(entry['message'])
 
     log.append(entry)
     ANALYSES_LOG.write_text(json.dumps(log, ensure_ascii=False, indent=2), encoding='utf-8')
+    save_transcript(entry['video_id'], transcript)
     print('[summarizer] Entry appended to analyses_log.json')
+
+    if update_last_processed:
+        save_last_processed_id(entry['video_id'])
+
+
+def backfill_video(video_id: str) -> None:
+    print(f'[summarizer] Backfill mode for {video_id}')
+    entry, transcript = build_summary_entry(video_id)
+    write_entry(entry, transcript, send_telegram=False, update_last_processed=False)
+    print('[summarizer] Backfill done.')
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Beecthor phone summarizer')
+    parser.add_argument('--video-id', help='Specific YouTube video ID to process')
+    parser.add_argument('--backfill', action='store_true', help='Store summary in repo without Telegram send or last_video update')
+    args = parser.parse_args()
+
+    print(f'[summarizer] {now_utc()}')
+    send_server_log('phone.summarizer', 'run_started', 'Summarizer run started', payload={'backfill': args.backfill, 'video_id': args.video_id or ''})
+
+    if args.video_id:
+        video_id = args.video_id.strip()
+        print(f'[summarizer] Using explicit video ID: {video_id}')
+    else:
+        print('[summarizer] Fetching latest Beecthor video ID...')
+        video_id = get_latest_video_id(BEECTHOR_CHANNEL_ID)
+    print(f'[summarizer] Latest video: {video_id}')
+
+    if not args.backfill and video_id == load_last_processed_id():
+        print(f'[summarizer] Already processed {video_id}. Nothing to do.')
+        send_server_log('phone.summarizer', 'run_skipped', 'Latest video already processed', payload={'video_id': video_id})
+        return
+
+    if args.backfill:
+        backfill_video(video_id)
+        send_server_log('phone.summarizer', 'backfill_completed', 'Backfill stored without Telegram send', payload={'video_id': video_id})
+        return
+
+    entry, transcript = build_summary_entry(video_id)
+    write_entry(entry, transcript, send_telegram=True, update_last_processed=True)
+    send_server_log('phone.summarizer', 'summary_stored', 'Daily summary stored and sent to Telegram', payload={'video_id': video_id, 'robot_score': entry['robot_score']})
 
     print('[summarizer] Committing and pushing...')
     git_commit_and_push(video_id, transcript)
-    save_last_processed_id(video_id)
     print('[summarizer] Done.')
-
-    send_telegram(entry['message'])
-    print('[summarizer] Telegram notification sent.')
 
 
 if __name__ == '__main__':
@@ -321,5 +526,9 @@ if __name__ == '__main__':
     except Exception as exc:
         import traceback
         traceback.print_exc()
-        send_telegram(f'❌ Beecthor summarizer failed:\n{exc}')
+        try:
+            send_telegram_message(f'❌ Beecthor summarizer failed:\n{exc}')
+        except Exception:
+            pass
+        send_server_log('phone.summarizer', 'run_failed', f'Unhandled exception: {exc}', level='error')
         sys.exit(1)

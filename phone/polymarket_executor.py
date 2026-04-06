@@ -26,6 +26,8 @@ from eth_keys import keys as eth_keys
 from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 from eth_utils import keccak
 
+from log_client import refresh_log_client_config, send_server_log
+
 ENV_FILE = Path.home() / '.polymarket.env'
 EXECUTED_ORDERS_FILE = Path.home() / '.polymarket_executed_order_ids'
 CLOB_HOST = 'https://clob.polymarket.com'
@@ -74,6 +76,7 @@ def refresh_runtime_config() -> None:
     POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
     POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
     POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+    refresh_log_client_config()
 
 
 def parse_args() -> argparse.Namespace:
@@ -371,11 +374,30 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
     amount = float(pending.get('stake_usd') or pending.get('amount', 0))
 
     print(f'[executor] Order: {order_type} {side} {outcome} on "{market}" amount={amount}')
+    send_server_log(
+        'phone.executor',
+        'order_received',
+        f'{order_type} {side} {outcome} on {market}',
+        payload={
+            'order_id': order_id,
+            'market': market,
+            'market_slug': pending.get('market_slug'),
+            'outcome': outcome,
+            'amount': amount,
+            'dry_run': dry_run,
+        },
+    )
 
     if side == 'BUY':
         recent_trade = find_recent_matching_trade(pending)
         if recent_trade:
             print('[executor] Recent matching BUY found in activity; marking order as already handled.')
+            send_server_log(
+                'phone.executor',
+                'order_skipped',
+                'Recent matching BUY found in activity; treating order as already executed',
+                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'reason': 'recent_activity'},
+            )
             save_executed_order_id(order_id)
             if not dry_run:
                 send_telegram(
@@ -390,6 +412,12 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         live_position = resolve_live_position(pending)
         if live_position:
             print('[executor] Matching live position already open; marking order as already handled.')
+            send_server_log(
+                'phone.executor',
+                'order_skipped',
+                'Matching live position already open; treating order as already executed',
+                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'reason': 'live_position'},
+            )
             save_executed_order_id(order_id)
             if not dry_run:
                 send_telegram(
@@ -429,11 +457,23 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         if dry_run:
             print('[executor] DRY RUN payload:')
             print(json.dumps(body, indent=2))
+            send_server_log(
+                'phone.executor',
+                'order_dry_run',
+                'Built order payload successfully',
+                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'price': price},
+            )
             return True
 
         resp = post_order(order_dict)
         if resp.ok:
             print(f'[executor] SUCCESS: {resp.text}')
+            send_server_log(
+                'phone.executor',
+                'order_executed',
+                'Order executed successfully on phone',
+                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'response': resp.text[:500]},
+            )
             save_executed_order_id(order_id)
             send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
             return True
@@ -445,6 +485,13 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
             time.sleep(retry_delay)
 
     send_telegram(f'\u274c Order failed after {max_attempts} attempts:\n{market} {outcome}\n{last_error}')
+    send_server_log(
+        'phone.executor',
+        'order_failed',
+        'Order failed after retries',
+        level='error',
+        payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'error': last_error},
+    )
     return False
 
 
@@ -455,23 +502,27 @@ def main() -> None:
 
     ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     print(f'[executor] {ts} dry_run={args.dry_run}')
+    send_server_log('phone.executor', 'run_started', 'Executor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
 
     missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
                            'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
                if not os.environ.get(v)]
     if missing:
         print(f'[executor] Missing env vars: {missing}. Check {ENV_FILE}')
+        send_server_log('phone.executor', 'run_failed', 'Missing required environment variables', level='error', payload={'missing': missing})
         sys.exit(1)
 
     resp = requests.get(PENDING_ORDERS_API_URL, timeout=15, headers={'Cache-Control': 'no-cache'})
     if resp.status_code == 404:
         print('[executor] pending_orders.json not found in repo. Nothing to do.')
+        send_server_log('phone.executor', 'run_skipped', 'pending_orders.json not found in repo')
         return
     resp.raise_for_status()
     queue = json.loads(base64.b64decode(resp.json()['content']))
 
     if not queue:
         print('[executor] No pending orders in queue.')
+        send_server_log('phone.executor', 'run_skipped', 'No pending orders in queue')
         return
 
     executed_ids = load_executed_order_ids()
@@ -479,9 +530,11 @@ def main() -> None:
 
     if not pending:
         print(f'[executor] {len(queue)} order(s) in queue, all already executed.')
+        send_server_log('phone.executor', 'run_skipped', 'All queued orders were already executed', payload={'queue_size': len(queue)})
         return
 
     print(f'[executor] {len(pending)} pending order(s) to execute.')
+    send_server_log('phone.executor', 'run_active', 'Pending orders ready for execution', payload={'pending_count': len(pending), 'queue_size': len(queue)})
     for i, order in enumerate(pending, 1):
         print(f'[executor] --- Order {i}/{len(pending)} (id={order.get("order_id")}) ---')
         execute_order(order, dry_run=args.dry_run)
@@ -495,3 +548,4 @@ if __name__ == '__main__':
     except Exception as exc:
         print(f'[executor] Exception: {exc}')
         send_telegram(f'\u274c Exception in phone executor: {exc}')
+        send_server_log('phone.executor', 'run_failed', f'Unhandled exception: {exc}', level='error')

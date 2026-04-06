@@ -132,6 +132,8 @@ POLY_FUNDER=0x...
 POLY_SIGNER_ADDRESS=0x...
 POLY_PRIVATE_KEY=...
 GH_TOKEN=...
+SERVER_LOG_API_URL=https://<server-host>/api/mobile-log
+SERVER_LOG_API_SECRET=...
 EOF
 chmod 600 ~/.polymarket.env
 ```
@@ -139,6 +141,8 @@ chmod 600 ~/.polymarket.env
 - `TELEGRAM_CHAT_ID` — the group chat (used by Beecthor summarizer)
 - `TELEGRAM_PERSONAL_CHAT_ID` — your personal chat (used by executors)
 - `GH_TOKEN` — GitHub OAuth token (used by summarizer to push to repo)
+- `SERVER_LOG_API_URL` — private dashboard ingestion endpoint for structured phone logs
+- `SERVER_LOG_API_SECRET` — shared secret accepted by `/api/mobile-log`
 
 To get the GitHub token from the Hetzner server:
 ```bash

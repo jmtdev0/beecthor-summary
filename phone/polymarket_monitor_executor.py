@@ -30,6 +30,8 @@ from eth_keys import keys as eth_keys
 from eth_utils import keccak
 from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 
+from log_client import refresh_log_client_config, send_server_log
+
 ENV_FILE = Path.home() / '.polymarket.env'
 CLOB_HOST = 'https://clob.polymarket.com'
 ORDER_PATH = '/order'
@@ -74,6 +76,7 @@ def refresh_runtime_config() -> None:
     POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
     POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
     POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+    refresh_log_client_config()
 
 
 def parse_args() -> argparse.Namespace:
@@ -350,6 +353,7 @@ def main() -> None:
 
     ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     print(f'[monitor-executor] {ts} dry_run={args.dry_run}')
+    send_server_log('phone.monitor', 'run_started', 'Monitor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
 
     def maybe_send_telegram(text: str) -> None:
         if not args.dry_run:
@@ -369,16 +373,19 @@ def main() -> None:
     ]
     if missing:
         print(f'[monitor-executor] Missing env vars: {missing}. Check {ENV_FILE}')
+        send_server_log('phone.monitor', 'run_failed', 'Missing required environment variables', level='error', payload={'missing': missing})
         sys.exit(1)
 
     positions = fetch_live_positions()
     if not positions:
         print('[monitor-executor] No open positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No open positions')
         return
 
     action, target = choose_target_position(positions)
     if not target:
         print('[monitor-executor] No stop-loss or take-profit trigger in live positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No stop-loss or take-profit trigger in live positions', payload={'open_positions': len(positions)})
         return
 
     market_slug = target.get('slug', '')
@@ -388,12 +395,24 @@ def main() -> None:
     amount = safe_float(target.get('size'))
     token_id = str(target.get('asset', ''))
     print(f'[monitor-executor] Trigger: {action} SELL {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}')
+    send_server_log(
+        'phone.monitor',
+        'trigger_detected',
+        f'{action} selected for {market_slug}',
+        payload={'market_slug': market_slug, 'title': title, 'outcome': outcome, 'probability': prob, 'amount': amount},
+    )
 
     recent_sell = find_recent_matching_sell(target)
     if recent_sell:
         print(
             '[monitor-executor] Recent matching SELL found in activity; '
             'marking monitor action as already handled.'
+        )
+        send_server_log(
+            'phone.monitor',
+            'trigger_skipped',
+            'Recent matching SELL found in activity; treating trigger as already handled',
+            payload={'market_slug': market_slug, 'reason': 'recent_activity', 'action': action},
         )
         maybe_send_telegram(
             f'\u26a0\ufe0f {action} ya parece ejecutado:\n'
@@ -430,11 +449,23 @@ def main() -> None:
         if args.dry_run:
             print('[monitor-executor] DRY RUN payload:')
             print(json.dumps(body, indent=2))
+            send_server_log(
+                'phone.monitor',
+                'order_dry_run',
+                'Built SELL payload successfully',
+                payload={'market_slug': market_slug, 'action': action, 'price': price},
+            )
             return
 
         resp = post_order(order_dict)
         if resp.ok:
             print(f'[monitor-executor] SUCCESS: {resp.text}')
+            send_server_log(
+                'phone.monitor',
+                'order_executed',
+                f'{action} executed successfully',
+                payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]},
+            )
             maybe_send_telegram(
                 f'\u2705 {action} executed from phone:\n'
                 f'{title}\n'
@@ -449,6 +480,13 @@ def main() -> None:
             time.sleep(retry_delay)
 
     if resp is not None:
+        send_server_log(
+            'phone.monitor',
+            'order_failed',
+            f'{action} failed after retries',
+            level='error',
+            payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]},
+        )
         maybe_send_telegram(
             f'\u274c Monitor order failed after {max_attempts} attempts ({action}):\n'
             f'{title}\n{resp.status_code} {resp.text}'
@@ -461,3 +499,4 @@ if __name__ == '__main__':
     except Exception as exc:
         print(f'[monitor-executor] Exception: {exc}')
         send_telegram(f'\u274c Exception in monitor executor: {exc}')
+        send_server_log('phone.monitor', 'run_failed', f'Unhandled exception: {exc}', level='error')
