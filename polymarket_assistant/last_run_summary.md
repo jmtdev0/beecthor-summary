@@ -1,19 +1,21 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-01T12:02:24Z
+- Timestamp: 2026-04-08T17:04:59Z
 - Dry run: False
-- BTC price: 68676.08
-- Decision action: NO_ACTION
-- Decision summary: Hold the weekly 64k dip position and do not open any new BTC position this cycle.
-- Validation: True (ok)
-- Open positions before: 2
-- Open positions after: 2
+- BTC price: 71753.96
+- Decision action: OPEN_POSITION
+- Decision summary: No live position needs management; open the weekly BTC 74k reach market on the long side.
+- Validation: False (Outcome probability 0.4200 below configured minimum)
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 
 ```json
 {
   "performed": false,
-  "details": null
+  "details": {
+    "rejected": "Outcome probability 0.4200 below configured minimum"
+  }
 }
 ```
