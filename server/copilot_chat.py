@@ -794,7 +794,7 @@ def public_index():
           <h1 class="brand-title">Beecthor</h1>
           <div class="section-subtitle">Biblioteca pública de resúmenes, organizada como una videoteca del canal.</div>
         </div>
-        <div class="nav"><a class="button-link secondary" href="/refresh" style="font-size:.85rem;padding:8px 14px">↻ Actualizar</a></div>
+        <div class="nav"></div>
       </div>
       <div class="video-grid">
         {% for item in items %}
@@ -888,7 +888,12 @@ def refresh_repo():
         ['git', '-C', str(REPO_ROOT), 'pull', '--ff-only', 'origin', 'main'],
         capture_output=True, timeout=30,
     )
-    return redirect(url_for('public_index'))
+    next_page = request.args.get('next', 'public_index')
+    destinations = {
+        'polymarket': 'private_polymarket',
+        'logs': 'private_logs',
+    }
+    return redirect(url_for(destinations.get(next_page, 'public_index')))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -930,7 +935,7 @@ def private_polymarket():
           <h1 class="private-title">Zona privada</h1>
           <div class="section-subtitle">Panel de control inspirado en Polymarket para cartera, operativa y observabilidad.</div>
         </div>
-        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket" style="font-weight:700;color:#fff">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
+        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket" style="font-weight:700;color:#fff">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a><a class="button-link secondary" href="/refresh?next=polymarket" style="font-size:.85rem;padding:8px 14px">↻ Actualizar</a></div>
       </div>
       <div class="private-strip">
         <section class="metric-panel">
