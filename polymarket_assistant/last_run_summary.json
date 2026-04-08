@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-08T17:04:59Z",
+  "timestamp": "2026-04-08T18:01:25Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 0.79,
-    "summary": "No live position needs management; open the weekly BTC 74k reach market on the long side.",
-    "rationale": "The latest 2026-04-08 transcript and recent summaries keep Beecthor macro-bearish overall but shift the immediate thesis to a final corrective push toward 74k before looking for renewed downside, with invalidation only above 76k. Binance confirms that short-term execution reality is bullish right now at 71753.96 with +5.038% over 24h and a 72857 high. The stale account_state positions are not present in live Polymarket positions, so there is no actionable existing position to manage; among current markets, the nearest upside 73k April 8 line is too discounted at 15.5%, so the weekly 74k April 6-12 Yes market at 42.0% is the cleanest nearest-reasonable, conservative expression of the active thesis.",
+    "action": "NO_ACTION",
+    "confidence": 0.85,
+    "summary": "No open position needs management and no new BTC market offers a playbook-compliant edge right now.",
+    "rationale": "The latest 2026-04-08 Beecthor transcript and recent summaries keep the macro thesis bearish but the immediate path bullish toward roughly 74k before renewed downside, and Binance still confirms that short-term upside bias at 71816.03 after a strong 24h advance. There are no live open positions to close or reduce. Under nearest-strike-first, the closest upside markets are 73k Apr 8 at 23.5% and 74k Apr 6-12 at 44.5%; both are below the configured 0.50 minimum, with 73k too discounted and 74k still not priced attractively enough, so no new position should be opened.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -14,27 +14,25 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
+      "should_open": false,
       "event_slug": "",
-      "market_slug": "will-bitcoin-reach-74k-april-6-12",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 74000,
-      "stake_usd": 1,
-      "max_entry_probability": 0.42
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
-    "ok": false,
-    "message": "Outcome probability 0.4200 below configured minimum"
+    "ok": true,
+    "message": "ok"
   },
   "execution": {
     "performed": false,
-    "details": {
-      "rejected": "Outcome probability 0.4200 below configured minimum"
-    }
+    "details": null
   },
-  "binance_spot_price": 71753.96,
+  "binance_spot_price": 71816.03,
   "positions_before": 0,
   "positions_after": 0
 }
