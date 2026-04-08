@@ -14,6 +14,15 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
 
+try:
+    from py_clob_client.client import ClobClient
+    from py_clob_client.clob_types import ApiCreds, AssetType, BalanceAllowanceParams
+except ImportError:  # pragma: no cover - optional at runtime
+    ClobClient = None
+    ApiCreds = None
+    AssetType = None
+    BalanceAllowanceParams = None
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
@@ -29,7 +38,14 @@ SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'change-me-in-env')
 MOBILE_LOG_API_SECRET = os.environ.get('MOBILE_LOG_API_SECRET', '')
 POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
 POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
+POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+POLY_API_KEY = os.environ.get('POLY_API_KEY', '')
+POLY_API_SECRET = os.environ.get('POLY_API_SECRET', '')
+POLY_API_PASSPHRASE = os.environ.get('POLY_API_PASSPHRASE', '')
+POLY_SIGNATURE_TYPE = int(os.environ.get('POLY_SIGNATURE_TYPE', '1'))
 DATA_API_HOST = 'https://data-api.polymarket.com'
+CLOB_HOST = 'https://clob.polymarket.com'
+CHAIN_ID = 137
 LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (REPO_ROOT / 'server_runtime_logs'))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -38,25 +54,220 @@ app.secret_key = SECRET_KEY
 
 STYLE = """
 <style>
-body{margin:0;font-family:-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e6edf7}
-a{color:#7cb7ff;text-decoration:none} .shell{max-width:1120px;margin:0 auto;padding:24px}
-.top{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #243044;padding-bottom:16px;margin-bottom:20px}
-.nav{display:flex;gap:12px;flex-wrap:wrap}.card{background:#111827;border:1px solid #243044;border-radius:14px;padding:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.list{display:flex;flex-direction:column;gap:12px}
-.item{background:#0f172a;border:1px solid #243044;border-radius:12px;padding:12px}.muted{color:#99a9bf}.good{color:#22c55e}.bad{color:#ef4444}.warn{color:#f59e0b}
-.big{font-size:1.8rem;font-weight:700;margin:6px 0}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px 12px;border-bottom:1px solid #243044;text-align:left;vertical-align:top}
-.table th{color:#99a9bf;font-size:.85rem}.table-wrap{overflow:auto;border:1px solid #243044;border-radius:12px}.chat{display:flex;flex-direction:column;gap:10px;max-height:60dvh;overflow:auto}
-.bubble{padding:12px;border-radius:12px;white-space:pre-wrap}.user{background:#1d4ed8}.bot{background:#0f172a;border:1px solid #243044}.raw{background:#08101c;border:1px solid #243044;border-radius:12px;padding:12px;white-space:pre-wrap;max-height:260px;overflow:auto}
-input,select,textarea{background:#0b1220;color:#e6edf7;border:1px solid #243044;border-radius:10px;padding:10px 12px} button{background:#2563eb;color:#fff;border:none;border-radius:10px;padding:10px 14px;cursor:pointer}
+:root{
+  --bg:#0f0f0f;
+  --surface:#181818;
+  --surface-soft:#212121;
+  --surface-strong:#111827;
+  --border:#2d2d2d;
+  --muted:#aaaaaa;
+  --text:#f1f5f9;
+  --blue:#3ea6ff;
+  --green:#22c55e;
+  --red:#ef4444;
+  --amber:#f59e0b;
+  --shadow:0 14px 40px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:Roboto,"Segoe UI",Arial,sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(62,166,255,.09), transparent 28%),
+    radial-gradient(circle at top right, rgba(34,197,94,.06), transparent 24%),
+    linear-gradient(180deg,#0b0b0c 0%, #111315 100%);
+  color:var(--text);
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.shell{max-width:1380px;margin:0 auto;padding:0 24px 40px}
+.public-shell{max-width:1520px}
+.top{
+  display:flex;justify-content:space-between;gap:20px;align-items:flex-end;
+  padding:26px 0 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px
+}
+.brand-title{font-size:2.2rem;line-height:1;font-weight:800;letter-spacing:-.04em;margin:0}
+.section-subtitle,.muted{color:var(--muted)}
+.muted a{color:var(--muted)}
+.nav{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.nav-group{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.nav a{color:#d7dee7;font-weight:500}
+.nav a:hover{color:#fff}
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:26px 18px}
+.video-card{display:block}
+.video-link{display:block}
+.thumb-wrap{
+  position:relative;overflow:hidden;border-radius:18px;background:#000;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08);
+  aspect-ratio:16/9;transform:translateY(0);transition:transform .18s ease, box-shadow .18s ease
+}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.video-card:hover .thumb-wrap{transform:translateY(-4px);box-shadow:0 18px 42px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.14)}
+.video-card:hover .thumb-wrap img{transform:scale(1.05)}
+.video-meta{display:grid;grid-template-columns:1fr;gap:8px;padding-top:12px}
+.video-title{
+  font-size:1.16rem;line-height:1.35;font-weight:700;color:#f8fafc;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+}
+.video-date{font-size:.95rem;color:#9ca3af}
+.detail-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr);gap:28px;align-items:start}
+.detail-media,.detail-panel,.surface-card,.metric-card,.stream-card,.chat-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+}
+.detail-media{overflow:hidden}
+.detail-media img{width:100%;aspect-ratio:16/9;object-fit:cover}
+.detail-panel{padding:26px}
+.detail-title{font-size:2.15rem;line-height:1.05;font-weight:800;letter-spacing:-.04em;margin:0 0 10px}
+.detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.detail-summary-card{margin-top:22px;padding:22px 24px}
+.detail-summary-label{font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#8fb9ff;font-weight:800;margin-bottom:10px}
+.detail-summary-text{font-size:1.08rem;line-height:1.72;color:#eef4ff}
+.detail-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+.detail-section-card{
+  padding:20px 22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+}
+.detail-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.detail-section-icon{font-size:1.15rem;line-height:1}
+.detail-section-title{font-size:1.15rem;font-weight:800;line-height:1.2}
+.detail-section-body{font-size:1rem;line-height:1.72;color:#dce6f5}
+.detail-section-body b{color:#fff}
+.detail-section-body a{color:var(--blue)}
+.detail-fallback{margin-top:18px;padding:22px 24px}
+.detail-fallback .summary-body{padding:0}
+.button-link,button{
+  background:#1f6feb;color:#fff;border:none;border-radius:999px;padding:11px 16px;cursor:pointer;
+  font-weight:700
+}
+.button-link.secondary{background:#22272d;color:#f3f4f6}
+.summary-body{padding:26px 28px;font-size:1rem;line-height:1.68}
+.summary-body b{color:#fff}
+.summary-body a{color:var(--blue)}
+.summary-body tg-spoiler,.summary-body .spoiler-fallback{
+  display:block;margin-top:20px;padding:18px 20px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#d6dfeb
+}
+.private-shell{max-width:1460px}
+.private-header{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:28px 0 22px}
+.private-title{font-size:2.65rem;line-height:.95;font-weight:800;letter-spacing:-.05em;margin:0}
+.private-strip{display:grid;grid-template-columns:1.15fr .95fr;gap:18px;margin-bottom:18px}
+.metric-panel,.pnl-panel{
+  background:linear-gradient(180deg,#111827 0%, #0f172a 100%);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:26px;padding:24px 26px;box-shadow:var(--shadow)
+}
+.metric-label{color:#b8c2d1;font-size:1.02rem}
+.metric-value{font-size:3rem;line-height:1;font-weight:800;margin:8px 0}
+.metric-foot{color:#9fb0c7}
+.private-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.metric-card{padding:22px}
+.metric-card .big{font-size:2.25rem;line-height:1;font-weight:800;margin:8px 0 10px}
+.good{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--amber)}
+.panel-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
+.stream-card,.surface-card,.chat-card{padding:22px}
+.section-title{font-size:1.15rem;font-weight:800;margin:0 0 16px}
+.position-list,.pipeline-list{display:flex;flex-direction:column;gap:12px}
+.position-item,.pipeline-item{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px
+}
+.trace-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:18px}
+.trace-lane{
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:18px;
+  min-height:320px;
+}
+.trace-lane-head{padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:14px}
+.trace-lane-title{font-size:1.04rem;font-weight:800;margin:0 0 4px}
+.trace-lane-subtitle{font-size:.92rem;color:#93a0b4}
+.trace-stack{display:flex;flex-direction:column;gap:12px}
+.trace-entry{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  padding:14px 14px 13px;
+}
+.trace-entry.info{border-color:rgba(62,166,255,.16)}
+.trace-entry.warning{border-color:rgba(245,158,11,.2)}
+.trace-entry.error{border-color:rgba(239,68,68,.24)}
+.trace-time{font-size:.82rem;color:#8ea0ba;margin-bottom:6px}
+.trace-eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#7fb2ff;margin-bottom:6px}
+.trace-entry.warning .trace-eyebrow{color:#f7bf57}
+.trace-entry.error .trace-eyebrow{color:#ff8f8f}
+.trace-title{font-size:.95rem;line-height:1.45;font-weight:600;color:#eef4ff}
+.trace-meta{font-size:.84rem;line-height:1.45;color:#97a7bd;margin-top:8px}
+.position-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.position-market{font-weight:700;line-height:1.35}
+.position-sub,.position-kv,.log-filter-note{color:#98a7bb}
+.position-kv{margin-top:8px;font-size:.95rem}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;vertical-align:top}
+.table th{font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:#95a3b8}
+.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.07);border-radius:18px}
+.raw{background:#0a1018;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px;white-space:pre-wrap;max-height:360px;overflow:auto}
+.log-controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.log-controls input,.log-controls select,.chat-card textarea,input,select,textarea{
+  background:#0d131d;color:#e7edf6;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:11px 13px
+}
+.log-controls input,.log-controls select{min-width:0}
+.chat{display:flex;flex-direction:column;gap:12px;max-height:60dvh;overflow:auto}
+.bubble{padding:14px 16px;border-radius:18px;white-space:pre-wrap}
+.user{background:#0b57d0}
+.bot{background:#111827;border:1px solid rgba(255,255,255,.08)}
+.status-line{color:#9fb0c7;margin-top:10px}
+@media (max-width: 1180px){
+  .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
+}
+@media (max-width: 960px){
+  .private-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width: 680px){
+  .shell{padding:0 16px 28px}
+  .top,.private-header{flex-direction:column;align-items:flex-start}
+  .nav,.nav-group{width:100%;justify-content:flex-start;gap:12px}
+  .nav a{padding:4px 0}
+  .brand-title,.private-title{font-size:1.9rem}
+  .video-grid{grid-template-columns:1fr}
+  .private-grid{grid-template-columns:1fr}
+  .trace-grid{grid-template-columns:1fr}
+  .metric-value{font-size:2.35rem}
+  .detail-title{font-size:1.7rem}
+  .detail-panel,.detail-summary-card,.detail-section-card,.stream-card,.surface-card,.chat-card,.metric-card,.metric-panel,.pnl-panel,.trace-lane{padding:18px}
+  .detail-actions{flex-direction:column;align-items:stretch}
+  .button-link,button{width:100%;text-align:center}
+  .table th,.table td{padding:10px 10px;font-size:.92rem}
+  .summary-body{padding:18px 0 0}
+  .raw{font-size:.9rem}
+  .log-controls{flex-direction:column}
+}
 </style>
 """
 
-LOGIN_HTML = STYLE + """
+def page_start(title: str) -> str:
+    safe_title = (title or 'Beecthor').replace('{', '&#123;').replace('}', '&#125;')
+    return (
+        "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        f"<title>{safe_title}</title>{STYLE}</head><body>"
+    )
+
+
+PAGE_END = "</body></html>"
+
+LOGIN_HTML = page_start('Login | Beecthor') + """
 <div class="shell"><div class="card" style="max-width:360px;margin:10vh auto 0">
 <h1>Zona privada</h1><p class="muted">Polymarket, logs y chat</p>
 {% if error %}<p class="bad">{{ error }}</p>{% endif %}
 <form method="POST"><input type="password" name="password" placeholder="Password" style="width:100%;margin:12px 0"><button style="width:100%">Entrar</button></form>
-</div></div>"""
+</div></div>""" + PAGE_END
 
 
 def load_json(path: Path, default: Any) -> Any:
@@ -76,6 +287,15 @@ def load_history() -> list[dict[str, Any]]:
 
 def utc_now() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value in (None, ''):
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def require_private(view):
@@ -128,6 +348,134 @@ def read_jsonl_logs(limit: int = 200, *, source: str = '', level: str = '', even
     return items[:limit]
 
 
+def humanize_event_type(value: str) -> str:
+    return value.replace('_', ' ').strip().title()
+
+
+def compact_payload(payload: dict[str, Any], keys: list[str]) -> str:
+    parts = []
+    for key in keys:
+        value = payload.get(key)
+        if value in (None, ''):
+            continue
+        parts.append(f'{key}: {value}')
+    return ' · '.join(parts)
+
+
+def build_mobile_trace_entries(source: str, limit: int, payload_keys: list[str] | None = None, allowed_events: set[str] | None = None) -> list[dict[str, str]]:
+    payload_keys = payload_keys or []
+    events = read_jsonl_logs(limit=limit * 4, source=source)
+    items: list[dict[str, str]] = []
+    for event in events:
+        if allowed_events and event.get('event_type') not in allowed_events:
+            continue
+        payload = event.get('payload') or {}
+        meta = compact_payload(payload, payload_keys)
+        items.append({
+            'timestamp': event.get('timestamp', ''),
+            'eyebrow': humanize_event_type(event.get('event_type', 'event')),
+            'title': event.get('message', ''),
+            'meta': meta,
+            'tone': event.get('level', 'info'),
+        })
+        if len(items) >= limit:
+            break
+    return items
+
+
+def extract_cycle_json(text: str) -> dict[str, Any] | None:
+    start = text.find('{')
+    end = text.rfind('}')
+    if start == -1 or end == -1 or end <= start:
+        return None
+    try:
+        return json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return None
+
+
+def build_cycle_trace_entries(limit: int = 10) -> list[dict[str, str]]:
+    cycle_dir = Path('/var/log/polymarket-operator')
+    if not cycle_dir.exists():
+        return []
+    items: list[dict[str, str]] = []
+    for path in sorted(cycle_dir.glob('cycle-*.log'), reverse=True)[:limit]:
+        try:
+            text = path.read_text(encoding='utf-8', errors='replace')
+        except Exception:
+            continue
+        payload = extract_cycle_json(text)
+        if payload:
+            decision = payload.get('decision') or {}
+            execution = payload.get('execution') or {}
+            details = execution.get('details') or {}
+            action = decision.get('action', 'UNKNOWN')
+            summary = decision.get('summary') or details.get('market') or 'Cycle completed'
+            meta_parts = [
+                f"BTC: {payload.get('binance_spot_price')}",
+                f"before: {payload.get('positions_before')}",
+                f"after: {payload.get('positions_after')}",
+            ]
+            if details.get('market_slug'):
+                meta_parts.append(f"market: {details.get('market_slug')}")
+            items.append({
+                'timestamp': payload.get('timestamp', path.stem.replace('cycle-', '').replace('-', ':', 2)),
+                'eyebrow': action,
+                'title': summary,
+                'meta': ' · '.join(part for part in meta_parts if part and not part.endswith('None')),
+                'tone': 'info' if action == 'NO_ACTION' else 'warning' if action in {'OPEN_POSITION', 'REDUCE_POSITION'} else 'error',
+            })
+        else:
+            tail = ' '.join(text.splitlines()[-4:])[:220]
+            items.append({
+                'timestamp': path.stem.replace('cycle-', ''),
+                'eyebrow': 'Cycle file',
+                'title': tail or path.name,
+                'meta': path.name,
+                'tone': 'info',
+            })
+    return items[:limit]
+
+
+def build_private_trace_lanes() -> list[dict[str, Any]]:
+    return [
+        {
+            'title': 'Beecthor summaries',
+            'subtitle': 'Móvil · generación del resumen',
+            'entries': build_mobile_trace_entries(
+                'phone.summarizer',
+                limit=10,
+                payload_keys=['video_id', 'robot_score'],
+            ),
+        },
+        {
+            'title': 'Server cycles',
+            'subtitle': 'Servidor · decisión de ciclo',
+            'entries': build_cycle_trace_entries(limit=10),
+        },
+        {
+            'title': 'Open operations',
+            'subtitle': 'Móvil · aperturas',
+            'entries': build_mobile_trace_entries(
+                'phone.executor',
+                limit=10,
+                payload_keys=['order_id', 'market_slug', 'outcome', 'status'],
+                allowed_events={'order_received', 'order_executed', 'order_skipped', 'order_failed', 'run_active'},
+            ),
+        },
+        {
+            'title': 'TP / SL',
+            'subtitle': 'Móvil · take-profit y stop-loss',
+            'entries': build_mobile_trace_entries(
+                'phone.monitor',
+                limit=10,
+                payload_keys=['market_slug', 'outcome', 'reason', 'status'],
+                allowed_events={'trigger_detected', 'trigger_skipped', 'order_executed', 'order_failed', 'run_skipped'},
+            ),
+        },
+    ]
+
+
 def timestamp_to_local(timestamp: str) -> str:
     try:
         dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
@@ -147,16 +495,86 @@ def extract_message_section(message: str, start_label: str, end_label: str | Non
     return message[start:end].strip()
 
 
+def strip_html_tags(text: str) -> str:
+    return re.sub(r'<[^>]+>', '', text or '').strip()
+
+
+def derive_public_title(entry: dict[str, Any]) -> str:
+    title = strip_html_tags(entry.get('title', ''))
+    if title:
+        return title
+    summary = strip_html_tags(extract_message_section(entry.get('message', ''), '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>'))
+    if summary:
+        summary = re.sub(r'\s+', ' ', summary)
+        return summary[:92].rstrip(' ,.;:') + ('…' if len(summary) > 92 else '')
+    return f"Beecthor vídeo {entry.get('video_id', '').strip() or 'sin título'}"
+
+
+def youtube_watch_url(video_id: str) -> str:
+    return f'https://www.youtube.com/watch?v={video_id}'
+
+
+def youtube_thumb_url(video_id: str) -> str:
+    return f'https://i.ytimg.com/vi/{video_id}/hqdefault.jpg'
+
+
+def normalize_html_text_block(text: str) -> str:
+    normalized = (text or '').strip()
+    normalized = normalized.replace('\r\n', '\n').replace('\r', '\n')
+    normalized = re.sub(r'\n{3,}', '\n\n', normalized)
+    return normalized.replace('\n', '<br>')
+
+
+def extract_spoiler_inner_html(message: str) -> str:
+    match = re.search(r'<tg-spoiler>(.*?)</tg-spoiler>', message or '', flags=re.S)
+    if match:
+        return match.group(1).strip()
+    analysis = extract_message_section(message or '', '🔍 <b>Análisis completo</b>', None)
+    analysis = re.sub(r'^\s*<i>.*?</i>\s*', '', analysis, flags=re.S)
+    return analysis.strip()
+
+
+def parse_analysis_sections(message: str) -> list[dict[str, str]]:
+    spoiler_html = extract_spoiler_inner_html(message)
+    if not spoiler_html:
+        return []
+    chunks = [chunk.strip() for chunk in re.split(r'\n\s*\n', spoiler_html) if chunk.strip()]
+    sections: list[dict[str, str]] = []
+    pattern = re.compile(
+        r'^\s*(?:(?P<icon>[^\w<\s][^<\n]{0,3})\s+)?<b>(?P<title>[^<]+)</b>\s*(?P<body>.*)$',
+        flags=re.S,
+    )
+    for chunk in chunks:
+        match = pattern.match(chunk)
+        if not match:
+            continue
+        body = normalize_html_text_block(match.group('body'))
+        if not strip_html_tags(body):
+            continue
+        sections.append(
+            {
+                'icon': (match.group('icon') or '•').strip(),
+                'title': match.group('title').strip(),
+                'body_html': body,
+            }
+        )
+    return sections
+
+
 def load_summary_entries() -> list[dict[str, Any]]:
     entries = load_json(ANALYSES_LOG_PATH, [])
     items = []
     for entry in reversed(entries):
         message = entry.get('message', '')
+        video_id = entry.get('video_id', '')
         items.append({
             **entry,
             'timestamp_local': timestamp_to_local(entry.get('timestamp', '')),
             'summary_html': extract_message_section(message, '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>') or '<span class="muted">Sin resumen visible</span>',
             'message_html': message,
+            'public_title': derive_public_title(entry),
+            'youtube_url': youtube_watch_url(video_id),
+            'thumbnail_url': youtube_thumb_url(video_id),
         })
     return items
 
@@ -171,11 +589,25 @@ def find_summary(video_id: str) -> dict[str, Any] | None:
 def classify_market_bucket(text: str) -> str:
     normalized = (text or '').lower()
     month = r'(january|february|march|april|may|june|july|august|september|october|november|december)'
+    if re.search(rf'{month}\s+\d{{1,2}}\s*-\s*{month}\s+\d{{1,2}}', normalized):
+        return 'weekly'
     if re.search(rf'on-{month}-\d{{1,2}}', normalized) or re.search(rf'on {month} \d{{1,2}}', normalized):
         return 'daily'
     if re.search(rf'{month}-\d{{1,2}}-{month}-\d{{1,2}}', normalized):
         return 'weekly'
     return 'unknown'
+
+
+def fetch_live_positions() -> list[dict[str, Any]]:
+    user = POLY_FUNDER or POLY_SIGNER_ADDRESS
+    if not user:
+        return []
+    try:
+        response = requests.get(f'{DATA_API_HOST}/positions', params={'user': user, 'sizeThreshold': 0}, timeout=20)
+        response.raise_for_status()
+        return response.json()
+    except Exception:
+        return []
 
 
 def fetch_closed_positions_live() -> list[dict[str, Any]]:
@@ -190,14 +622,90 @@ def fetch_closed_positions_live() -> list[dict[str, Any]]:
         return []
 
 
+def fetch_live_position_value() -> float | None:
+    user = POLY_FUNDER or POLY_SIGNER_ADDRESS
+    if not user:
+        return None
+    try:
+        response = requests.get(f'{DATA_API_HOST}/value', params={'user': user}, timeout=20)
+        response.raise_for_status()
+        payload = response.json()
+        if isinstance(payload, list) and payload:
+            return safe_float(payload[0].get('value'))
+    except Exception:
+        return None
+    return None
+
+
+def fetch_live_cash_balance() -> float | None:
+    if not all([ClobClient, ApiCreds, AssetType, BalanceAllowanceParams]):
+        return None
+    if not all([POLY_PRIVATE_KEY, POLY_FUNDER, POLY_API_KEY, POLY_API_SECRET, POLY_API_PASSPHRASE]):
+        return None
+    try:
+        client = ClobClient(
+            CLOB_HOST,
+            key=POLY_PRIVATE_KEY,
+            chain_id=CHAIN_ID,
+            signature_type=POLY_SIGNATURE_TYPE,
+            funder=POLY_FUNDER,
+        )
+        client.set_api_creds(
+            ApiCreds(
+                api_key=POLY_API_KEY,
+                api_secret=POLY_API_SECRET,
+                api_passphrase=POLY_API_PASSPHRASE,
+            )
+        )
+        payload = client.get_balance_allowance(
+            BalanceAllowanceParams(
+                asset_type=AssetType.COLLATERAL,
+                signature_type=POLY_SIGNATURE_TYPE,
+            )
+        )
+        return safe_float(payload.get('balance')) / 1_000_000
+    except Exception:
+        return None
+
+
+def normalize_live_position(position: dict[str, Any]) -> dict[str, Any]:
+    market_slug = position.get('slug', '')
+    event_slug = position.get('eventSlug', '')
+    return {
+        'event_slug': event_slug,
+        'market_slug': market_slug,
+        'market_title': position.get('title') or market_slug,
+        'position_side': position.get('outcome', ''),
+        'token_id': position.get('asset', ''),
+        'shares': round(safe_float(position.get('size')), 4),
+        'avg_price': round(safe_float(position.get('avgPrice')), 4),
+        'entry_cost_usd': round(safe_float(position.get('initialValue')), 6),
+        'current_price': round(safe_float(position.get('curPrice')), 4),
+        'current_value_usd': round(safe_float(position.get('currentValue')), 6),
+        'cash_pnl_usd': round(safe_float(position.get('cashPnl')), 6),
+        'category': classify_market_bucket(event_slug or market_slug or position.get('title') or ''),
+        'status': 'open',
+    }
+
+
 def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
     pending_orders = load_json(PENDING_ORDERS_PATH, [])
-    open_positions = account_state.get('open_positions', [])
+    live_positions_raw = fetch_live_positions()
+    open_positions = [normalize_live_position(item) for item in live_positions_raw]
     closed_positions = fetch_closed_positions_live()
-    portfolio_value = round(float(account_state.get('cash_available', 0.0)) + sum(float(p.get('current_value_usd', 0.0)) for p in open_positions), 6)
-    unrealized_pnl = round(sum(float(p.get('cash_pnl_usd', 0.0)) for p in open_positions), 6)
+    live_cash_balance = fetch_live_cash_balance()
+    live_position_value = fetch_live_position_value()
+    fallback_cash = safe_float(account_state.get('cash_available'))
+    fallback_position_value = sum(safe_float(p.get('current_value_usd')) for p in account_state.get('open_positions', []))
+    cash_balance = live_cash_balance if live_cash_balance is not None else fallback_cash
+    position_value = live_position_value if live_position_value is not None else fallback_position_value
+    portfolio_value = round(cash_balance + position_value, 6)
+    unrealized_pnl = round(sum(safe_float(p.get('cash_pnl_usd')) for p in open_positions), 6)
+    starting_bankroll = safe_float(account_state.get('starting_bankroll'))
+    total_pnl = round(portfolio_value - starting_bankroll, 6) if starting_bankroll else round(sum(safe_float(item.get('realizedPnl')) for item in closed_positions), 6) + unrealized_pnl
+    realized_pnl = round(total_pnl - unrealized_pnl, 6)
     wins = sum(1 for item in closed_positions if float(item.get('realizedPnl', 0.0)) > 0)
     losses = sum(1 for item in closed_positions if float(item.get('realizedPnl', 0.0)) < 0)
     total_closed = len(closed_positions)
@@ -212,24 +720,16 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         elif bucket == 'weekly':
             weekly_count += 1
     metrics = [
-        {'label': 'Portfolio', 'value': f'{portfolio_value:.2f}$', 'caption': 'cash + open positions', 'css_class': ''},
-        {'label': 'Cash', 'value': f"{float(account_state.get('cash_available', 0.0)):.2f}$", 'caption': '', 'css_class': ''},
-        {'label': 'PnL realizado', 'value': f"{float(account_state.get('realized_pnl', 0.0)):.2f}$", 'caption': '', 'css_class': 'good' if float(account_state.get('realized_pnl', 0.0)) >= 0 else 'bad'},
+        {'label': 'Portfolio', 'value': f'{portfolio_value:.2f}$', 'caption': 'live cash + live positions when available', 'css_class': ''},
+        {'label': 'Cash', 'value': f"{cash_balance:.2f}$", 'caption': 'available to trade' if live_cash_balance is not None else 'fallback from local state', 'css_class': ''},
+        {'label': 'PnL realizado', 'value': f'{realized_pnl:.2f}$', 'caption': 'portfolio - bankroll - unrealized', 'css_class': 'good' if realized_pnl >= 0 else 'bad'},
         {'label': 'PnL no realizado', 'value': f'{unrealized_pnl:.2f}$', 'caption': 'posiciones abiertas', 'css_class': 'good' if unrealized_pnl >= 0 else 'bad'},
         {'label': 'Operaciones', 'value': str(total_operations), 'caption': f'{total_closed} cerradas · {len(open_positions)} abiertas', 'css_class': ''},
         {'label': 'Aciertos / fallos', 'value': f'{wins} / {losses}', 'caption': 'closed positions', 'css_class': ''},
         {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions', 'css_class': 'good' if win_rate >= 50 else 'bad'},
         {'label': 'Daily / Weekly', 'value': f'{daily_count} / {weekly_count}', 'caption': 'classified positions', 'css_class': ''},
     ]
-    positions = [{
-        **position,
-        'category': classify_market_bucket(position.get('event_slug') or position.get('market_slug') or ''),
-        'shares': round(float(position.get('shares', 0.0)), 4),
-        'avg_price': round(float(position.get('avg_price', 0.0)), 4),
-        'current_price': round(float(position.get('current_price', 0.0)), 4),
-        'current_value_usd': round(float(position.get('current_value_usd', 0.0)), 4),
-        'cash_pnl_usd': round(float(position.get('cash_pnl_usd', 0.0)), 4),
-    } for position in open_positions]
+    positions = open_positions
     recent_operations = []
     for entry in reversed(trade_log):
         execution = entry.get('execution') or {}
@@ -287,20 +787,31 @@ def run_copilot(message: str) -> str:
 @app.route('/')
 def public_index():
     items = load_summary_entries()
-    html = STYLE + """
-    <div class="shell">
-      <div class="top"><div><h1 style="margin:0">Beecthor Dashboard</h1><div class="muted">Galería pública de resúmenes</div></div><div class="nav"><a href="/">Resúmenes</a><a href="/login">Zona privada</a></div></div>
-      <div class="grid">
+    html = page_start('Resúmenes | Beecthor') + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Beecthor</h1>
+          <div class="section-subtitle">Biblioteca pública de resúmenes, organizada como una videoteca del canal.</div>
+        </div>
+        <div class="nav"><a class="button-link secondary" href="/refresh" style="font-size:.85rem;padding:8px 14px">↻ Actualizar</a></div>
+      </div>
+      <div class="video-grid">
         {% for item in items %}
-        <article class="card">
-          <div class="muted">{{ item.timestamp_local }}</div>
-          <h2><a href="{{ url_for('public_video_detail', video_id=item.video_id) }}">{{ item.video_id }}</a></h2>
-          <div class="muted">Robot score {{ item.robot_score }}</div>
-          <div style="margin-top:12px">{{ item.summary_html|safe }}</div>
+        <article class="video-card">
+          <a class="video-link" href="{{ url_for('public_video_detail', video_id=item.video_id) }}">
+            <div class="thumb-wrap">
+              <img src="{{ item.thumbnail_url }}" alt="{{ item.public_title }}">
+            </div>
+            <div class="video-meta">
+              <div class="video-title">{{ item.public_title }}</div>
+              <div class="video-date">{{ item.timestamp_local }}</div>
+            </div>
+          </a>
         </article>
         {% endfor %}
       </div>
-    </div>"""
+    </div>""" + PAGE_END
     return render_template_string(html, items=items)
 
 
@@ -309,12 +820,75 @@ def public_video_detail(video_id: str):
     item = find_summary(video_id)
     if not item:
         return ('Not found', 404)
-    html = STYLE + """
-    <div class="shell">
-      <div class="top"><div><h1 style="margin:0">{{ item.video_id }}</h1><div class="muted">{{ item.timestamp_local }}</div></div><div class="nav"><a href="/">Volver</a><a href="/login">Zona privada</a></div></div>
-      <div class="card">{{ item.message_html|safe }}</div>
-    </div>"""
-    return render_template_string(html, item=item)
+    summary_html = extract_message_section(item.get('message_html', ''), '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>') or '<span class="muted">Sin resumen visible.</span>'
+    analysis_sections = parse_analysis_sections(item.get('message_html', ''))
+    fallback_analysis_html = ''
+    if not analysis_sections:
+        spoiler_html = extract_spoiler_inner_html(item.get('message_html', ''))
+        if spoiler_html:
+            fallback_analysis_html = normalize_html_text_block(spoiler_html)
+    html = page_start(f"{item.get('public_title', 'Resumen')} | Beecthor") + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Beecthor</h1>
+          <div class="section-subtitle">Resumen detallado del vídeo seleccionado.</div>
+        </div>
+        <div class="nav"><a href="/">Vídeos</a></div>
+      </div>
+      <div class="detail-layout">
+        <section class="detail-media">
+          <img src="{{ item.thumbnail_url }}" alt="{{ item.public_title }}">
+        </section>
+        <aside class="detail-panel">
+          <div class="muted">{{ item.timestamp_local }}</div>
+          <h1 class="detail-title">{{ item.public_title }}</h1>
+          <div class="muted">Video ID · {{ item.video_id }}</div>
+          <div class="detail-actions">
+            <a class="button-link" href="{{ item.youtube_url }}" target="_blank" rel="noopener noreferrer">Ver en YouTube</a>
+            <a class="button-link secondary" href="/">Volver a vídeos</a>
+          </div>
+        </aside>
+      </div>
+      <section class="surface-card detail-summary-card">
+        <div class="detail-summary-label">Resumen visible</div>
+        <div class="detail-summary-text">{{ summary_html|safe }}</div>
+      </section>
+      {% if analysis_sections %}
+      <section class="detail-section-grid">
+        {% for section in analysis_sections %}
+        <article class="detail-section-card">
+          <div class="detail-section-head">
+            <div class="detail-section-icon">{{ section.icon }}</div>
+            <div class="detail-section-title">{{ section.title }}</div>
+          </div>
+          <div class="detail-section-body">{{ section.body_html|safe }}</div>
+        </article>
+        {% endfor %}
+      </section>
+      {% elif fallback_analysis_html %}
+      <section class="surface-card detail-fallback">
+        <div class="detail-summary-label">Análisis completo</div>
+        <div class="summary-body">{{ fallback_analysis_html|safe }}</div>
+      </section>
+      {% endif %}
+    </div>""" + PAGE_END
+    return render_template_string(
+        html,
+        item=item,
+        summary_html=summary_html,
+        analysis_sections=analysis_sections,
+        fallback_analysis_html=fallback_analysis_html,
+    )
+
+
+@app.route('/refresh')
+def refresh_repo():
+    subprocess.run(
+        ['git', '-C', str(REPO_ROOT), 'pull', '--ff-only', 'origin', 'main'],
+        capture_output=True, timeout=30,
+    )
+    return redirect(url_for('public_index'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -348,17 +922,65 @@ def private_root():
 @require_private
 def private_polymarket():
     snapshot = build_polymarket_snapshot()
-    html = STYLE + """
-    <div class="shell">
-      <div class="top"><div><h1 style="margin:0">Zona privada</h1><div class="muted">Polymarket dashboard</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div></div>
-      <div class="grid">{% for metric in metrics %}<div class="card"><div class="muted">{{ metric.label }}</div><div class="big {{ metric.css_class }}">{{ metric.value }}</div><div class="muted">{{ metric.caption }}</div></div>{% endfor %}</div>
-      <div class="grid" style="margin-top:16px">
-        <div class="card"><h2>Posiciones abiertas</h2><div class="list">{% for position in positions %}<div class="item"><strong>{{ position.market_title or position.market_slug }}</strong><div class="muted">{{ position.position_side }} · {{ position.category }}</div><div>Shares: <b>{{ position.shares }}</b> · Avg: <b>{{ position.avg_price }}</b> · Now: <b>{{ position.current_price }}</b></div><div>Value: <b>{{ position.current_value_usd }}$</b> · PnL: <span class="{{ 'good' if position.cash_pnl_usd >= 0 else 'bad' }}">{{ position.cash_pnl_usd }}$</span></div></div>{% else %}<div class="item">No open positions.</div>{% endfor %}</div></div>
-        <div class="card"><h2>Pipeline server → móvil</h2><div class="item"><strong>Pending actions</strong><div>{{ pipeline.pending_count }} pending order(s)</div></div><div class="list">{% for item in pipeline.pending_orders %}<div class="item"><strong>{{ item.type }} · {{ item.market_slug }}</strong><div class="muted">{{ item.order_id or 'no-order-id' }}</div><div>{{ item.side }} · {{ item.outcome }} · {{ item.status }}</div></div>{% else %}<div class="item">No pending actions.</div>{% endfor %}</div></div>
+    trace_lanes = build_private_trace_lanes()
+    html = page_start('Polymarket | Beecthor') + """
+    <div class="shell private-shell">
+      <div class="private-header">
+        <div>
+          <h1 class="private-title">Zona privada</h1>
+          <div class="section-subtitle">Panel de control inspirado en Polymarket para cartera, operativa y observabilidad.</div>
+        </div>
+        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket" style="font-weight:700;color:#fff">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
       </div>
-      <div class="card" style="margin-top:16px"><h2>Operaciones recientes</h2><div class="table-wrap"><table class="table"><thead><tr><th>Timestamp</th><th>Type</th><th>Market</th><th>Category</th><th>Status</th></tr></thead><tbody>{% for item in recent_operations %}<tr><td>{{ item.timestamp }}</td><td>{{ item.type }}</td><td>{{ item.market_slug }}</td><td>{{ item.category }}</td><td>{{ item.status }}</td></tr>{% else %}<tr><td colspan="5">No recent operations.</td></tr>{% endfor %}</tbody></table></div></div>
-    </div>"""
-    return render_template_string(html, **snapshot)
+      <div class="private-strip">
+        <section class="metric-panel">
+          <div class="metric-label">{{ metrics[0].label }}</div>
+          <div class="metric-value">{{ metrics[0].value }}</div>
+          <div class="metric-foot">{{ metrics[1].caption }}</div>
+        </section>
+        <section class="pnl-panel">
+          <div class="metric-label">{{ metrics[2].label }}</div>
+          <div class="metric-value {{ metrics[2].css_class }}">{{ metrics[2].value }}</div>
+          <div class="metric-foot">{{ metrics[2].caption }}</div>
+        </section>
+      </div>
+      <div class="private-grid">
+        {% for metric in metrics[1:] %}
+        <section class="metric-card">
+          <div class="metric-label">{{ metric.label }}</div>
+          <div class="big {{ metric.css_class }}">{{ metric.value }}</div>
+          <div class="muted">{{ metric.caption }}</div>
+        </section>
+        {% endfor %}
+      </div>
+      <div class="trace-grid">
+        {% for lane in trace_lanes %}
+        <section class="trace-lane">
+          <div class="trace-lane-head">
+            <h2 class="trace-lane-title">{{ lane.title }}</h2>
+            <div class="trace-lane-subtitle">{{ lane.subtitle }}</div>
+          </div>
+          <div class="trace-stack">
+            {% for entry in lane.entries %}
+            <div class="trace-entry {{ entry.tone }}">
+              <div class="trace-time">{{ entry.timestamp }}</div>
+              <div class="trace-eyebrow">{{ entry.eyebrow }}</div>
+              <div class="trace-title">{{ entry.title }}</div>
+              {% if entry.meta %}
+              <div class="trace-meta">{{ entry.meta }}</div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="trace-entry info">
+              <div class="trace-title">No hay trazas recientes en este carril.</div>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endfor %}
+      </div>
+    </div>""" + PAGE_END
+    return render_template_string(html, trace_lanes=trace_lanes, **snapshot)
 
 
 @app.route('/private/logs')
@@ -366,13 +988,41 @@ def private_polymarket():
 def private_logs():
     filters = {'source': request.args.get('source', '').strip(), 'event_type': request.args.get('event_type', '').strip(), 'level': request.args.get('level', '').strip()}
     items = read_jsonl_logs(source=filters['source'], event_type=filters['event_type'], level=filters['level'])
-    html = STYLE + """
-    <div class="shell">
-      <div class="top"><div><h1 style="margin:0">Zona privada</h1><div class="muted">Logs dashboard</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div></div>
-      <form class="card" method="GET" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"><input type="text" name="source" placeholder="source" value="{{ filters.source }}"><input type="text" name="event_type" placeholder="event type" value="{{ filters.event_type }}"><select name="level"><option value="">all levels</option>{% for option in ['info','warning','error'] %}<option value="{{ option }}" {{ 'selected' if filters.level == option else '' }}>{{ option }}</option>{% endfor %}</select><button>Filtrar</button></form>
-      <div class="card"><h2>Structured events</h2><div class="table-wrap"><table class="table"><thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Level</th><th>Message</th><th>Payload</th></tr></thead><tbody>{% for item in log_items %}<tr><td>{{ item.timestamp }}</td><td>{{ item.source }}</td><td>{{ item.event_type }}</td><td class="{{ 'bad' if item.level == 'error' else 'warn' if item.level == 'warning' else '' }}">{{ item.level }}</td><td>{{ item.message }}</td><td><code>{{ item.payload_preview }}</code></td></tr>{% else %}<tr><td colspan="6">No matching events.</td></tr>{% endfor %}</tbody></table></div></div>
-      <div class="grid" style="margin-top:16px"><div class="card"><h2>Operator log tail</h2><div class="raw">{{ operator_tail }}</div></div><div class="card"><h2>Latest cycle file</h2><div class="raw">{{ cycle_tail }}</div></div></div>
-    </div>"""
+    html = page_start('Logs | Beecthor') + """
+    <div class="shell private-shell">
+      <div class="private-header">
+        <div>
+          <h1 class="private-title">Logs</h1>
+          <div class="section-subtitle">Observabilidad unificada del servidor, del móvil y de la propia app web.</div>
+        </div>
+        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs" style="font-weight:700;color:#fff">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
+      </div>
+      <form class="surface-card log-controls" method="GET">
+        <input type="text" name="source" placeholder="source" value="{{ filters.source }}">
+        <input type="text" name="event_type" placeholder="event type" value="{{ filters.event_type }}">
+        <select name="level"><option value="">all levels</option>{% for option in ['info','warning','error'] %}<option value="{{ option }}" {{ 'selected' if filters.level == option else '' }}>{{ option }}</option>{% endfor %}</select>
+        <button>Filtrar</button>
+      </form>
+      <section class="surface-card">
+        <h2 class="section-title">Structured events</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Level</th><th>Message</th><th>Payload</th></tr></thead>
+            <tbody>
+              {% for item in log_items %}
+              <tr><td>{{ item.timestamp }}</td><td>{{ item.source }}</td><td>{{ item.event_type }}</td><td class="{{ 'bad' if item.level == 'error' else 'warn' if item.level == 'warning' else '' }}">{{ item.level }}</td><td>{{ item.message }}</td><td><code>{{ item.payload_preview }}</code></td></tr>
+              {% else %}
+              <tr><td colspan="6">No matching events.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <div class="panel-grid" style="margin-top:18px">
+        <section class="surface-card"><h2 class="section-title">Operator log tail</h2><div class="raw">{{ operator_tail }}</div></section>
+        <section class="surface-card"><h2 class="section-title">Latest cycle file</h2><div class="raw">{{ cycle_tail }}</div></section>
+      </div>
+    </div>""" + PAGE_END
     return render_template_string(html, log_items=items, filters=filters, operator_tail=load_recent_operator_tail(), cycle_tail=load_latest_cycle_tail())
 
 
@@ -385,18 +1035,18 @@ def legacy_chat():
 @require_private
 def private_chat():
     history = load_history()
-    html = STYLE + """
-    <div class="shell">
-      <div class="top"><div><h1 style="margin:0">Zona privada</h1><div class="muted">Copilot chat</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div></div>
+    html = page_start('Chat | Beecthor') + """
+    <div class="shell private-shell">
+      <div class="private-header"><div><h1 class="private-title">Chat</h1><div class="section-subtitle">Superficie técnica para seguir usando la sesión de Copilot del servidor.</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat" style="font-weight:700;color:#fff">Chat</a><a href="/logout">Logout</a></div></div>
       <div class="chat" id="history">{% for msg in history %}<div class="bubble {{ 'user' if msg.role == 'user' else 'bot' }}">{{ msg.text }}<div class="muted" style="margin-top:8px">{{ msg.timestamp }}</div></div>{% else %}<div class="muted">No messages yet.</div>{% endfor %}</div>
-      <div class="card" style="margin-top:16px"><textarea id="input" placeholder="Message to Copilot..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="muted" style="margin-top:10px"></div></div>
+      <div class="chat-card" style="margin-top:16px"><textarea id="input" placeholder="Message to Copilot..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="status-line"></div></div>
     </div>
     <script>
       const hist=document.getElementById('history'); hist.scrollTop=hist.scrollHeight;
       function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       function appendBubble(role,text,timestamp){const el=document.createElement('div'); el.className='bubble '+(role==='user'?'user':'bot'); el.innerHTML=esc(text)+'<div class="muted" style="margin-top:8px">'+esc(timestamp)+'</div>'; hist.appendChild(el); hist.scrollTop=hist.scrollHeight;}
       async function send(){const input=document.getElementById('input'); const btn=document.getElementById('btn'); const status=document.getElementById('status'); const text=input.value.trim(); if(!text) return; btn.disabled=true; input.value=''; status.textContent='Waiting for Copilot...'; appendBubble('user', text, new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC'); try{const resp=await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})}); const data=await resp.json(); if(data.error){status.textContent=data.error;} else {appendBubble('bot', data.response, data.timestamp); status.textContent='';}}catch(err){status.textContent='Network error';} btn.disabled=false; input.focus();}
-    </script>"""
+    </script>""" + PAGE_END
     return render_template_string(html, history=history)
 
 

@@ -181,12 +181,11 @@ def get_transcript(video_id: str) -> str:
     from youtube_transcript_api import YouTubeTranscriptApi
 
     try:
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        try:
-            transcript_obj = transcript_list.find_transcript(['es', 'es-ES', 'es-419'])
-        except Exception:
-            transcript_obj = transcript_list.find_generated_transcript(['es', 'es-ES', 'es-419', 'en'])
-        return ' '.join(entry['text'] for entry in transcript_obj.fetch())
+        api = YouTubeTranscriptApi()
+        fetched = api.fetch(video_id, languages=['es', 'es-ES', 'es-419', 'en'])
+        return ' '.join(
+            (s.text if hasattr(s, 'text') else s['text']) for s in fetched
+        )
     except Exception:
         return get_transcript_via_ytdlp(video_id)
 

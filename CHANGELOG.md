@@ -1,5 +1,12 @@
 # Changelog
 
+### 08/04/2026
+* Fix `get_transcript` en `phone/beecthor_summarizer.py`: migrado a la API instanciada de `youtube-transcript-api` v1.2.4+ (`YouTubeTranscriptApi().fetch()`), eliminando el método de clase obsoleto `list_transcripts`.
+* Instalado `yt-dlp` en Termux como fallback de transcript.
+* Añadido `. ~/.polymarket.env` a `~/.bashrc` del móvil para exponer `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` al cron.
+* Nuevo cron en el móvil a las 16:45 UTC como disparo anticipado del summarizer (antes de las 17:45 existentes).
+* Resumen del vídeo `x1A0itOzi18` generado y enviado al grupo de Telegram.
+
 ### 06/04/2026
 * Backfill completado de dos vídeos pendientes de Beecthor en el repo principal: `IGDvoXUCgAA` y `-ZXOMl3jFqw`, ambos añadidos a `analyses_log.json` sin reenvío a Telegram y con transcript guardado en `transcripts/`.
 * `phone/beecthor_summarizer.py` ampliado con `--video-id` y `--backfill`, detección portable del repo local y persistencia de entradas sin tocar `last_video_id.txt`.
