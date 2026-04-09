@@ -619,12 +619,20 @@ def find_summary(video_id: str) -> dict[str, Any] | None:
 def classify_market_bucket(text: str) -> str:
     normalized = (text or '').lower()
     month = r'(january|february|march|april|may|june|july|august|september|october|november|december)'
-    if re.search(rf'{month}\s+\d{{1,2}}\s*-\s*{month}\s+\d{{1,2}}', normalized):
-        return 'weekly'
-    if re.search(rf'on-{month}-\d{{1,2}}', normalized) or re.search(rf'on {month} \d{{1,2}}', normalized):
-        return 'daily'
+    # Weekly: slug contains two date references separated by a range (e.g. march-30-april-5 or april-6-12)
     if re.search(rf'{month}-\d{{1,2}}-{month}-\d{{1,2}}', normalized):
         return 'weekly'
+    if re.search(rf'{month}\s+\d{{1,2}}\s*-\s*{month}\s+\d{{1,2}}', normalized):
+        return 'weekly'
+    if re.search(rf'{month}-\d{{1,2}}-\d{{1,2}}', normalized):
+        return 'weekly'
+    # Daily: slug contains "on-month-day" or "on april 9" or ends with month-day
+    if re.search(rf'on-{month}-\d{{1,2}}', normalized):
+        return 'daily'
+    if re.search(rf'on {month} \d{{1,2}}', normalized):
+        return 'daily'
+    if re.search(rf'-on-\d{{1,2}}$', normalized):
+        return 'daily'
     return 'unknown'
 
 
@@ -633,7 +641,7 @@ def fetch_live_positions() -> list[dict[str, Any]]:
     if not user:
         return []
     try:
-        response = requests.get(f'{DATA_API_HOST}/positions', params={'user': user, 'sizeThreshold': 0}, timeout=20)
+        response = requests.get(f'{DATA_API_HOST}/positions', params={'user': user, 'sizeThreshold': 0.01, 'limit': 100}, timeout=20)
         response.raise_for_status()
         return response.json()
     except Exception:
