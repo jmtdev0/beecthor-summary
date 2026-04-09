@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-03-30T17:41:01Z",
+  "timestamp": "2026-04-09T23:00:09Z",
   "action": "TAKE_PROFIT",
   "status": "pending_phone_execution",
-  "market_slug": "will-bitcoin-dip-to-67k-on-march-30",
-  "market_title": "Will Bitcoin dip to $67,000 on March 30?",
+  "market_slug": "will-bitcoin-reach-73k-on-april-9",
+  "market_title": "Will Bitcoin reach $73,000 on April 9?",
   "outcome": "Yes",
   "prob": 0.9995,
-  "token_id": "22251957378952428363935530960816215878629596590072424278182644667567966125531",
+  "token_id": "46288697750888823650668626450154744620065013740970322190498551796013370972349",
   "side": "SELL",
-  "amount": 2.089508
+  "amount": 3.739988
 }
