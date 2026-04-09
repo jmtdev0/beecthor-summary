@@ -99,9 +99,7 @@ def main() -> None:
 
     for pos in positions:
         prob = safe_float(pos.get('cur_price'))
-        if prob <= STOP_LOSS_THRESHOLD:
-            action = 'STOP_LOSS'
-        elif prob >= TAKE_PROFIT_THRESHOLD:
+        if prob >= TAKE_PROFIT_THRESHOLD:
             action = 'TAKE_PROFIT'
         else:
             continue

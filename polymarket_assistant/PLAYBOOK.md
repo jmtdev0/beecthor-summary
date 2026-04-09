@@ -12,7 +12,7 @@
 
 Each automated cycle must follow these steps strictly in order:
 
-1. **Stop-loss check** — Review all open positions. Exit any position where the market probability has dropped to `20%` or below.
+1. **Stop-loss check** — Skipped. No automated stop-loss while portfolio is in early stage (below $15). Positions are held until take-profit or natural resolution.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
 4. **Scout opportunities** — For each market type (daily / weekly / monthly), check if the slot is already filled. If not, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
@@ -65,7 +65,7 @@ Two allowed market types, each tracked separately:
 ## Exit rules
 
 - Stop loss:
-  - exit if market probability drops to `20%` or below
+  - disabled in early stage (portfolio below `$15`) — let positions run to resolution or take-profit
 - Take profit:
   - consider exit once market probability reaches `90%`
   - default full take profit range: `90-95%`
