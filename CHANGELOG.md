@@ -1,5 +1,15 @@
 # Changelog
 
+### 09/04/2026
+* PLAYBOOK: regla de frescura del vídeo de Beecthor relajada — vídeo de D-1 se considera válido para apostar; D-2+ requiere confirmación extra.
+* PLAYBOOK + código: stop-loss desactivado en fase inicial (portfolio < $15) — solo take-profit automático.
+* Eliminado validador duro `min_entry_probability` del código — la decisión de probabilidad mínima pasa a ser responsabilidad exclusiva del PLAYBOOK y GPT.
+* `phone/polymarket_monitor_executor.py`: SL eliminado, un solo intento de ejecución (sin reintentos).
+* Dashboard Flask: timestamps de trazas convertidos a CET/CEST (Europe/Madrid).
+* Dashboard Flask: `fetch_live_positions` corregido con `sizeThreshold=0.01` para excluir posiciones resueltas con size 0.
+* Dashboard Flask: `classify_market_bucket` mejorado para cubrir patrones de slug semanales (`april-6-12`).
+* Crons del móvil corregidos: rutas absolutas y `.` en lugar de `source` para compatibilidad con `/bin/sh` de crond.
+
 ### 08/04/2026
 * Fix `get_transcript` en `phone/beecthor_summarizer.py`: migrado a la API instanciada de `youtube-transcript-api` v1.2.4+ (`YouTubeTranscriptApi().fetch()`), eliminando el método de clase obsoleto `list_transcripts`.
 * Instalado `yt-dlp` en Termux como fallback de transcript.
