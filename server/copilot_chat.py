@@ -6,6 +6,9 @@ import os
 import re
 import subprocess
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
+
+_CET = ZoneInfo('Europe/Madrid')
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -48,6 +51,7 @@ CLOB_HOST = 'https://clob.polymarket.com'
 CHAIN_ID = 137
 LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (REPO_ROOT / 'server_runtime_logs'))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+TRACE_LANE_LIMIT = 5
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -372,7 +376,7 @@ def build_mobile_trace_entries(source: str, limit: int, payload_keys: list[str] 
         payload = event.get('payload') or {}
         meta = compact_payload(payload, payload_keys)
         items.append({
-            'timestamp': event.get('timestamp', ''),
+            'timestamp': fmt_cet(event.get('timestamp', '')),
             'eyebrow': humanize_event_type(event.get('event_type', 'event')),
             'title': event.get('message', ''),
             'meta': meta,
@@ -381,6 +385,18 @@ def build_mobile_trace_entries(source: str, limit: int, payload_keys: list[str] 
         if len(items) >= limit:
             break
     return items
+
+
+def classify_cycle_outcome(action: str, validation: dict[str, Any], execution: dict[str, Any]) -> tuple[str, str]:
+    validation_ok = bool(validation.get('ok'))
+    performed = bool(execution.get('performed'))
+    if performed:
+        return 'enqueued', 'warning' if action in {'OPEN_POSITION', 'REDUCE_POSITION', 'CLOSE_POSITION'} else 'info'
+    if not validation_ok:
+        return 'rejected', 'error'
+    if action == 'NO_ACTION':
+        return 'no action', 'info'
+    return 'not executed', 'warning'
 
 
 def extract_cycle_json(text: str) -> dict[str, Any] | None:
@@ -407,23 +423,29 @@ def build_cycle_trace_entries(limit: int = 10) -> list[dict[str, str]]:
         payload = extract_cycle_json(text)
         if payload:
             decision = payload.get('decision') or {}
+            validation = payload.get('validation') or {}
             execution = payload.get('execution') or {}
             details = execution.get('details') or {}
             action = decision.get('action', 'UNKNOWN')
             summary = decision.get('summary') or details.get('market') or 'Cycle completed'
+            outcome_label, tone = classify_cycle_outcome(action, validation, execution)
             meta_parts = [
                 f"BTC: {payload.get('binance_spot_price')}",
                 f"before: {payload.get('positions_before')}",
                 f"after: {payload.get('positions_after')}",
             ]
+            if validation.get('message'):
+                meta_parts.append(f"validation: {validation.get('message')}")
+            if details.get('rejected'):
+                meta_parts.append(f"rejected: {details.get('rejected')}")
             if details.get('market_slug'):
                 meta_parts.append(f"market: {details.get('market_slug')}")
             items.append({
-                'timestamp': payload.get('timestamp', path.stem.replace('cycle-', '').replace('-', ':', 2)),
-                'eyebrow': action,
+                'timestamp': fmt_cet(payload.get('timestamp', path.stem.replace('cycle-', '').replace('-', ':', 2))),
+                'eyebrow': f'{action} · {outcome_label.upper()}',
                 'title': summary,
                 'meta': ' · '.join(part for part in meta_parts if part and not part.endswith('None')),
-                'tone': 'info' if action == 'NO_ACTION' else 'warning' if action in {'OPEN_POSITION', 'REDUCE_POSITION'} else 'error',
+                'tone': tone,
             })
         else:
             tail = ' '.join(text.splitlines()[-4:])[:220]
@@ -444,23 +466,23 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'subtitle': 'Móvil · generación del resumen',
             'entries': build_mobile_trace_entries(
                 'phone.summarizer',
-                limit=10,
+                limit=TRACE_LANE_LIMIT,
                 payload_keys=['video_id', 'robot_score'],
             ),
         },
         {
             'title': 'Server cycles',
             'subtitle': 'Servidor · decisión de ciclo',
-            'entries': build_cycle_trace_entries(limit=10),
+            'entries': build_cycle_trace_entries(limit=TRACE_LANE_LIMIT),
         },
         {
             'title': 'Open operations',
             'subtitle': 'Móvil · aperturas',
             'entries': build_mobile_trace_entries(
                 'phone.executor',
-                limit=10,
+                limit=TRACE_LANE_LIMIT,
                 payload_keys=['order_id', 'market_slug', 'outcome', 'status'],
-                allowed_events={'order_received', 'order_executed', 'order_skipped', 'order_failed', 'run_active'},
+                allowed_events={'run_started', 'run_skipped', 'order_received', 'order_executed', 'order_skipped', 'order_failed', 'run_active'},
             ),
         },
         {
@@ -468,7 +490,7 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'subtitle': 'Móvil · take-profit y stop-loss',
             'entries': build_mobile_trace_entries(
                 'phone.monitor',
-                limit=10,
+                limit=TRACE_LANE_LIMIT,
                 payload_keys=['market_slug', 'outcome', 'reason', 'status'],
                 allowed_events={'trigger_detected', 'trigger_skipped', 'order_executed', 'order_failed', 'run_skipped'},
             ),
@@ -476,10 +498,18 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
     ]
 
 
+def fmt_cet(timestamp: str) -> str:
+    try:
+        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(_CET)
+        return dt.strftime('%Y-%m-%dT%H:%M')
+    except Exception:
+        return timestamp
+
+
 def timestamp_to_local(timestamp: str) -> str:
     try:
-        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-        return dt.astimezone().strftime('%Y-%m-%d %H:%M')
+        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(_CET)
+        return dt.strftime('%Y-%m-%d %H:%M')
     except Exception:
         return timestamp
 
