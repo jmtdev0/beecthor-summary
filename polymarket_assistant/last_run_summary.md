@@ -1,11 +1,11 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-09T12:00:29Z
+- Timestamp: 2026-04-09T18:01:27Z
 - Dry run: False
-- BTC price: 71160.61
-- Decision action: NO_ACTION
-- Decision summary: No position management is needed and no new BTC entry is allowed this cycle.
-- Validation: True (ok)
+- BTC price: 72320.8
+- Decision action: OPEN_POSITION
+- Decision summary: No live position needs management; open the April 9 BTC 73k reach market on the long side.
+- Validation: False (Outcome probability 0.4955 below configured minimum)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -14,6 +14,8 @@
 ```json
 {
   "performed": false,
-  "details": null
+  "details": {
+    "rejected": "Outcome probability 0.4955 below configured minimum"
+  }
 }
 ```

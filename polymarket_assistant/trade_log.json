@@ -1726,5 +1726,46 @@
     "binance_spot_price": 71160.61,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-04-09T18:01:27Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "OPEN_POSITION",
+      "confidence": 0.88,
+      "summary": "No live position needs management; open the April 9 BTC 73k reach market on the long side.",
+      "rationale": "The latest Beecthor video is current and keeps the macro thesis bearish but the active short-term path bullish, with a preferred sweep into roughly 73.8k-74k before renewed downside. Binance confirms that execution reality now matches that setup, with BTC at 72320.8, positive on the day, and trading near session highs. There are no open positions to manage first, and under nearest-strike-first the closest upside target above spot is the April 9 73k reach market; its 49.55% probability is effectively at the preferred entry band and materially cleaner than skipping to farther strikes.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "",
+        "market_slug": "will-bitcoin-reach-73k-on-april-9",
+        "outcome": "Yes",
+        "direction": "bullish",
+        "strike": 73000,
+        "stake_usd": 1,
+        "max_entry_probability": 0.4955
+      }
+    },
+    "validation": {
+      "ok": false,
+      "message": "Outcome probability 0.4955 below configured minimum"
+    },
+    "execution": {
+      "performed": false,
+      "details": {
+        "rejected": "Outcome probability 0.4955 below configured minimum"
+      }
+    },
+    "binance_spot_price": 72320.8,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
