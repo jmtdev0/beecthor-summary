@@ -302,19 +302,14 @@ def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None
 
 def classify_action(position: dict[str, Any]) -> str | None:
     prob = safe_float(position.get('curPrice'))
-    if prob <= STOP_LOSS_THRESHOLD:
-        return 'STOP_LOSS'
     if prob >= TAKE_PROFIT_THRESHOLD:
         return 'TAKE_PROFIT'
     return None
 
 
 def position_priority_key(position: dict[str, Any]) -> tuple[int, float]:
-    action = classify_action(position)
     prob = safe_float(position.get('curPrice'))
-    if action == 'STOP_LOSS':
-        return (0, prob)
-    return (1, -prob)
+    return (0, -prob)
 
 
 def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, dict[str, Any]] | tuple[None, None]:
@@ -384,8 +379,8 @@ def main() -> None:
 
     action, target = choose_target_position(positions)
     if not target:
-        print('[monitor-executor] No stop-loss or take-profit trigger in live positions.')
-        send_server_log('phone.monitor', 'run_skipped', 'No stop-loss or take-profit trigger in live positions', payload={'open_positions': len(positions)})
+        print('[monitor-executor] No take-profit trigger in live positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No take-profit trigger in live positions', payload={'open_positions': len(positions)})
         return
 
     market_slug = target.get('slug', '')
@@ -423,74 +418,44 @@ def main() -> None:
         )
         return
 
-    max_attempts = 5
-    retry_delay = 20
     resp = None
+    try:
+        print('[monitor-executor] Querying order book...')
+        price = get_market_price(token_id, 'SELL', amount)
+        print(f'[monitor-executor] Market price: {price}')
+        order_dict = build_order_dict(token_id, 'SELL', amount, price)
+    except Exception as exc:
+        print(f'[monitor-executor] Failed to build order: {exc}')
+        send_server_log('phone.monitor', 'order_failed', f'Failed to build order: {exc}', level='error', payload={'market_slug': market_slug, 'action': action})
+        maybe_send_telegram(f'\u274c Monitor order build failed ({action}):\n{title}\n{exc}')
+        return
 
-    for attempt in range(1, max_attempts + 1):
-        print(f'[monitor-executor] Attempt {attempt}/{max_attempts} — querying order book...')
-        try:
-            price = get_market_price(token_id, 'SELL', amount)
-            print(f'[monitor-executor] Market price: {price}')
-            order_dict = build_order_dict(token_id, 'SELL', amount, price)
-        except Exception as exc:
-            print(f'[monitor-executor] Failed to build order: {exc}')
-            if attempt < max_attempts:
-                print(f'[monitor-executor] Retrying in {retry_delay}s...')
-                time.sleep(retry_delay)
-            continue
+    body = {
+        'order': order_dict,
+        'owner': POLY_API_KEY,
+        'orderType': 'FOK',
+        'postOnly': False,
+    }
+    if args.dry_run:
+        print('[monitor-executor] DRY RUN payload:')
+        print(json.dumps(body, indent=2))
+        send_server_log('phone.monitor', 'order_dry_run', 'Built SELL payload successfully', payload={'market_slug': market_slug, 'action': action, 'price': price})
+        return
 
-        body = {
-            'order': order_dict,
-            'owner': POLY_API_KEY,
-            'orderType': 'FOK',
-            'postOnly': False,
-        }
-        if args.dry_run:
-            print('[monitor-executor] DRY RUN payload:')
-            print(json.dumps(body, indent=2))
-            send_server_log(
-                'phone.monitor',
-                'order_dry_run',
-                'Built SELL payload successfully',
-                payload={'market_slug': market_slug, 'action': action, 'price': price},
-            )
-            return
-
-        resp = post_order(order_dict)
-        if resp.ok:
-            print(f'[monitor-executor] SUCCESS: {resp.text}')
-            send_server_log(
-                'phone.monitor',
-                'order_executed',
-                f'{action} executed successfully',
-                payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]},
-            )
-            maybe_send_telegram(
-                f'\u2705 {action} executed from phone:\n'
-                f'{title}\n'
-                f'{outcome} @ {prob:.0%}\n'
-                f'sold {amount:.4f}'
-            )
-            return
-
-        print(f'[monitor-executor] Attempt {attempt} FAILED {resp.status_code}: {resp.text}')
-        if attempt < max_attempts:
-            print(f'[monitor-executor] Retrying in {retry_delay}s...')
-            time.sleep(retry_delay)
-
-    if resp is not None:
-        send_server_log(
-            'phone.monitor',
-            'order_failed',
-            f'{action} failed after retries',
-            level='error',
-            payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]},
-        )
+    resp = post_order(order_dict)
+    if resp.ok:
+        print(f'[monitor-executor] SUCCESS: {resp.text}')
+        send_server_log('phone.monitor', 'order_executed', f'{action} executed successfully', payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]})
         maybe_send_telegram(
-            f'\u274c Monitor order failed after {max_attempts} attempts ({action}):\n'
-            f'{title}\n{resp.status_code} {resp.text}'
+            f'\u2705 {action} executed from phone:\n'
+            f'{title}\n'
+            f'{outcome} @ {prob:.0%}\n'
+            f'sold {amount:.4f}'
         )
+    else:
+        print(f'[monitor-executor] FAILED {resp.status_code}: {resp.text}')
+        send_server_log('phone.monitor', 'order_failed', f'{action} failed', level='error', payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]})
+        maybe_send_telegram(f'\u274c Monitor order failed ({action}):\n{title}\n{resp.status_code} {resp.text}')
 
 
 if __name__ == '__main__':
