@@ -3,7 +3,7 @@
 ## Core principles
 
 1. Beecthor provides the thesis, but Binance provides execution reality.
-2. No new Beecthor video means no bet.
+2. A Beecthor video from today or yesterday (D-1) is considered current — betting is allowed. A video from two or more days ago (D-2+) is stale — only open a position if the thesis is exceptionally clear and Binance confirms the direction; otherwise skip.
 3. The latest transcript is mandatory context.
 4. Recent transcripts and recent entries i `analyses_log.json`n must be reviewed before any bet.
 5. Prefer conservative BTC `What price will Bitcoin hit...` markets.
