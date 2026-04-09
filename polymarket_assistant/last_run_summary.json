@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-08T18:01:25Z",
+  "timestamp": "2026-04-09T00:00:59Z",
   "dry_run": false,
   "decision": {
     "action": "NO_ACTION",
-    "confidence": 0.85,
-    "summary": "No open position needs management and no new BTC market offers a playbook-compliant edge right now.",
-    "rationale": "The latest 2026-04-08 Beecthor transcript and recent summaries keep the macro thesis bearish but the immediate path bullish toward roughly 74k before renewed downside, and Binance still confirms that short-term upside bias at 71816.03 after a strong 24h advance. There are no live open positions to close or reduce. Under nearest-strike-first, the closest upside markets are 73k Apr 8 at 23.5% and 74k Apr 6-12 at 44.5%; both are below the configured 0.50 minimum, with 73k too discounted and 74k still not priced attractively enough, so no new position should be opened.",
+    "confidence": 0.91,
+    "summary": "No live position needs management and no new BTC entry is valid this cycle.",
+    "rationale": "There are no open positions to close or reduce. The latest Beecthor transcript and summaries still frame the bigger thesis as bearish but with the immediate path having been a corrective push toward 74k before renewed downside; Binance execution reality has now weakened that short-term bullish leg, with BTC at 71049.99 and down 1.208% over 24h after failing to extend higher. Under the playbook, no new Beecthor video means no bet, and the current markets do not offer a clean exception anyway: the nearest bullish weekly 74k April 6-12 market is only 29.0%, below the configured minimum, while the bearish dip markets remain very low probability and do not cleanly fit the latest transcript’s still-corrective framing.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -32,7 +32,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 71816.03,
+  "binance_spot_price": 71049.99,
   "positions_before": 0,
   "positions_after": 0
 }
