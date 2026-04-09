@@ -409,8 +409,6 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         if outcome not in market['outcomes']:
             return False, 'Selected outcome not valid for chosen market'
         probability = outcome_probability(market, outcome)
-        if probability < safe_float(account_state.get('min_entry_probability', 0.3)):
-            return False, f'Outcome probability {probability:.4f} below configured minimum'
         stake_usd = safe_float(new_position.get('stake_usd'))
         cash_available = polymarket['cash_balance_usdc']
         if stake_usd <= 0 or stake_usd > cash_available:
