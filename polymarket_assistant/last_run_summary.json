@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-09T06:01:21Z",
+  "timestamp": "2026-04-09T12:00:29Z",
   "dry_run": false,
   "decision": {
     "action": "NO_ACTION",
-    "confidence": 0.9,
-    "summary": "No open position needs management and no new BTC trade should be opened this cycle.",
-    "rationale": "There are no live positions to close or reduce. The latest available Beecthor context is still the 2026-04-08 video, which favored a corrective push higher before renewed downside, while Binance at 71028.0 shows that upside has stalled and price is now softer intraday. Even though the nearest bearish daily line on April 9 is the 70k dip market at 47.0%, the playbook rule says no new Beecthor video means no bet, so there is no valid playbook-compliant edge for a new entry.",
+    "confidence": 0.92,
+    "summary": "No position management is needed and no new BTC entry is allowed this cycle.",
+    "rationale": "There are no open positions to close or reduce. The latest Beecthor transcript and summaries still describe a broader bearish thesis with a corrective upside attempt toward 74k before renewed downside, while Binance at 71160.61 shows price still below that upside target and only mildly weak on the day. Although the nearest bullish daily market on April 9 is the 72k reach at 47.0%, the playbook’s binding rule says no new Beecthor video means no bet, so no new position can be opened.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -32,7 +32,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 71028.0,
+  "binance_spot_price": 71160.61,
   "positions_before": 0,
   "positions_after": 0
 }
