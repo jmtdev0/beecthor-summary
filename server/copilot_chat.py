@@ -648,6 +648,12 @@ def fetch_live_positions() -> list[dict[str, Any]]:
         return []
 
 
+# Positions permanently excluded from the dashboard (test trades, non-BTC narrative bets, etc.)
+IGNORED_POSITION_SLUGS: set[str] = {
+    'will-december-be-the-best-month-for-bitcoin-in-2026',
+}
+
+
 def fetch_closed_positions_live() -> list[dict[str, Any]]:
     user = POLY_FUNDER or POLY_SIGNER_ADDRESS
     if not user:
@@ -655,7 +661,7 @@ def fetch_closed_positions_live() -> list[dict[str, Any]]:
     try:
         response = requests.get(f'{DATA_API_HOST}/closed-positions', params={'user': user, 'limit': 200, 'offset': 0}, timeout=20)
         response.raise_for_status()
-        return response.json()
+        return [p for p in response.json() if p.get('slug') not in IGNORED_POSITION_SLUGS]
     except Exception:
         return []
 
