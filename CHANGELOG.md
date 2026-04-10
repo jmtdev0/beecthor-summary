@@ -1,5 +1,9 @@
 # Changelog
 
+### 10/04/2026
+* `phone/polymarket_monitor_executor.py`: detecta error 404 del order book (mercado ya resuelto) y lo trata como señal de auto-redención de Polymarket — cierre graceful sin error ni Telegram de fallo.
+* `trade_log.json`: añadidas entradas manuales para `will-bitcoin-reach-73k-on-april-9` — posición abierta y TP/claim hechos por el usuario manualmente (servidor bloqueado por `min_entry_probability`, ya eliminado).
+
 ### 09/04/2026
 * PLAYBOOK: regla de frescura del vídeo de Beecthor relajada — vídeo de D-1 se considera válido para apostar; D-2+ requiere confirmación extra.
 * PLAYBOOK + código: stop-loss desactivado en fase inicial (portfolio < $15) — solo take-profit automático.

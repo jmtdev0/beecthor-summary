@@ -133,12 +133,18 @@ def sign_order(order: Order) -> str:
     return '0x' + bytes(sig_bytes).hex()
 
 
+class MarketResolvedException(Exception):
+    """Raised when the order book returns 404 because the market has already resolved."""
+
+
 def get_market_price(token_id: str, side: str, amount: float) -> float:
     resp = requests.get(
         f'{CLOB_HOST}/book',
         params={'token_id': token_id},
         timeout=15,
     )
+    if resp.status_code == 404:
+        raise MarketResolvedException(f'Order book not found (404) — market likely resolved; token_id={token_id}')
     resp.raise_for_status()
     book = resp.json()
 
@@ -424,6 +430,21 @@ def main() -> None:
         price = get_market_price(token_id, 'SELL', amount)
         print(f'[monitor-executor] Market price: {price}')
         order_dict = build_order_dict(token_id, 'SELL', amount, price)
+    except MarketResolvedException as exc:
+        print(f'[monitor-executor] Market already resolved: {exc}')
+        send_server_log(
+            'phone.monitor',
+            'market_resolved',
+            'Order book unavailable — market has resolved; Polymarket will auto-redeem',
+            payload={'market_slug': market_slug, 'action': action, 'token_id': token_id},
+        )
+        maybe_send_telegram(
+            f'\u2139\ufe0f {action} — market already resolved:\n'
+            f'{title}\n'
+            f'{outcome} @ {prob:.0%}\n'
+            'El mercado ya est\u00e1 resuelto. Polymarket har\u00e1 el reembolso autom\u00e1ticamente.'
+        )
+        return
     except Exception as exc:
         print(f'[monitor-executor] Failed to build order: {exc}')
         send_server_log('phone.monitor', 'order_failed', f'Failed to build order: {exc}', level='error', payload={'market_slug': market_slug, 'action': action})
