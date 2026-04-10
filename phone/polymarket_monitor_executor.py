@@ -183,8 +183,11 @@ def build_order_dict(token_id: str, side: str, amount: float, price: float) -> d
         maker_amount = to_usdc(round_down(amount, 2))
         taker_amount = to_usdc(round_down(amount / price, 4))
     else:
-        maker_amount = to_usdc(round_down(amount, 2))
-        taker_amount = to_usdc(round_down(amount * price, 4))
+        # Compute taker from the already-rounded maker to keep effective price <= intended price.
+        # Using the raw amount would cause taker/maker > 1 and a 400 "invalid price" rejection.
+        maker_tokens = round_down(amount, 2)
+        maker_amount = to_usdc(maker_tokens)
+        taker_amount = to_usdc(round_down(maker_tokens * price, 4))
 
     order = Order(
         salt=salt,

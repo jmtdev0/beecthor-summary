@@ -1,6 +1,7 @@
 # Changelog
 
 ### 10/04/2026
+* `phone/polymarket_monitor_executor.py`: fix bug crítico en `build_order_dict` para órdenes SELL — `taker_amount` se computaba con el `amount` sin redondear, produciendo un precio efectivo `taker/maker > 1` que Polymarket rechazaba con 400. Ahora `taker_amount` se deriva del `maker_amount` ya redondeado. **Primer take-profit ejecutado correctamente** (`will-bitcoin-reach-73k-on-april-10`, YES, 1.92 shares @ 0.999).
 * `phone/polymarket_monitor_executor.py`: detecta error 404 del order book (mercado ya resuelto) y lo trata como señal de auto-redención de Polymarket — cierre graceful sin error ni Telegram de fallo.
 * `trade_log.json`: añadidas entradas manuales para `will-bitcoin-reach-73k-on-april-9` — posición abierta y TP/claim hechos por el usuario manualmente (servidor bloqueado por `min_entry_probability`, ya eliminado).
 
