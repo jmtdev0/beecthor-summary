@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-09T18:01:27Z
+- Timestamp: 2026-04-10T00:02:40Z
 - Dry run: False
-- BTC price: 72320.8
+- BTC price: 71782.19
 - Decision action: OPEN_POSITION
-- Decision summary: No live position needs management; open the April 9 BTC 73k reach market on the long side.
-- Validation: False (Outcome probability 0.4955 below configured minimum)
-- Open positions before: 0
-- Open positions after: 0
+- Decision summary: Hold the near-certain April 9 73k reach position to resolution and open the weekly 74k reach market.
+- Validation: False (Nearest-strike-first rule rejected the proposed market)
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
@@ -15,7 +15,7 @@
 {
   "performed": false,
   "details": {
-    "rejected": "Outcome probability 0.4955 below configured minimum"
+    "rejected": "Nearest-strike-first rule rejected the proposed market"
   }
 }
 ```
