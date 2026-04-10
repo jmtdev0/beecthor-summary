@@ -59,8 +59,8 @@ Two allowed market types, each tracked separately:
   - **1 daily** position maximum
   - **2 weekly** positions maximum
 - Monthly or longer-dated positions are not allowed, so they do not count toward the cap.
-- Base stake per entry: `33%` of currently available cash.
-- **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 33% rule.
+- Base stake per entry: `15%` of currently available cash.
+- **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 15% rule.
 
 ## Exit rules
 
