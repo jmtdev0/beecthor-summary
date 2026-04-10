@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-10T06:01:07Z",
+  "timestamp": "2026-04-10T12:03:01Z",
   "dry_run": false,
   "decision": {
     "action": "OPEN_POSITION",
-    "confidence": 0.82,
-    "summary": "Keep the live weekly 74k position unchanged and open the April 10 BTC 73k reach market on the long side.",
-    "rationale": "The live weekly position `will-bitcoin-reach-74k-april-6-12` Yes is only at 41.5%, so it does not qualify for take-profit and early-stage rules disable stop-loss, which means no existing position needs management. The latest Beecthor transcript and summary from 2026-04-09 still favor a short-term push into roughly 73.8k-74k before larger bearish continuation, and Binance at 72123.46 with positive 24h momentum keeps that upside thesis intact. Under nearest-strike-first, the closest valid upside target above spot for the new daily set is `will-bitcoin-reach-73k-on-april-10`; its 42.0% probability is slightly below the preferred band but still acceptable under the soft filter because the thesis is current, clear, and confirmed by price structure.",
+    "confidence": 0.87,
+    "summary": "Keep the weekly 74k reach position unchanged and open the April 10 BTC 73k reach market.",
+    "rationale": "The live weekly `will-bitcoin-reach-74k-april-6-12` Yes position is far below take-profit and early-stage rules disable stop-loss, so no existing position needs closing or reduction. The latest 2026-04-09 Beecthor transcript and summary still favor a final upside sweep toward 73.8k-74k before larger bearish continuation, and Binance at 72138.0 with positive 24h momentum keeps that short-term bullish thesis intact. Under nearest-strike-first, the closest upside target above spot is the April 10 73k reach market, and its 53.5% probability sits cleanly inside the preferred entry range.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -21,28 +21,20 @@
       "direction": "bullish",
       "strike": 73000,
       "stake_usd": 1,
-      "max_entry_probability": 0.42
+      "max_entry_probability": 0.535
     }
   },
   "validation": {
-    "ok": true,
-    "message": "ok"
+    "ok": false,
+    "message": "Maximum number of open positions reached"
   },
   "execution": {
-    "performed": true,
+    "performed": false,
     "details": {
-      "order_id": "2026-04-10T06:01:07Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "37608064007784265600212801015823184528020850588442391494456966898295685035372",
-      "side": "BUY",
-      "stake_usd": 1,
-      "market": "Will Bitcoin reach $73,000 on April 10?",
-      "market_slug": "will-bitcoin-reach-73k-on-april-10",
-      "outcome": "Yes"
+      "rejected": "Maximum number of open positions reached"
     }
   },
-  "binance_spot_price": 72123.46,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 72138.0,
+  "positions_before": 2,
+  "positions_after": 2
 }

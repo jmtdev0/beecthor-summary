@@ -1857,5 +1857,46 @@
     "binance_spot_price": 72123.46,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-10T12:03:01Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "OPEN_POSITION",
+      "confidence": 0.87,
+      "summary": "Keep the weekly 74k reach position unchanged and open the April 10 BTC 73k reach market.",
+      "rationale": "The live weekly `will-bitcoin-reach-74k-april-6-12` Yes position is far below take-profit and early-stage rules disable stop-loss, so no existing position needs closing or reduction. The latest 2026-04-09 Beecthor transcript and summary still favor a final upside sweep toward 73.8k-74k before larger bearish continuation, and Binance at 72138.0 with positive 24h momentum keeps that short-term bullish thesis intact. Under nearest-strike-first, the closest upside target above spot is the April 10 73k reach market, and its 53.5% probability sits cleanly inside the preferred entry range.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "",
+        "market_slug": "will-bitcoin-reach-73k-on-april-10",
+        "outcome": "Yes",
+        "direction": "bullish",
+        "strike": 73000,
+        "stake_usd": 1,
+        "max_entry_probability": 0.535
+      }
+    },
+    "validation": {
+      "ok": false,
+      "message": "Maximum number of open positions reached"
+    },
+    "execution": {
+      "performed": false,
+      "details": {
+        "rejected": "Maximum number of open positions reached"
+      }
+    },
+    "binance_spot_price": 72138.0,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]

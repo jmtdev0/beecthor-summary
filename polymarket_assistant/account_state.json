@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 10.451347,
+  "cash_available": 9.451347,
   "realized_pnl": 0.0,
-  "open_exposure": 0.9255081,
+  "open_exposure": 1.7394,
   "max_open_positions": 2,
   "base_stake_fraction": 0.33,
   "early_stage_max_stake": 1.0,
@@ -19,15 +19,29 @@
       "market_title": "Will Bitcoin reach $74,000 April 6-12?",
       "position_side": "Yes",
       "token_id": "99613013359872800130698376315853443353176968814898443156379930013262330563677",
-      "shares": 2.23014,
-      "avg_price": 0.429999,
-      "entry_cost_usd": 0.95895796986,
-      "current_price": 0.415,
-      "current_value_usd": 0.9255081,
-      "cash_pnl_usd": -0.03344986986000009,
+      "shares": 2.2301,
+      "avg_price": 0.4299,
+      "entry_cost_usd": 0.9589,
+      "current_price": 0.365,
+      "current_value_usd": 0.814,
+      "cash_pnl_usd": -0.1449,
+      "status": "open"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-10",
+      "market_slug": "will-bitcoin-reach-73k-on-april-10",
+      "market_title": "Will Bitcoin reach $73,000 on April 10?",
+      "position_side": "Yes",
+      "token_id": "37608064007784265600212801015823184528020850588442391494456966898295685035372",
+      "shares": 1.928,
+      "avg_price": 0.5,
+      "entry_cost_usd": 0.964,
+      "current_price": 0.48,
+      "current_value_usd": 0.9254,
+      "cash_pnl_usd": -0.0385,
       "status": "open"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-10T06:01:07Z"
+  "last_synced_at": "2026-04-10T12:03:01Z"
 }
