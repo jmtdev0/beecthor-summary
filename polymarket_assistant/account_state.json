@@ -6,7 +6,7 @@
   "realized_pnl": 0.0,
   "open_exposure": 2.1988,
   "max_open_positions": 2,
-  "base_stake_fraction": 0.33,
+  "base_stake_pct": 0.15,
   "early_stage_max_stake": 1.0,
   "early_stage_threshold": 15.0,
   "stop_loss_probability": 0.2,

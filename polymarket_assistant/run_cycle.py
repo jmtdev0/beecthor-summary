@@ -427,6 +427,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         early_stage_threshold = safe_float(account_state.get('early_stage_threshold', 15.0))
         if portfolio_value < early_stage_threshold and stake_usd > early_stage_cap:
             return False, f'Early-stage cap: max stake ${early_stage_cap} while portfolio < ${early_stage_threshold}'
+        base_stake_pct = safe_float(account_state.get('base_stake_pct', 0.15))
+        if portfolio_value >= early_stage_threshold:
+            max_stake = round(cash_available * base_stake_pct, 2)
+            if stake_usd > max_stake:
+                return False, f'Stake ${stake_usd} exceeds {base_stake_pct:.0%} of available cash (max ${max_stake})'
         if len(positions) >= int(account_state.get('max_open_positions', 2)):
             return False, 'Maximum number of open positions reached'
         duplicate = any(
