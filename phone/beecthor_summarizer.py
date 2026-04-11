@@ -133,16 +133,31 @@ def split_long_line(text: str, max_chars: int) -> list[str]:
     return parts
 
 
+REPO_URL = 'https://github.com/jmtdev0/beecthor-summary/blob/main/analyses_log.json'
+TELEGRAM_TRUNCATE_AT = 3900
+
+
+def truncate_for_telegram(text: str) -> str:
+    """If text exceeds TELEGRAM_TRUNCATE_AT, cut at the last paragraph boundary
+    and append a link to the full summary in the repo."""
+    if len(text) <= TELEGRAM_TRUNCATE_AT:
+        return text
+    suffix = f'\n\n… <a href="{REPO_URL}">ver resumen completo →</a>'
+    budget = TELEGRAM_TRUNCATE_AT - len(suffix)
+    cut = text.rfind('\n\n', 0, budget)
+    if cut == -1:
+        cut = text.rfind('\n', 0, budget)
+    if cut == -1:
+        cut = budget
+    return text[:cut].rstrip() + suffix
+
+
 def send_telegram_message(text: str) -> None:
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print('[summarizer] Telegram not configured. Skipping notification.')
         return
 
-    if len(text) > 4096:
-        raise RuntimeError(
-            f'Telegram message too long ({len(text)} chars). Copilot must keep it within 4096.'
-        )
-
+    text = truncate_for_telegram(text)
     url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
@@ -155,7 +170,7 @@ def send_telegram_message(text: str) -> None:
     data = response.json()
     if not data.get('ok'):
         raise RuntimeError(f'Telegram API rejected message: {data}')
-    print('[summarizer] Telegram message sent.')
+    print(f'[summarizer] Telegram message sent ({len(text)} chars).')
 
 
 # ---------------------------------------------------------------------------
