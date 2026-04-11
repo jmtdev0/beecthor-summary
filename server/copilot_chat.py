@@ -768,7 +768,15 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         {'label': 'Cash', 'value': f"{cash_balance:.2f}$", 'caption': 'available to trade' if live_cash_balance is not None else 'fallback from local state', 'css_class': ''},
         {'label': 'PnL realizado', 'value': f'{realized_pnl:.2f}$', 'caption': 'portfolio - bankroll - unrealized', 'css_class': 'good' if realized_pnl >= 0 else 'bad'},
         {'label': 'PnL no realizado', 'value': f'{unrealized_pnl:.2f}$', 'caption': 'posiciones abiertas', 'css_class': 'good' if unrealized_pnl >= 0 else 'bad'},
-        {'label': 'Operaciones', 'value': str(total_operations), 'caption': f'{total_closed} cerradas · {len(open_positions)} abiertas', 'css_class': ''},
+        {'label': 'Operaciones', 'value': str(total_operations), 'caption': f'{total_closed} cerradas · {len(open_positions)} abiertas', 'css_class': '', 'open_positions': [
+            {
+                'title': p.get('title', p.get('market_slug', '')),
+                'outcome': p.get('outcome', ''),
+                'prob': f"{safe_float(p.get('cur_price')) * 100:.0f}¢",
+                'pnl': safe_float(p.get('cash_pnl_usd')),
+            }
+            for p in open_positions
+        ]},
         {'label': 'Aciertos / fallos', 'value': f'{wins} / {losses}', 'caption': 'closed positions', 'css_class': ''},
         {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions', 'css_class': 'good' if win_rate >= 50 else 'bad'},
         {'label': 'Daily / Weekly', 'value': f'{daily_count} / {weekly_count}', 'caption': 'classified positions', 'css_class': ''},
@@ -999,6 +1007,22 @@ def private_polymarket():
           <div class="metric-label">{{ metric.label }}</div>
           <div class="big {{ metric.css_class }}">{{ metric.value }}</div>
           <div class="muted">{{ metric.caption }}</div>
+          {% if metric.open_positions is defined and metric.open_positions %}
+          <details style="margin-top:8px">
+            <summary style="cursor:pointer;font-size:.78rem;color:#aaa;list-style:none">▸ ver abiertas</summary>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+              {% for pos in metric.open_positions %}
+              <div style="font-size:.78rem;padding:5px 7px;background:#1e1e1e;border-radius:6px;display:flex;justify-content:space-between;gap:8px">
+                <span style="color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
+                <span style="white-space:nowrap">
+                  <span style="color:#888">{{ pos.prob }}</span>
+                  <span style="margin-left:6px;{{ 'color:#4caf50' if pos.pnl >= 0 else 'color:#f44336' }}">{{ '%+.2f$' % pos.pnl }}</span>
+                </span>
+              </div>
+              {% endfor %}
+            </div>
+          </details>
+          {% endif %}
         </section>
         {% endfor %}
       </div>
