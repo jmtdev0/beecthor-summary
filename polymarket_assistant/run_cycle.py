@@ -271,11 +271,20 @@ def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
     )
     response.raise_for_status()
     positions = response.json()
+    now_utc = datetime.now(UTC)
     normalized = []
     for item in positions:
         size = safe_float(item.get('size'))
         if size <= 0:
             continue
+        end_date_str = item.get('endDate')
+        if end_date_str:
+            try:
+                end_dt = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+                if end_dt < now_utc:
+                    continue  # market already resolved — exclude from active positions
+            except Exception:
+                pass
         normalized.append({
             'market_slug': item.get('slug'),
             'market_title': item.get('title'),
@@ -289,7 +298,7 @@ def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
             'cash_pnl': safe_float(item.get('cashPnl')),
             'percent_pnl': safe_float(item.get('percentPnl')),
             'cur_price': safe_float(item.get('curPrice')),
-            'end_date': item.get('endDate'),
+            'end_date': end_date_str,
         })
     return normalized
 
