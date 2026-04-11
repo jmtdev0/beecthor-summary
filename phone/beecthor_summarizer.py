@@ -133,31 +133,36 @@ def split_long_line(text: str, max_chars: int) -> list[str]:
     return parts
 
 
-REPO_URL = 'https://github.com/jmtdev0/beecthor-summary/blob/main/analyses_log.json'
+DASHBOARD_BASE_URL = 'https://6p6s8bcz-5050.uks1.devtunnels.ms/videos'
 TELEGRAM_TRUNCATE_AT = 3900
 
 
-def truncate_for_telegram(text: str) -> str:
+def truncate_for_telegram(text: str, video_id: str = '') -> str:
     """If text exceeds TELEGRAM_TRUNCATE_AT, cut at the last paragraph boundary
-    and append a link to the full summary in the repo."""
+    and append a link to the full summary on the dashboard."""
     if len(text) <= TELEGRAM_TRUNCATE_AT:
         return text
-    suffix = f'\n\n… <a href="{REPO_URL}">ver resumen completo →</a>'
+    link = f'{DASHBOARD_BASE_URL}/{video_id}' if video_id else DASHBOARD_BASE_URL
+    suffix = f'\n\n… <a href="{link}">ver resumen completo →</a>'
     budget = TELEGRAM_TRUNCATE_AT - len(suffix)
     cut = text.rfind('\n\n', 0, budget)
     if cut == -1:
         cut = text.rfind('\n', 0, budget)
     if cut == -1:
         cut = budget
-    return text[:cut].rstrip() + suffix
+    truncated = text[:cut].rstrip()
+    # Close any unclosed <tg-spoiler> tag to avoid Telegram HTML parse errors
+    if truncated.count('<tg-spoiler>') > truncated.count('</tg-spoiler>'):
+        truncated += '</tg-spoiler>'
+    return truncated + suffix
 
 
-def send_telegram_message(text: str) -> None:
+def send_telegram_message(text: str, video_id: str = '') -> None:
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print('[summarizer] Telegram not configured. Skipping notification.')
         return
 
-    text = truncate_for_telegram(text)
+    text = truncate_for_telegram(text, video_id=video_id)
     url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
@@ -299,12 +304,13 @@ Generate a JSON object following EXACTLY the format of the examples below. Pay c
 - The HTML structure of the "message" field (Telegram HTML — use <b>, <i>, <a>, <tg-spoiler>)
 - The 🤖 robot_score (float 0-10): how robotic/technical vs human the video felt
 - The witty one-liner under the robot score (ironic, concise, in Spanish)
-- The 🧭 Visión macro section summarizing the medium/long-term bias
-- The 📌 Resumen section: 2-3 direct lines with the key trade idea
+- The 🧭 Visión macro section: MAXIMUM 2 lines. Just the medium/long-term directional bias, nothing more. No wave counts, no Fibonacci levels, no targets — only the big-picture direction.
+- The 📌 Resumen section: 2-3 direct lines with the key SHORT-TERM trade idea and the most important price levels.
 - The full detailed analysis inside <tg-spoiler>
+- PRICE LEVELS ARE CRITICAL: include every specific price level Beecthor mentions in <b> tags — resistance zones, support zones, VWAP/BWAP anchors, Fibonacci targets, liquidation clusters, wave invalidation points. Traders rely on these numbers. Do not omit any.
 - Writing style: concise, uses <b> for key price levels and concepts, in Spanish
 - The final "message" must fit in a single Telegram message and must not exceed 4096 total characters
-- If you need to shorten something, shorten the <tg-spoiler> analysis first
+- If you need to shorten something, shorten the macro narrative in <tg-spoiler> first — never drop price levels
 - Do not produce multiple parts, continuations, or references to a second message
 
 EXAMPLES (last {len(examples)} entries — learn the format from these):
@@ -476,7 +482,7 @@ def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_p
 
     if send_telegram:
         print('[summarizer] Sending message to Telegram...')
-        send_telegram_message(entry['message'])
+        send_telegram_message(entry['message'], video_id=entry.get('video_id', ''))
 
     log.append(entry)
     ANALYSES_LOG.write_text(json.dumps(log, ensure_ascii=False, indent=2), encoding='utf-8')
