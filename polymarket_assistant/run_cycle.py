@@ -36,6 +36,10 @@ DATA_API_HOST = 'https://data-api.polymarket.com'
 BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
 BINANCE_STATS_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'
 BINANCE_FUNDING_URL = 'https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT'
+BINANCE_LS_RATIO_URL = 'https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=5m&limit=1'
+BINANCE_OI_URL = 'https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT'
+BINANCE_OI_HIST_URL = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=1h&limit=5'
+FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
@@ -152,6 +156,93 @@ def fetch_btc_funding_rate() -> dict[str, Any] | None:
         return None
 
 
+def fetch_fear_greed() -> dict[str, Any] | None:
+    """Fetch the current Fear & Greed index from alternative.me."""
+    try:
+        resp = requests.get(FEAR_GREED_URL, timeout=10)
+        resp.raise_for_status()
+        entry = resp.json()['data'][0]
+        value = int(entry['value'])
+        label = entry['value_classification']
+        return {'value': value, 'label': label}
+    except Exception:
+        return None
+
+
+def fetch_long_short_ratio() -> dict[str, Any] | None:
+    """Fetch the global BTC long/short account ratio from Binance futures."""
+    try:
+        resp = requests.get(BINANCE_LS_RATIO_URL, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()[0]
+        ratio = safe_float(data.get('longShortRatio'))
+        long_pct = round(safe_float(data.get('longAccount')) * 100, 1)
+        short_pct = round(safe_float(data.get('shortAccount')) * 100, 1)
+        if ratio > 1.1:
+            bias = 'longs dominant'
+        elif ratio < 0.9:
+            bias = 'shorts dominant'
+        else:
+            bias = 'balanced'
+        return {'ratio': round(ratio, 3), 'long_pct': long_pct, 'short_pct': short_pct, 'bias': bias}
+    except Exception:
+        return None
+
+
+def fetch_open_interest() -> dict[str, Any] | None:
+    """Fetch current OI and 4h trend from Binance futures."""
+    try:
+        oi_resp = requests.get(BINANCE_OI_URL, timeout=10)
+        oi_resp.raise_for_status()
+        current_oi = safe_float(oi_resp.json().get('openInterest'))
+
+        hist_resp = requests.get(BINANCE_OI_HIST_URL, timeout=10)
+        hist_resp.raise_for_status()
+        hist = hist_resp.json()
+        if len(hist) >= 2:
+            oldest_oi = safe_float(hist[0].get('sumOpenInterest'))
+            change_pct = round((current_oi - oldest_oi) / oldest_oi * 100, 2) if oldest_oi else 0.0
+            if change_pct > 1:
+                trend = 'expanding (new money entering)'
+            elif change_pct < -1:
+                trend = 'contracting (positions closing)'
+            else:
+                trend = 'flat'
+        else:
+            change_pct = 0.0
+            trend = 'unknown'
+
+        return {
+            'current_btc': round(current_oi, 0),
+            'change_4h_pct': change_pct,
+            'trend': trend,
+        }
+    except Exception:
+        return None
+
+
+def build_market_time_context() -> dict[str, Any]:
+    """Return time-awareness context for daily and weekly Polymarket markets."""
+    now = datetime.now(UTC)
+    # Daily markets reset at UTC midnight
+    hours_until_daily_close = round((23 - now.hour) + (60 - now.minute) / 60, 1)
+    # Weekly markets (Mon–Sun) close at end of Sunday UTC
+    days_until_weekly_close = 6 - now.weekday()  # weekday(): Mon=0, Sun=6
+    if days_until_weekly_close < 0:
+        days_until_weekly_close = 0
+    hours_until_weekly_close = round(days_until_weekly_close * 24 + hours_until_daily_close, 1)
+    return {
+        'utc_now': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'utc_hour': now.hour,
+        'hours_until_daily_market_close': hours_until_daily_close,
+        'hours_until_weekly_market_close': hours_until_weekly_close,
+        'note': (
+            'Daily markets resolve at UTC midnight. '
+            'A position entered with <4h remaining has very limited time to resolve.'
+        ),
+    }
+
+
 def fetch_binance_snapshot() -> dict[str, Any]:
     ticker = requests.get(BINANCE_TICKER_URL, timeout=20)
     ticker.raise_for_status()
@@ -159,17 +250,33 @@ def fetch_binance_snapshot() -> dict[str, Any]:
     stats.raise_for_status()
     ticker_json = ticker.json()
     stats_json = stats.json()
+    spot = safe_float(ticker_json.get('price'))
+    high = safe_float(stats_json.get('highPrice'))
+    low = safe_float(stats_json.get('lowPrice'))
+    change_pct = safe_float(stats_json.get('priceChangePercent'))
+    # Intraday move context: how much of the daily range has already been used
+    daily_range = high - low
+    pct_from_high = round((high - spot) / high * 100, 2) if high else 0.0
+    pct_from_low = round((spot - low) / low * 100, 2) if low else 0.0
     snapshot = {
         'symbol': ticker_json.get('symbol'),
-        'spot_price': safe_float(ticker_json.get('price')),
-        'price_change_percent_24h': safe_float(stats_json.get('priceChangePercent')),
-        'high_24h': safe_float(stats_json.get('highPrice')),
-        'low_24h': safe_float(stats_json.get('lowPrice')),
+        'spot_price': spot,
+        'price_change_percent_24h': change_pct,
+        'high_24h': high,
+        'low_24h': low,
         'volume_24h': safe_float(stats_json.get('volume')),
+        'daily_range_usd': round(daily_range, 0),
+        'pct_below_24h_high': pct_from_high,
+        'pct_above_24h_low': pct_from_low,
     }
-    funding = fetch_btc_funding_rate()
-    if funding:
-        snapshot['funding_rate'] = funding
+    for fetcher, key in [
+        (fetch_btc_funding_rate, 'funding_rate'),
+        (fetch_long_short_ratio, 'long_short_ratio'),
+        (fetch_open_interest, 'open_interest'),
+    ]:
+        result = fetcher()
+        if result:
+            snapshot[key] = result
     return snapshot
 
 
@@ -408,6 +515,8 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'account_state': account_state,
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
+        'market_time_context': build_market_time_context(),
+        'fear_and_greed': fetch_fear_greed(),
         'binance': fetch_binance_snapshot(),
         'polymarket': {
             'cash_balance_usdc': safe_float(balance.get('balance')) / 1_000_000,
