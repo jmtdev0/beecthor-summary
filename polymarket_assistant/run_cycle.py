@@ -312,6 +312,54 @@ def fetch_balance_allowance(client: ClobClient, config: dict[str, str]) -> dict[
     )
 
 
+def compute_performance_snapshot(trade_log: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Compute a calibration summary from closed trades for GPT context.
+
+    Returns None when fewer than 3 closed trades exist (not statistically useful).
+    """
+    closed = [e for e in trade_log if e.get('type') == 'trade_closed']
+    if len(closed) < 3:
+        return None
+
+    wins = [t for t in closed if safe_float(t.get('pnl_usd')) > 0]
+    losses = [t for t in closed if safe_float(t.get('pnl_usd')) <= 0]
+    win_rate = round(len(wins) / len(closed) * 100, 1)
+
+    avg_gain = round(sum(safe_float(t.get('pnl_pct')) for t in wins) / len(wins), 1) if wins else 0.0
+    avg_loss = round(sum(safe_float(t.get('pnl_pct')) for t in losses) / len(losses), 1) if losses else 0.0
+
+    # Win rate by entry probability band
+    bands: dict[str, list[bool]] = {'20-40%': [], '40-60%': [], '60-80%': [], '>80%': []}
+    for t in closed:
+        prob = safe_float(t.get('avg_entry_price'))
+        result = safe_float(t.get('pnl_usd')) > 0
+        if prob < 0.40:
+            bands['20-40%'].append(result)
+        elif prob < 0.60:
+            bands['40-60%'].append(result)
+        elif prob < 0.80:
+            bands['60-80%'].append(result)
+        else:
+            bands['>80%'].append(result)
+
+    band_stats = {}
+    for label, results in bands.items():
+        if results:
+            band_stats[label] = f"{round(sum(results) / len(results) * 100)}% win ({len(results)} trades)"
+
+    # Recent streak (last 5 closed trades)
+    streak = ''.join('W' if safe_float(t.get('pnl_usd')) > 0 else 'L' for t in closed[-5:])
+
+    return {
+        'total_closed_trades': len(closed),
+        'win_rate_pct': win_rate,
+        'avg_gain_on_wins_pct': avg_gain,
+        'avg_loss_on_losses_pct': avg_loss,
+        'by_entry_probability_band': band_stats,
+        'recent_streak_last5': streak,
+    }
+
+
 def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     client = build_private_client(config)
     account_state = load_json(ACCOUNT_STATE_PATH, {})
@@ -319,12 +367,14 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     positions = fetch_positions(config)
     balance = fetch_balance_allowance(client, config)
     orders = client.get_orders()
+    perf = compute_performance_snapshot(trade_log)
     return {
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
         'recent_transcripts': read_recent_transcripts(),
         'recent_summaries': read_recent_summaries(),
         'account_state': account_state,
         'recent_trade_log': trade_log[-8:],
+        'performance_snapshot': perf,
         'binance': fetch_binance_snapshot(),
         'polymarket': {
             'cash_balance_usdc': safe_float(balance.get('balance')) / 1_000_000,
