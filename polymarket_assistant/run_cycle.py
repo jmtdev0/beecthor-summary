@@ -516,7 +516,6 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
         'market_time_context': build_market_time_context(),
-        'fear_and_greed': fetch_fear_greed(),
         'binance': fetch_binance_snapshot(),
         'polymarket': {
             'cash_balance_usdc': safe_float(balance.get('balance')) / 1_000_000,
