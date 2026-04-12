@@ -35,6 +35,7 @@ GAMMA_HOST = 'https://gamma-api.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
 BINANCE_STATS_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'
+BINANCE_FUNDING_URL = 'https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT'
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
@@ -123,6 +124,34 @@ def read_recent_summaries(limit: int = MAX_SUMMARIES, chars_per_message: int = 1
     return results
 
 
+def fetch_btc_funding_rate() -> dict[str, Any] | None:
+    """Fetch the current BTC perpetual funding rate from Binance futures.
+
+    Returns a dict with the raw rate, annualised rate, and a human-readable
+    sentiment label, or None if the request fails.
+    """
+    try:
+        resp = requests.get(BINANCE_FUNDING_URL, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        rate = safe_float(data.get('lastFundingRate'))
+        rate_pct = round(rate * 100, 4)
+        annualised_pct = round(rate * 3 * 365 * 100, 2)  # 3 payments/day * 365 days
+        if rate > 0.0005:
+            sentiment = 'bullish (longs paying shorts)'
+        elif rate < -0.0005:
+            sentiment = 'bearish (shorts paying longs)'
+        else:
+            sentiment = 'neutral'
+        return {
+            'funding_rate': rate_pct,
+            'annualised_pct': annualised_pct,
+            'sentiment': sentiment,
+        }
+    except Exception:
+        return None
+
+
 def fetch_binance_snapshot() -> dict[str, Any]:
     ticker = requests.get(BINANCE_TICKER_URL, timeout=20)
     ticker.raise_for_status()
@@ -130,7 +159,7 @@ def fetch_binance_snapshot() -> dict[str, Any]:
     stats.raise_for_status()
     ticker_json = ticker.json()
     stats_json = stats.json()
-    return {
+    snapshot = {
         'symbol': ticker_json.get('symbol'),
         'spot_price': safe_float(ticker_json.get('price')),
         'price_change_percent_24h': safe_float(stats_json.get('priceChangePercent')),
@@ -138,6 +167,10 @@ def fetch_binance_snapshot() -> dict[str, Any]:
         'low_24h': safe_float(stats_json.get('lowPrice')),
         'volume_24h': safe_float(stats_json.get('volume')),
     }
+    funding = fetch_btc_funding_rate()
+    if funding:
+        snapshot['funding_rate'] = funding
+    return snapshot
 
 
 def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
