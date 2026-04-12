@@ -474,8 +474,7 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'title': 'Server cycles',
             'subtitle': 'Servidor · decisión de ciclo',
             'entries': build_cycle_trace_entries(limit=TRACE_LANE_LIMIT),
-            'trigger': 'cycle',
-            'trigger_label': '▶ Run Cycle',
+            'triggers': [{'process': 'cycle', 'label': '▶ Run Cycle', 'primary': True}],
         },
         {
             'title': 'Open operations',
@@ -486,12 +485,15 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
                 payload_keys=['order_id', 'market_slug', 'outcome', 'status'],
                 allowed_events={'run_started', 'run_skipped', 'order_received', 'order_executed', 'order_skipped', 'order_failed', 'run_active'},
             ),
+            'triggers': [{'process': 'executor', 'label': '▶ Run Executor', 'primary': True}],
         },
         {
             'title': 'TP / SL',
             'subtitle': 'Móvil · take-profit y stop-loss',
-            'trigger': 'monitor',
-            'trigger_label': '⚡ Run Monitor',
+            'triggers': [
+                {'process': 'monitor', 'label': '⚡ Monitor', 'primary': False},
+                {'process': 'monitor_executor', 'label': '▶ Executor', 'primary': True},
+            ],
             'entries': build_mobile_trace_entries(
                 'phone.monitor',
                 limit=TRACE_LANE_LIMIT,
@@ -940,8 +942,12 @@ def public_video_detail(video_id: str):
 
 TRIGGER_LABELS = {
     'cycle': 'Cycle',
-    'monitor': 'Monitor',
+    'monitor': 'Monitor (server)',
+    'executor': 'Executor (phone)',
+    'monitor_executor': 'Monitor Executor (phone)',
 }
+
+PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'jmart@localhost']
 
 
 @app.route('/private/trigger/<process>', methods=['POST'])
@@ -956,6 +962,18 @@ def trigger_process(process: str):
     elif process == 'monitor':
         subprocess.Popen(
             ['python', str(REPO_ROOT / 'polymarket_assistant' / 'run_monitor.py')],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    elif process == 'executor':
+        subprocess.Popen(
+            PHONE_SSH + ['python ~/polymarket_executor.py'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    elif process == 'monitor_executor':
+        subprocess.Popen(
+            PHONE_SSH + ['python ~/polymarket_monitor_executor.py'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -1069,10 +1087,14 @@ def private_polymarket():
               <h2 class="trace-lane-title">{{ lane.title }}</h2>
               <div class="trace-lane-subtitle">{{ lane.subtitle }}</div>
             </div>
-            {% if lane.trigger is defined %}
-            <form method="POST" action="/private/trigger/{{ lane.trigger }}" style="flex-shrink:0">
-              <button type="submit" style="background:{% if lane.trigger == 'cycle' %}#1f6feb{% else %}#22272d{% endif %};color:#f3f4f6;border:none;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:.78rem;white-space:nowrap">{{ lane.trigger_label }}</button>
-            </form>
+            {% if lane.triggers is defined %}
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+              {% for t in lane.triggers %}
+              <form method="POST" action="/private/trigger/{{ t.process }}">
+                <button type="submit" style="background:{% if t.primary %}#1f6feb{% else %}#22272d{% endif %};color:#f3f4f6;border:none;border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:.75rem;white-space:nowrap">{{ t.label }}</button>
+              </form>
+              {% endfor %}
+            </div>
             {% endif %}
           </div>
           <div class="trace-stack">
