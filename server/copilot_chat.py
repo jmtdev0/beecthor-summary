@@ -474,6 +474,8 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'title': 'Server cycles',
             'subtitle': 'Servidor · decisión de ciclo',
             'entries': build_cycle_trace_entries(limit=TRACE_LANE_LIMIT),
+            'trigger': 'cycle',
+            'trigger_label': '▶ Run Cycle',
         },
         {
             'title': 'Open operations',
@@ -488,6 +490,8 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
         {
             'title': 'TP / SL',
             'subtitle': 'Móvil · take-profit y stop-loss',
+            'trigger': 'monitor',
+            'trigger_label': '⚡ Run Monitor',
             'entries': build_mobile_trace_entries(
                 'phone.monitor',
                 limit=TRACE_LANE_LIMIT,
@@ -1057,20 +1061,19 @@ def private_polymarket():
         ✓ {{ triggered_label }} lanzado en background — revisa los logs en unos minutos.
       </div>
       {% endif %}
-      <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
-        <form method="POST" action="/private/trigger/cycle">
-          <button type="submit" style="background:#1f6feb;color:#fff;border:none;border-radius:999px;padding:10px 22px;cursor:pointer;font-weight:700;font-size:.9rem">▶ Run Cycle</button>
-        </form>
-        <form method="POST" action="/private/trigger/monitor">
-          <button type="submit" style="background:#22272d;color:#f3f4f6;border:none;border-radius:999px;padding:10px 22px;cursor:pointer;font-weight:700;font-size:.9rem">⚡ Run Monitor</button>
-        </form>
-      </div>
       <div class="trace-grid">
         {% for lane in trace_lanes %}
         <section class="trace-lane">
-          <div class="trace-lane-head">
-            <h2 class="trace-lane-title">{{ lane.title }}</h2>
-            <div class="trace-lane-subtitle">{{ lane.subtitle }}</div>
+          <div class="trace-lane-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div>
+              <h2 class="trace-lane-title">{{ lane.title }}</h2>
+              <div class="trace-lane-subtitle">{{ lane.subtitle }}</div>
+            </div>
+            {% if lane.trigger is defined %}
+            <form method="POST" action="/private/trigger/{{ lane.trigger }}" style="flex-shrink:0">
+              <button type="submit" style="background:{% if lane.trigger == 'cycle' %}#1f6feb{% else %}#22272d{% endif %};color:#f3f4f6;border:none;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:.78rem;white-space:nowrap">{{ lane.trigger_label }}</button>
+            </form>
+            {% endif %}
           </div>
           <div class="trace-stack">
             {% for entry in lane.entries %}
