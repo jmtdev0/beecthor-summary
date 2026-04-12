@@ -2248,5 +2248,54 @@
     "binance_spot_price": 71420.41,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-12T14:05:52Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "OPEN_POSITION",
+      "confidence": 0.89,
+      "summary": "Hold the open weekly 74k reach position and open the April 12 BTC 70k dip market.",
+      "rationale": "The open weekly `will-bitcoin-reach-74k-april-6-12` Yes position is far below the 90-95% take-profit zone, and the early-stage playbook disables stop-loss, so no existing position should be closed or reduced. The latest Beecthor transcript and recent summaries keep the active thesis bearish again unless recent highs break, still expecting lower lows, and Binance confirms that execution reality with BTC at 70945.98, down 2.386% on the day and trading near the session low. Under nearest-strike-first, the closest downside target below spot for the April 12 daily set is `will-bitcoin-dip-to-70k-on-april-12`, and its 49.5% probability is conservative, aligned with the thesis, and below the 85% hard cap.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "",
+        "market_slug": "will-bitcoin-dip-to-70k-on-april-12",
+        "outcome": "Yes",
+        "direction": "bearish",
+        "strike": 70000,
+        "stake_usd": 1,
+        "max_entry_probability": 0.495
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": true,
+      "details": {
+        "order_id": "2026-04-12T14:05:52Z",
+        "status": "pending_phone_execution",
+        "type": "OPEN_POSITION",
+        "token_id": "52287499536352742920555078216488369155969007057110800964076939881723524726921",
+        "side": "BUY",
+        "stake_usd": 1,
+        "market": "Will Bitcoin dip to $70,000 on April 12?",
+        "market_slug": "will-bitcoin-dip-to-70k-on-april-12",
+        "outcome": "Yes"
+      }
+    },
+    "binance_spot_price": 70945.98,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
