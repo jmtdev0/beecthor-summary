@@ -934,6 +934,32 @@ def public_video_detail(video_id: str):
     )
 
 
+TRIGGER_LABELS = {
+    'cycle': 'Cycle',
+    'monitor': 'Monitor',
+}
+
+
+@app.route('/private/trigger/<process>', methods=['POST'])
+@require_private
+def trigger_process(process: str):
+    if process == 'cycle':
+        subprocess.Popen(
+            ['bash', '/root/run_polymarket_cycle.sh'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    elif process == 'monitor':
+        subprocess.Popen(
+            ['python', str(REPO_ROOT / 'polymarket_assistant' / 'run_monitor.py')],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    else:
+        return redirect(url_for('private_polymarket'))
+    return redirect(url_for('private_polymarket', triggered=process))
+
+
 @app.route('/refresh')
 def refresh_repo():
     subprocess.run(
@@ -1026,6 +1052,19 @@ def private_polymarket():
         </section>
         {% endfor %}
       </div>
+      {% if triggered %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-weight:600;font-size:.93rem">
+        ✓ {{ triggered_label }} lanzado en background — revisa los logs en unos minutos.
+      </div>
+      {% endif %}
+      <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+        <form method="POST" action="/private/trigger/cycle">
+          <button type="submit" style="background:#1f6feb;color:#fff;border:none;border-radius:999px;padding:10px 22px;cursor:pointer;font-weight:700;font-size:.9rem">▶ Run Cycle</button>
+        </form>
+        <form method="POST" action="/private/trigger/monitor">
+          <button type="submit" style="background:#22272d;color:#f3f4f6;border:none;border-radius:999px;padding:10px 22px;cursor:pointer;font-weight:700;font-size:.9rem">⚡ Run Monitor</button>
+        </form>
+      </div>
       <div class="trace-grid">
         {% for lane in trace_lanes %}
         <section class="trace-lane">
@@ -1053,7 +1092,9 @@ def private_polymarket():
         {% endfor %}
       </div>
     </div>""" + PAGE_END
-    return render_template_string(html, trace_lanes=trace_lanes, **snapshot)
+    triggered = request.args.get('triggered', '')
+    triggered_label = TRIGGER_LABELS.get(triggered, triggered)
+    return render_template_string(html, trace_lanes=trace_lanes, triggered=triggered, triggered_label=triggered_label, **snapshot)
 
 
 @app.route('/private/logs')
