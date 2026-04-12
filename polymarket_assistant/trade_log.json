@@ -2160,5 +2160,44 @@
     "binance_spot_price": 73043.16,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-12T06:01:54Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.91,
+      "summary": "Hold the weekly 74k reach position and skip any new BTC entry this cycle.",
+      "rationale": "The open weekly position `will-bitcoin-reach-74k-april-6-12` on `Yes` is at 54.5%, well below the 90-95% take-profit zone, and early-stage rules keep it open. The latest Beecthor transcript and summaries have shifted the active thesis back bearish unless recent highs break, still expecting lower lows, and Binance now supports that turn with BTC at 71711.4 and down 1.375% over 24h. But the nearest valid bearish entries are too discounted to offer a clean edge: the closest fresh daily downside line, `will-bitcoin-dip-to-67k-on-april-12`, is only 2.85%, and the weekly downside alternatives are even lower.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 71711.4,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
