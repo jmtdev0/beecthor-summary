@@ -446,6 +446,7 @@ def run_copilot(prompt: str, model: str) -> dict[str, Any]:
         prompt,
         '--model',
         model,
+        '--effort=high',
         '-s',
         '--no-ask-user',
     ]
