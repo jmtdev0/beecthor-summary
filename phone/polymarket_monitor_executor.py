@@ -56,6 +56,9 @@ POLY_API_PASSPHRASE = os.environ.get('POLY_API_PASSPHRASE', '')
 POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
 POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
 POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+GH_TOKEN = os.environ.get('GH_TOKEN', '')
+
+TRADE_LOG_API_URL = 'https://api.github.com/repos/jmtdev0/beecthor-summary/contents/polymarket_assistant/trade_log.json'
 
 
 def refresh_runtime_config() -> None:
@@ -76,6 +79,8 @@ def refresh_runtime_config() -> None:
     POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
     POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
     POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
+    global GH_TOKEN
+    GH_TOKEN = os.environ.get('GH_TOKEN', '')
     refresh_log_client_config()
 
 
@@ -350,6 +355,46 @@ def post_order(order_dict: dict[str, Any]) -> requests.Response:
     )
 
 
+def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
+    """Append a trade_closed entry to trade_log.json via GitHub Contents API."""
+    if not GH_TOKEN:
+        print('[monitor-executor] GH_TOKEN not set — skipping trade_log update')
+        return
+    headers = {
+        'Authorization': f'token {GH_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+    }
+    resp = requests.get(TRADE_LOG_API_URL, headers=headers, timeout=20)
+    if not resp.ok:
+        print(f'[monitor-executor] Failed to fetch trade_log.json: {resp.status_code}')
+        return
+    data = resp.json()
+    sha = data['sha']
+    log = json.loads(base64.b64decode(data['content']).decode('utf-8'))
+    log.append(entry)
+    new_content = base64.b64encode(
+        json.dumps(log, ensure_ascii=False, indent=2).encode('utf-8')
+    ).decode('utf-8')
+    put_resp = requests.put(
+        TRADE_LOG_API_URL,
+        headers=headers,
+        json={
+            'message': f'chore: auto trade_closed {entry.get("market_slug", "")} ({entry.get("close_reason", "")})',
+            'content': new_content,
+            'sha': sha,
+            'committer': {
+                'name': 'beecthor-summarizer[bot]',
+                'email': 'beecthor-summarizer[bot]@users.noreply.github.com',
+            },
+        },
+        timeout=30,
+    )
+    if put_resp.ok:
+        print('[monitor-executor] trade_closed appended to trade_log.json on GitHub')
+    else:
+        print(f'[monitor-executor] Failed to update trade_log.json: {put_resp.status_code} {put_resp.text[:200]}')
+
+
 def main() -> None:
     args = parse_args()
     load_dotenv(args.env_file, override=True)
@@ -476,6 +521,28 @@ def main() -> None:
             f'{outcome} @ {prob:.0%}\n'
             f'sold {amount:.4f}'
         )
+        avg_entry = safe_float(target.get('avgPrice', 0))
+        entry_cost = round(amount * avg_entry, 4) if avg_entry else None
+        exit_proceeds = round(amount * price, 4)
+        pnl_usd = round(exit_proceeds - entry_cost, 4) if entry_cost is not None else None
+        pnl_pct = round((exit_proceeds / entry_cost - 1) * 100, 2) if entry_cost else None
+        append_trade_closed_to_log({
+            'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            'type': 'trade_closed',
+            'market_slug': market_slug,
+            'market_title': title,
+            'outcome': outcome,
+            'side': 'SELL',
+            'close_reason': action.lower(),
+            'shares': round(amount, 4),
+            'avg_entry_price': avg_entry,
+            'exit_price': round(price, 4),
+            'entry_cost_usd': entry_cost,
+            'exit_proceeds_usd': exit_proceeds,
+            'pnl_usd': pnl_usd,
+            'pnl_pct': pnl_pct,
+            'source': 'monitor_executor',
+        })
     else:
         print(f'[monitor-executor] FAILED {resp.status_code}: {resp.text}')
         send_server_log('phone.monitor', 'order_failed', f'{action} failed', level='error', payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]})
