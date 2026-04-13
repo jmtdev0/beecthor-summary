@@ -2453,5 +2453,101 @@
     "binance_spot_price": 70917.82,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-13T17:45:01Z",
+    "type": "cycle_run",
+    "dry_run": true,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.91,
+      "summary": "No existing management is warranted and no new price-hit or floor entry has a valid edge.",
+      "rationale": "Beecthor's latest transcript and recent summaries still keep the active thesis bearish below 75k-76k, with 73.5k-74k treated as resistance and downside favored afterward. Binance at 72442.8 shows a rebound near the session high rather than a clean bearish breakdown, so the nearest bearish price-hit markets are too discounted for a strong entry (70k on Apr 13 at 6.0%, 68k Apr 13-19 at 26.5%), while bullish reach markets like 73k daily at 56.5% or 74k weekly at 68.5% conflict with the current thesis. The floor market above 72k at 64.5% is also invalid because Beecthor's thesis still implies BTC can break back below 72k.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 72442.8,
+    "positions_before": 0,
+    "positions_after": 0
+  },
+  {
+    "timestamp": "2026-04-13T18:02:58Z",
+    "type": "cycle_run",
+    "dry_run": false,
+    "decision": {
+      "action": "NO_ACTION",
+      "confidence": 0.92,
+      "summary": "No existing management is needed and there is no valid new price-hit or floor entry.",
+      "rationale": "The latest Beecthor transcript and recent summaries still keep the thesis bearish below 75k-76k, with 73.5k-74k treated as resistance and further downside toward 70k and possibly 67k-66k still favored. Binance does not confirm fresh downside execution right now: BTC is 72135.11, up 1.439% on the day and trading close to the 24h high, so bearish momentum confirmation is weak. The nearest bearish price-hit candidates are too discounted for a clean edge (70k daily at 7.0%, 68k weekly at 29.0%), while bullish price-hit markets like 73k daily at 36.5% or 74k weekly at 63.5% conflict with Beecthor’s active thesis. The floor market above 72k at 56.5% also fails because the thesis still implies BTC can break back below 72k.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 72135.11,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]

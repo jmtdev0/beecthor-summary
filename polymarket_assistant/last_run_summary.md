@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-13T12:01:11Z
+- Timestamp: 2026-04-13T18:02:58Z
 - Dry run: False
-- BTC price: 70917.82
+- BTC price: 72135.11
 - Decision action: NO_ACTION
-- Decision summary: Keep the unresolved April 12 70k dip position unchanged and do not open a new BTC trade this cycle.
+- Decision summary: No existing management is needed and there is no valid new price-hit or floor entry.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 
