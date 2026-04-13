@@ -504,10 +504,22 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     client = build_private_client(config)
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
-    positions = fetch_positions(config)
+    positions = fetch_positions(config)  # already filtered by endDate
     balance = fetch_balance_allowance(client, config)
     orders = client.get_orders()
     perf = compute_performance_snapshot(trade_log)
+
+    # Reconcile account_state.open_positions against live positions before
+    # passing to GPT. Any position whose market has expired (excluded from
+    # fetch_positions by endDate) is removed here so GPT always sees an
+    # accurate slot count, even if the previous sync wrote a stale entry.
+    live_slugs = {p['market_slug'] for p in positions}
+    account_state = dict(account_state)
+    account_state['open_positions'] = [
+        p for p in account_state.get('open_positions', [])
+        if p.get('market_slug') in live_slugs
+    ]
+
     return {
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
         'recent_transcripts': read_recent_transcripts(),
@@ -849,12 +861,9 @@ def prepare_close_or_reduce_via_phone(
 
 
 def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions: list[dict[str, Any]]) -> dict[str, Any]:
-    # Exclude positions that have effectively resolved at zero — their market
-    # has expired worthless and they should no longer count as open slots.
-    active_positions = [p for p in positions if safe_float(p.get('cur_price')) > 0.01]
     state = dict(existing)
     state['cash_available'] = balance_usdc
-    state['open_exposure'] = round(sum(pos['current_value'] for pos in active_positions), 8)
+    state['open_exposure'] = round(sum(pos['current_value'] for pos in positions), 8)
     state['open_positions'] = [
         {
             'event_slug': pos['event_slug'],
@@ -870,7 +879,7 @@ def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions:
             'cash_pnl_usd': pos['cash_pnl'],
             'status': 'open',
         }
-        for pos in active_positions
+        for pos in positions
     ]
     state['last_synced_at'] = now_utc()
     return state
