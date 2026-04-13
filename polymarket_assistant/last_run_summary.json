@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-13T06:02:39Z",
+  "timestamp": "2026-04-13T12:01:11Z",
   "dry_run": false,
   "decision": {
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "Hold the open April 12 70k dip position and do not add a new BTC trade.",
-    "rationale": "The latest Beecthor transcript from 2026-04-12 and recent summaries keep the active thesis bearish, still expecting continued downside and possibly one or two more lows, and Binance supports that with BTC at 70926.78, down 1.107% on the day and trading close to the 24h low. The only open position, `will-bitcoin-dip-to-70k-on-april-12` Yes, is a near-settled loser at 0.0005 probability, but the playbook disables stop-loss in this early-stage portfolio and it is nowhere near take-profit; the remaining active BTC markets are either the already-filled daily downside slot or extremely discounted/stale lines that do not offer a valid new edge.",
+    "confidence": 0.92,
+    "summary": "Keep the unresolved April 12 70k dip position unchanged and do not open a new BTC trade this cycle.",
+    "rationale": "The latest Beecthor transcript and recent summaries still point to bearish continuation with one or two more lows likely, and Binance confirms that execution reality with BTC at 70917.82, down on the day and still trading close to the 24h low. The existing April 12 70k dip Yes position is effectively a dead loser, but the playbook disables stop-loss in the early-stage portfolio and it is nowhere near take-profit, so it should be left to natural resolution. Although the nearest new bearish line for April 13 is the 70k dip market at 49.5% and aligns with the thesis, the daily slot is still occupied by the unresolved open daily position, so opening another daily trade would conflict with the playbook.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -32,7 +32,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 70926.78,
+  "binance_spot_price": 70917.82,
   "positions_before": 1,
   "positions_after": 1
 }
