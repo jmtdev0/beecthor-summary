@@ -849,9 +849,12 @@ def prepare_close_or_reduce_via_phone(
 
 
 def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions: list[dict[str, Any]]) -> dict[str, Any]:
+    # Exclude positions that have effectively resolved at zero — their market
+    # has expired worthless and they should no longer count as open slots.
+    active_positions = [p for p in positions if safe_float(p.get('cur_price')) > 0.01]
     state = dict(existing)
     state['cash_available'] = balance_usdc
-    state['open_exposure'] = round(sum(pos['current_value'] for pos in positions), 8)
+    state['open_exposure'] = round(sum(pos['current_value'] for pos in active_positions), 8)
     state['open_positions'] = [
         {
             'event_slug': pos['event_slug'],
@@ -867,7 +870,7 @@ def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions:
             'cash_pnl_usd': pos['cash_pnl'],
             'status': 'open',
         }
-        for pos in positions
+        for pos in active_positions
     ]
     state['last_synced_at'] = now_utc()
     return state
