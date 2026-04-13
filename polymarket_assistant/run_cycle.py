@@ -335,6 +335,50 @@ def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def parse_floor_market(record: dict[str, Any]) -> dict[str, Any] | None:
+    """Parse a 'Bitcoin above $X on date' binary market record from the GAMMA API."""
+    question = str(record.get('question', ''))
+    title = question.lower()
+    if 'bitcoin' not in title or 'above' not in title:
+        return None
+    match = re.search(r'\$([0-9,]+)', question)
+    if not match:
+        return None
+    floor_level = int(match.group(1).replace(',', ''))
+    outcomes = []
+    outcome_prices = []
+    token_ids = []
+    try:
+        outcomes = json.loads(record.get('outcomes', '[]'))
+        outcome_prices = [safe_float(x) for x in json.loads(record.get('outcomePrices', '[]'))]
+        token_ids = json.loads(record.get('clobTokenIds', '[]'))
+    except json.JSONDecodeError:
+        return None
+    outcome_map = {}
+    for idx, outcome in enumerate(outcomes):
+        outcome_map[outcome] = {
+            'probability': outcome_prices[idx] if idx < len(outcome_prices) else None,
+            'token_id': token_ids[idx] if idx < len(token_ids) else None,
+        }
+    event_slug = record.get('eventSlug', '')
+    return {
+        'event_slug': event_slug,
+        'market_slug': record.get('slug'),
+        'question': question,
+        'family': 'floor',
+        'market_type': 'floor',
+        'floor_level': floor_level,
+        'best_bid': safe_float(record.get('bestBid')),
+        'best_ask': safe_float(record.get('bestAsk')),
+        'last_trade_price': safe_float(record.get('lastTradePrice')),
+        'active': bool(record.get('active')),
+        'closed': bool(record.get('closed')),
+        'accepting_orders': bool(record.get('acceptingOrders')),
+        'end_date': record.get('endDate'),
+        'outcomes': outcome_map,
+    }
+
+
 def _fetch_daily_event_slugs(days_ahead: int = 2) -> list[str]:
     # Start from yesterday in UTC: Polymarket daily events close at 11:59 PM ET (~05:00 UTC
     # the following day), so the previous UTC day's markets may still be open and accepting
@@ -375,6 +419,44 @@ def _fetch_weekly_event_slugs() -> list[str]:
     except requests.RequestException:
         pass
     return slugs
+
+
+def _fetch_floor_event_slugs(days_ahead: int = 2) -> list[str]:
+    # Slug pattern: bitcoin-above-on-{month}-{day}
+    slugs: list[str] = []
+    now = datetime.now(UTC)
+    for delta in range(-1, days_ahead):
+        d = now + timedelta(days=delta)
+        month = d.strftime('%B').lower()
+        day = d.day
+        slugs.append(f'bitcoin-above-on-{month}-{day}')
+    return slugs
+
+
+def fetch_active_floor_markets() -> list[dict[str, Any]]:
+    """Return 'Bitcoin above $X' binary markets in the contested probability range (0.45–0.82)."""
+    markets: list[dict[str, Any]] = []
+    for event_slug in _fetch_floor_event_slugs():
+        try:
+            response = requests.get(
+                f'{GAMMA_HOST}/events/slug/{event_slug}',
+                timeout=30,
+            )
+            if response.status_code == 404:
+                continue
+            response.raise_for_status()
+            event = response.json()
+            for item in event.get('markets', []):
+                parsed = parse_floor_market(item)
+                if not parsed or not parsed['accepting_orders'] or parsed['closed']:
+                    continue
+                yes_prob = (parsed['outcomes'].get('Yes') or {}).get('probability', 0.0)
+                if 0.45 <= yes_prob <= 0.82:
+                    markets.append(parsed)
+        except requests.RequestException:
+            continue
+    markets.sort(key=lambda m: (m['end_date'] or '', m['floor_level']))
+    return markets
 
 
 def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
@@ -535,6 +617,8 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
             'open_orders': orders,
             'positions': positions,
             'active_btc_markets': fetch_active_btc_markets(),
+            'active_floor_markets': fetch_active_floor_markets(),
+            'open_floor_positions': [p for p in positions if infer_position_market_type(p) == 'floor'],
         },
     }
 
@@ -585,6 +669,17 @@ def find_market_by_slug(markets: list[dict[str, Any]], slug: str) -> dict[str, A
     return None
 
 
+def infer_position_market_type(position: dict[str, Any]) -> str:
+    """Infer market_type from position slugs (positions don't carry this field natively)."""
+    market_slug = position.get('market_slug') or ''
+    event_slug = position.get('event_slug') or ''
+    if market_slug.startswith('bitcoin-above') or event_slug.startswith('bitcoin-above'):
+        return 'floor'
+    if '-on-' in event_slug:
+        return 'daily'
+    return 'weekly'
+
+
 def nearest_strike_ok(market: dict[str, Any], markets: list[dict[str, Any]], spot_price: float) -> bool:
     # Nearest-strike-first applies only within the same market_type (daily vs weekly).
     family = market['family']
@@ -615,37 +710,76 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
 
     if action == 'OPEN_POSITION':
         new_position = decision.get('new_position') or {}
-        market = find_market_by_slug(markets, new_position.get('market_slug', ''))
-        if not market:
-            return False, 'Selected market slug not found among active BTC markets'
-        outcome = new_position.get('outcome')
-        if outcome not in market['outcomes']:
-            return False, 'Selected outcome not valid for chosen market'
-        probability = outcome_probability(market, outcome)
-        stake_usd = safe_float(new_position.get('stake_usd'))
+        floor_position = decision.get('new_floor_position') or {}
         cash_available = polymarket['cash_balance_usdc']
-        if stake_usd <= 0 or stake_usd > cash_available:
-            return False, 'Stake is invalid or exceeds available cash'
         portfolio_value = cash_available + safe_float(account_state.get('open_exposure'))
         early_stage_cap = safe_float(account_state.get('early_stage_max_stake', 1.0))
         early_stage_threshold = safe_float(account_state.get('early_stage_threshold', 15.0))
-        if portfolio_value < early_stage_threshold and stake_usd > early_stage_cap:
-            return False, f'Early-stage cap: max stake ${early_stage_cap} while portfolio < ${early_stage_threshold}'
         base_stake_pct = safe_float(account_state.get('base_stake_pct', 0.15))
-        if portfolio_value >= early_stage_threshold:
-            max_stake = round(cash_available * base_stake_pct, 2)
-            if stake_usd > max_stake:
-                return False, f'Stake ${stake_usd} exceeds {base_stake_pct:.0%} of available cash (max ${max_stake})'
-        if len(positions) >= int(account_state.get('max_open_positions', 2)):
-            return False, 'Maximum number of open positions reached'
-        duplicate = any(
-            pos['market_slug'] == market['market_slug'] and pos['outcome'] == outcome
-            for pos in positions
-        )
-        if duplicate:
-            return False, 'Duplicate position already open'
-        if not nearest_strike_ok(market, markets, spot_price):
-            return False, 'Nearest-strike-first rule rejected the proposed market'
+        max_open = int(account_state.get('max_open_positions', 3))
+        price_hit_opening = bool(new_position.get('should_open'))
+        floor_opening = bool(floor_position.get('should_open'))
+
+        # Total positions after this cycle must not exceed max_open_positions
+        pending_opens = (1 if price_hit_opening else 0) + (1 if floor_opening else 0)
+        if len(positions) + pending_opens > max_open:
+            return False, f'Opening {pending_opens} position(s) would exceed max_open_positions ({max_open})'
+
+        if price_hit_opening:
+            market = find_market_by_slug(markets, new_position.get('market_slug', ''))
+            if not market:
+                return False, 'Selected market slug not found among active BTC markets'
+            outcome = new_position.get('outcome')
+            if outcome not in market['outcomes']:
+                return False, 'Selected outcome not valid for chosen market'
+            stake_usd = safe_float(new_position.get('stake_usd'))
+            if stake_usd <= 0 or stake_usd > cash_available:
+                return False, 'Price-hit stake is invalid or exceeds available cash'
+            if portfolio_value < early_stage_threshold and stake_usd > early_stage_cap:
+                return False, f'Early-stage cap: max stake ${early_stage_cap} while portfolio < ${early_stage_threshold}'
+            if portfolio_value >= early_stage_threshold:
+                max_stake = round(cash_available * base_stake_pct, 2)
+                if stake_usd > max_stake:
+                    return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
+            # Per-type slot: max 1 daily, max 1 weekly
+            mtype = market.get('market_type', 'daily')
+            type_open = sum(1 for p in positions if infer_position_market_type(p) == mtype)
+            if type_open >= 1:
+                return False, f'{mtype.capitalize()} price-hit slot already occupied'
+            duplicate = any(
+                pos['market_slug'] == market['market_slug'] and pos['outcome'] == outcome
+                for pos in positions
+            )
+            if duplicate:
+                return False, 'Duplicate price-hit position already open'
+            if not nearest_strike_ok(market, markets, spot_price):
+                return False, 'Nearest-strike-first rule rejected the proposed market'
+
+        if floor_opening:
+            floor_markets = polymarket.get('active_floor_markets', [])
+            floor_market = find_market_by_slug(floor_markets, floor_position.get('market_slug', ''))
+            if not floor_market:
+                return False, 'Floor market slug not found among active floor markets'
+            if floor_position.get('outcome', 'Yes') != 'Yes':
+                return False, 'Floor positions must always bet Yes'
+            floor_stake = safe_float(floor_position.get('stake_usd'))
+            if floor_stake <= 0 or floor_stake > cash_available:
+                return False, 'Floor stake is invalid or exceeds available cash'
+            if portfolio_value < early_stage_threshold and floor_stake > early_stage_cap:
+                return False, f'Early-stage cap applies to floor stake too'
+            if portfolio_value >= early_stage_threshold:
+                max_stake = round(cash_available * base_stake_pct, 2)
+                if floor_stake > max_stake:
+                    return False, f'Floor stake ${floor_stake} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
+            # Max 1 floor position open at a time
+            floor_open_count = len(polymarket.get('open_floor_positions', []))
+            max_floor = int(account_state.get('max_floor_positions', 1))
+            if floor_open_count >= max_floor:
+                return False, f'Floor position slot already occupied ({floor_open_count}/{max_floor})'
+            duplicate_floor = any(pos['market_slug'] == floor_market['market_slug'] for pos in positions)
+            if duplicate_floor:
+                return False, 'Duplicate floor position already open'
+
     elif action in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
         management = decision.get('position_management') or {}
         target_slug = management.get('target_market_slug', '')
@@ -1010,11 +1144,23 @@ def main() -> None:
         if decision['action'] == 'OPEN_POSITION':
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
-            execution['details'] = prepare_and_send_order_via_phone(
-                decision, context['polymarket']['active_btc_markets'],
-                telegram_token, telegram_chat_id, context['binance']['spot_price'],
-            )
-            execution['performed'] = True
+            execution['details'] = []
+            # Price-hit position (reach/dip markets)
+            if (decision.get('new_position') or {}).get('should_open'):
+                order = prepare_and_send_order_via_phone(
+                    decision, context['polymarket']['active_btc_markets'],
+                    telegram_token, telegram_chat_id, context['binance']['spot_price'],
+                )
+                execution['details'].append(order)
+            # Floor position (bitcoin-above-X markets)
+            if (decision.get('new_floor_position') or {}).get('should_open'):
+                floor_order = prepare_and_send_order_via_phone(
+                    {'new_position': decision['new_floor_position']},
+                    context['polymarket']['active_floor_markets'],
+                    telegram_token, telegram_chat_id, context['binance']['spot_price'],
+                )
+                execution['details'].append(floor_order)
+            execution['performed'] = bool(execution['details'])
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
