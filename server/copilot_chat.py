@@ -425,7 +425,12 @@ def build_cycle_trace_entries(limit: int = 10) -> list[dict[str, str]]:
             decision = payload.get('decision') or {}
             validation = payload.get('validation') or {}
             execution = payload.get('execution') or {}
-            details = execution.get('details') or {}
+            raw_details = execution.get('details') or {}
+            # details may be a list (multi-order) or a single dict
+            if isinstance(raw_details, list):
+                details = raw_details[0] if raw_details else {}
+            else:
+                details = raw_details
             action = decision.get('action', 'UNKNOWN')
             summary = decision.get('summary') or details.get('market') or 'Cycle completed'
             outcome_label, tone = classify_cycle_outcome(action, validation, execution)
@@ -438,8 +443,9 @@ def build_cycle_trace_entries(limit: int = 10) -> list[dict[str, str]]:
                 meta_parts.append(f"validation: {validation.get('message')}")
             if details.get('rejected'):
                 meta_parts.append(f"rejected: {details.get('rejected')}")
-            if details.get('market_slug'):
-                meta_parts.append(f"market: {details.get('market_slug')}")
+            slugs = [d.get('market_slug') for d in (raw_details if isinstance(raw_details, list) else [details]) if d.get('market_slug')]
+            if slugs:
+                meta_parts.append(f"market: {', '.join(slugs)}")
             items.append({
                 'timestamp': fmt_cet(payload.get('timestamp', path.stem.replace('cycle-', '').replace('-', ':', 2))),
                 'eyebrow': f'{action} · {outcome_label.upper()}',
