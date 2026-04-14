@@ -791,13 +791,16 @@ def build_polymarket_snapshot() -> dict[str, Any]:
     recent_operations = []
     for entry in reversed(trade_log):
         execution = entry.get('execution') or {}
-        details = execution.get('details') or {}
+        raw_details = execution.get('details') or {}
+        # details may be a list (multi-order) or a single dict
+        details_list = raw_details if isinstance(raw_details, list) else ([raw_details] if raw_details else [])
         if entry.get('type') == 'trade_opened':
             market_slug = entry.get('market_slug', '')
             recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': 'trade_opened', 'market_slug': market_slug, 'category': classify_market_bucket(entry.get('event_slug') or market_slug), 'status': entry.get('status', '')})
-        elif details:
-            market_slug = details.get('market_slug', '')
-            recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_slug), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
+        elif details_list:
+            for details in details_list:
+                market_slug = details.get('market_slug', '')
+                recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_slug), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
     return {'metrics': metrics, 'positions': positions, 'recent_operations': recent_operations[:12], 'pipeline': {'pending_count': len(pending_orders), 'pending_orders': pending_orders[:12]}}
 
 
