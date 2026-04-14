@@ -15,5 +15,5 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-14T12:01:29Z"
+  "last_synced_at": "2026-04-14T18:04:13Z"
 }
