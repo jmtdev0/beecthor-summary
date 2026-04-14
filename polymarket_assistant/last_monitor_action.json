@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-04-11T13:00:16Z",
+  "timestamp": "2026-04-14T19:00:16Z",
   "action": "TAKE_PROFIT",
   "status": "pending_phone_execution",
-  "market_slug": "will-bitcoin-reach-73k-on-april-11",
-  "market_title": "Will Bitcoin reach $73,000 on April 11?",
+  "market_slug": "will-bitcoin-dip-to-74k-on-april-14",
+  "market_title": "Will Bitcoin dip to $74,000 on April 14?",
   "outcome": "Yes",
-  "prob": 0.9085,
-  "token_id": "41637367912915216680928381150648145686210477695981447581024179278494349346530",
+  "prob": 0.9995,
+  "token_id": "5045790133190925680119392001597968157445601665195016445025620486944747335054",
   "side": "SELL",
-  "amount": 1.3226
+  "amount": 2.181
 }
