@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 11.197714,
+  "cash_available": 10.197715,
   "realized_pnl": 0.3412,
-  "open_exposure": 0,
+  "open_exposure": 0.6157,
   "max_open_positions": 3,
   "max_floor_positions": 1,
   "base_stake_pct": 0.15,
@@ -13,7 +13,22 @@
   "stop_loss_probability": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-15",
+      "market_slug": "will-bitcoin-dip-to-73k-on-april-15",
+      "market_title": "Will Bitcoin dip to $73,000 on April 15?",
+      "position_side": "Yes",
+      "token_id": "103647028384903153647719726752757564044935633725194577727674085923559053836610",
+      "shares": 1.7592,
+      "avg_price": 0.55,
+      "entry_cost_usd": 0.9676,
+      "current_price": 0.35,
+      "current_value_usd": 0.6157,
+      "cash_pnl_usd": -0.3519,
+      "status": "open"
+    }
+  ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-15T07:02:13Z"
+  "last_synced_at": "2026-04-15T12:01:07Z"
 }

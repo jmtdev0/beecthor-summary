@@ -1,31 +1,19 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-15T07:02:13Z
+- Timestamp: 2026-04-15T12:01:07Z
 - Dry run: False
-- BTC price: 73915.99
-- Decision action: OPEN_POSITION
-- Decision summary: Open the April 15 BTC 73k dip market; no existing or floor action is warranted.
+- BTC price: 74163.8
+- Decision action: NO_ACTION
+- Decision summary: Hold the April 15 73k dip position and skip new price-hit and floor entries.
 - Validation: True (ok)
-- Open positions before: 0
-- Open positions after: 0
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-04-15T07:02:12Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "103647028384903153647719726752757564044935633725194577727674085923559053836610",
-      "side": "BUY",
-      "stake_usd": 1,
-      "market": "Will Bitcoin dip to $73,000 on April 15?",
-      "market_slug": "will-bitcoin-dip-to-73k-on-april-15",
-      "outcome": "Yes"
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```
