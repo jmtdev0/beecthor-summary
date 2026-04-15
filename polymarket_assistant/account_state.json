@@ -2,7 +2,7 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 10.020043,
+  "cash_available": 11.197714,
   "realized_pnl": 0.3412,
   "open_exposure": 0,
   "max_open_positions": 3,
@@ -15,5 +15,5 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-14T18:04:13Z"
+  "last_synced_at": "2026-04-15T07:02:13Z"
 }
