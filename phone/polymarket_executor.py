@@ -121,6 +121,10 @@ DOMAIN = make_domain(
 )
 
 
+class MarketResolvedException(Exception):
+    """Raised when the order book returns 404 because the market already resolved."""
+
+
 def sign_order(order: Order) -> str:
     """Sign EIP-712 order struct with the private key."""
     struct_hash = keccak(order.signable_bytes(domain=DOMAIN))
@@ -139,6 +143,10 @@ def get_market_price(token_id: str, side: str, amount: float) -> float:
         params={'token_id': token_id},
         timeout=15,
     )
+    if resp.status_code == 404:
+        raise MarketResolvedException(
+            f'Order book not found (404) — market likely resolved; token_id={token_id}'
+        )
     resp.raise_for_status()
     book = resp.json()
 
@@ -440,6 +448,21 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
             price = get_market_price(token_id, side, amount)
             print(f'[executor] Market price: {price}')
             order_dict = build_order_dict(token_id, side, amount, price)
+        except MarketResolvedException as exc:
+            print(f'[executor] Skipping stale order because market is already resolved: {exc}')
+            send_server_log(
+                'phone.executor',
+                'order_skipped',
+                'Pending order skipped because market already resolved',
+                payload={
+                    'order_id': order_id,
+                    'market_slug': pending.get('market_slug'),
+                    'reason': 'market_resolved',
+                    'token_id': token_id,
+                },
+            )
+            save_executed_order_id(order_id)
+            return True
         except Exception as exc:
             last_error = str(exc)
             print(f'[executor] Failed to build order: {exc}')
