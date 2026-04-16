@@ -820,7 +820,7 @@ def _timeline_sort_key(value: str) -> float:
         return 0.0
 
 
-def build_operations_timeline() -> list[dict[str, Any]]:
+def build_operations_timeline(sort_order: str = 'asc') -> list[dict[str, Any]]:
     trade_log = load_json(TRADE_LOG_PATH, [])
     closed_positions = fetch_closed_positions_live()
 
@@ -941,7 +941,8 @@ def build_operations_timeline() -> list[dict[str, Any]]:
             }
         )
 
-    timeline.sort(key=lambda item: _timeline_sort_key(item.get('timestamp', '')))
+    reverse = str(sort_order).lower() == 'desc'
+    timeline.sort(key=lambda item: _timeline_sort_key(item.get('timestamp', '')), reverse=reverse)
     return timeline
 
 
@@ -1344,7 +1345,10 @@ def private_polymarket():
 @app.route('/private/operations')
 @require_private
 def private_operations():
-    timeline = build_operations_timeline()
+    sort_order = request.args.get('sort', 'asc').strip().lower()
+    if sort_order not in {'asc', 'desc'}:
+        sort_order = 'asc'
+    timeline = build_operations_timeline(sort_order=sort_order)
     html = page_start('Operaciones | Beecthor') + """
     <div class="shell private-shell">
       <div class="private-header">
@@ -1355,7 +1359,13 @@ def private_operations():
         <div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/operations" style="font-weight:700;color:#fff">Operaciones</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
       </div>
       <section class="surface-card">
-        <h2 class="section-title">Timeline completo</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <h2 class="section-title" style="margin:0">Timeline completo</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="button-link {{ '' if sort_order == 'asc' else 'secondary' }}" href="{{ url_for('private_operations', sort='asc') }}">Antiguas primero</a>
+            <a class="button-link {{ '' if sort_order == 'desc' else 'secondary' }}" href="{{ url_for('private_operations', sort='desc') }}">Recientes primero</a>
+          </div>
+        </div>
         <div class="timeline-list">
           {% for item in timeline %}
           <article class="timeline-item">
@@ -1376,7 +1386,7 @@ def private_operations():
         </div>
       </section>
     </div>""" + PAGE_END
-    return render_template_string(html, timeline=timeline)
+    return render_template_string(html, timeline=timeline, sort_order=sort_order)
 
 
 @app.route('/private/logs')
