@@ -2926,5 +2926,67 @@
     "binance_spot_price": 75001.4,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-16T12:05:26Z",
+    "type": "cycle_run",
+    "run_id": "manual-2026-04-16T12-00-00Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "manual-2026-04-16T12-00-00Z",
+      "action": "OPEN_POSITION",
+      "confidence": 0.74,
+      "summary": "Beecthor still favors a short corrective dip before any final push higher, so the nearest aligned setup is BTC dipping to $74k on April 16.",
+      "rationale": "Latest Beecthor thesis keeps the macro bearish and explicitly prefers an ABC pullback into roughly $73.2k-$72.4k before any last move toward $78k-$79k. With BTC spot around $74.7k and no open positions, the nearest downside strike is the clearest conservative expression of that short-term thesis.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "",
+        "market_slug": "will-bitcoin-dip-to-74k-on-april-16",
+        "outcome": "Yes",
+        "direction": "bearish",
+        "strike": 74000,
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.63
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": true,
+      "details": [
+        {
+          "order_id": "2026-04-16T12:05:26Z",
+          "status": "pending_phone_execution",
+          "type": "OPEN_POSITION",
+          "token_id": "89865490473695410913926670545402005754544829872877792571737722780811982096292",
+          "side": "BUY",
+          "stake_usd": 1.0,
+          "market": "Will Bitcoin dip to $74,000 on April 16?",
+          "market_slug": "will-bitcoin-dip-to-74k-on-april-16",
+          "outcome": "Yes"
+        }
+      ]
+    },
+    "binance_spot_price": 74715.38,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
