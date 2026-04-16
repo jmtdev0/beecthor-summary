@@ -3138,5 +3138,55 @@
     "binance_spot_price": 73884.31,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-04-16T14:23:41Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-16T14-21-22Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-16T14-21-22Z",
+      "action": "NO_ACTION",
+      "confidence": 0.0,
+      "summary": "Automatic Codex cycle fallback: NO_ACTION.",
+      "rationale": "Codex auto-cycle fallback: manual integration-test rescue after fixing the VS Code sender and git environment.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 73438.01,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
