@@ -67,7 +67,8 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 ### Decision & Cycle
 | File | Purpose |
 |------|---------|
-| `polymarket_assistant/run_cycle.py` | Main cycle: builds context, calls GPT, validates, executes |
+| `polymarket_assistant/run_cycle.py` | Main base cycle: builds context, calls GPT, validates, executes |
+| `polymarket_assistant/run_cycle_codex.py` | Codex-specific variant: accepts normalized JSON decisions with `run_id` |
 | `polymarket_assistant/run_monitor.py` | Runs every 2h (odd UTC hours), checks take-profit, writes SELL orders |
 | `polymarket_assistant/PLAYBOOK.md` | Binding trading rules for GPT |
 | `polymarket_assistant/copilot_prompt.md` | GPT prompt template + JSON schema |
@@ -103,7 +104,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 
 | Timer | Schedule | What it runs |
 |-------|----------|-------------|
-| `polymarket-cycle.timer` | 01:00, 07:30, 13:30, 20:00 UTC | `run_cycle.py` (full GPT decision cycle) |
+| `polymarket-operator.timer` | even UTC hours every 2h | `/root/run_polymarket_cycle.sh` -> `run_cycle_codex.py --decision-file` |
 | `polymarket-monitor.timer` | odd UTC hours | `run_monitor.py` (take-profit / stop-loss check, no GPT) |
 
 ---
@@ -280,7 +281,7 @@ Orphaned `xfce4-session` (PID 22258, running since 2026-03-26) held `org.xfce.Se
 - `xdotool` is installed and can interact with VS Code even with mstsc disconnected
 - `/root/scripts/vscode_chat_send.sh` types a message into the active VS Code chat input
 - **Codex heartbeat experiment**: cron every 4h asked Codex to append current time to `/root/codex_heartbeat.txt`. Ran successfully for 1.5 days. Cron removed after validation (2026-04-16).
-- **Codex as decision engine** (planned, not yet implemented): `run_codex_cycle.sh` would build context, send to Codex via xdotool, poll for `codex_decision.json`, then run `run_cycle.py --decision-file`.
+- **Codex as decision engine**: `/root/run_polymarket_cycle.sh` builds context, sends the trigger to Codex via xdotool, waits for a decision JSON, then runs `run_cycle_codex.py --decision-file`.
 
 ---
 

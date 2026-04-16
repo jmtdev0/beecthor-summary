@@ -14,7 +14,7 @@ Your job is only to decide whether to open, close, reduce, or skip.
 Write exactly one JSON decision to {{DECISION_FILE}}.
 
 Rules:
-- Use the same JSON schema expected by polymarket_assistant/run_cycle.py --decision-file
+- Use the same JSON schema expected by polymarket_assistant/run_cycle_codex.py --decision-file
 - Include top-level "run_id": "{{RUN_ID}}"
 - Do not ask follow-up questions
 - Do not modify repo-tracked files

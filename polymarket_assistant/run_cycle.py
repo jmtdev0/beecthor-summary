@@ -633,57 +633,12 @@ def render_prompt(context: dict[str, Any]) -> str:
     return f'{template}\n\n{compact_context}\n'
 
 
-def normalize_decision(decision: dict[str, Any]) -> dict[str, Any]:
-    normalized = dict(decision)
-    normalized.setdefault('run_id', '')
-    normalized.setdefault('action', 'NO_ACTION')
-    normalized.setdefault('confidence', 0.0)
-    normalized.setdefault('summary', '')
-    normalized.setdefault('rationale', '')
-    normalized.setdefault(
-        'position_management',
-        {
-            'should_manage_existing': False,
-            'target_market_slug': '',
-            'target_outcome': '',
-            'reason': 'none',
-            'reduce_fraction': 0.5,
-        },
-    )
-    normalized.setdefault(
-        'new_position',
-        {
-            'should_open': False,
-            'event_slug': '',
-            'market_slug': '',
-            'outcome': '',
-            'direction': 'neutral',
-            'strike': 0,
-            'stake_usd': 0,
-            'max_entry_probability': 0.0,
-        },
-    )
-    normalized.setdefault(
-        'new_floor_position',
-        {
-            'should_open': False,
-            'event_slug': '',
-            'market_slug': '',
-            'outcome': 'Yes',
-            'floor_level': 0,
-            'stake_usd': 0,
-            'max_entry_probability': 0.0,
-        },
-    )
-    return normalized
-
-
 def extract_json(text: str) -> dict[str, Any]:
     stripped = text.strip()
     if stripped.startswith('```'):
         stripped = re.sub(r'^```(?:json)?', '', stripped).strip()
         stripped = re.sub(r'```$', '', stripped).strip()
-    return normalize_decision(json.loads(stripped))
+    return json.loads(stripped)
 
 
 def run_copilot(prompt: str, model: str) -> dict[str, Any]:
@@ -708,7 +663,7 @@ def run_copilot(prompt: str, model: str) -> dict[str, Any]:
 
 
 def load_decision_from_file(path: Path) -> dict[str, Any]:
-    return normalize_decision(json.loads(path.read_text(encoding='utf-8')))
+    return json.loads(path.read_text(encoding='utf-8'))
 
 
 def find_market_by_slug(markets: list[dict[str, Any]], slug: str) -> dict[str, Any] | None:
@@ -1230,7 +1185,6 @@ def main() -> None:
     log_entry = {
         'timestamp': now_utc(),
         'type': 'cycle_run',
-        'run_id': decision.get('run_id', ''),
         'dry_run': args.dry_run,
         'decision': decision,
         'validation': {'ok': ok, 'message': message},
@@ -1243,7 +1197,6 @@ def main() -> None:
 
     run_summary = {
         'timestamp': log_entry['timestamp'],
-        'run_id': decision.get('run_id', ''),
         'dry_run': args.dry_run,
         'decision': decision,
         'validation': {'ok': ok, 'message': message},

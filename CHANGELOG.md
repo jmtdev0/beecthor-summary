@@ -2,9 +2,8 @@
 
 ### 16/04/2026
 * `fetch_positions()` fix: posiciones resueltas ya no se muestran a GPT. Doble filtro: (1) `redeemable: true` excluye inmediatamente la posición; (2) comparación de fecha ahora timezone-aware (`end_dt.replace(tzinfo=UTC)` para fechas sin hora), eliminando el `TypeError` silencioso que dejaba pasar posiciones expiradas.
-* Nuevo flujo automático del operador: `/root/run_polymarket_cycle.sh` deja de llamar a Copilot CLI directamente y pasa a usar a Codex en el chat de VS Code como motor de decisión. Cada ciclo exporta un snapshot fresh, envía un prompt corto con `run_id`, espera un `decision_file`, y luego ejecuta `run_cycle.py --decision-file`. Si Codex no responde o el JSON es inválido, el wrapper fuerza `NO_ACTION`.
-* Añadidos `polymarket_assistant/export_context_snapshot.py` y `polymarket_assistant/codex_cycle_prompt.md` para soportar el nuevo flujo de snapshot + prompt runtime hacia Codex.
-* `run_cycle.py`: decisiones normalizadas con `run_id`, `new_floor_position` por defecto y persistencia de `run_id` en `trade_log.json` y `last_run_summary.json`.
+* Nuevo flujo automático del operador: `/root/run_polymarket_cycle.sh` deja de llamar a Copilot CLI directamente y pasa a usar a Codex en el chat de VS Code como motor de decisión. Cada ciclo exporta un snapshot fresh, envía un prompt corto con `run_id`, espera un `decision_file`, y luego ejecuta `run_cycle_codex.py --decision-file`. Si Codex no responde o el JSON es inválido, el wrapper fuerza `NO_ACTION`.
+* Añadidos `polymarket_assistant/run_cycle_codex.py`, `polymarket_assistant/export_context_snapshot.py` y `polymarket_assistant/codex_cycle_prompt.md` para soportar el nuevo flujo de snapshot + prompt runtime hacia Codex, dejando `run_cycle.py` como ciclo base sin cambios específicos de Codex.
 * `polymarket-operator.timer` actualizado a horas pares UTC cada 2 horas; `polymarket-monitor.timer` se mantiene en horas impares.
 
 ### 14/04/2026
