@@ -1,11 +1,11 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-16T17:17:14Z
+- Timestamp: 2026-04-16T17:27:20Z
 - Dry run: False
-- BTC price: 74042.98
-- Decision action: OPEN_POSITION
-- Decision summary: Beecthor now favors correction-and-continuation higher, so the cleanest open slot is the weekly BTC $78k reach market.
-- Validation: False (Nearest-strike-first rule rejected the proposed market)
+- BTC price: 74196.76
+- Decision action: NO_ACTION
+- Decision summary: Automatic Codex cycle fallback: NO_ACTION.
+- Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -14,8 +14,6 @@
 ```json
 {
   "performed": false,
-  "details": {
-    "rejected": "Nearest-strike-first rule rejected the proposed market"
-  }
+  "details": null
 }
 ```
