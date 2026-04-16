@@ -91,6 +91,17 @@ def load_decision_from_file(path: Path) -> dict[str, Any]:
     return normalize_decision(json.loads(path.read_text(encoding='utf-8')))
 
 
+def is_automatic_fallback_decision(decision: dict[str, Any]) -> bool:
+    if decision.get('action') != 'NO_ACTION':
+        return False
+    summary = (decision.get('summary') or '').strip()
+    rationale = (decision.get('rationale') or '').strip()
+    return (
+        summary.startswith('Automatic Codex cycle fallback:')
+        or rationale.startswith('Codex auto-cycle fallback:')
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description='Run one unattended Polymarket operator cycle via Codex JSON decisions')
     parser.add_argument('--model', default='gpt-5.4')
@@ -211,7 +222,7 @@ def main() -> None:
 
     token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
     chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
-    if token and chat_id and not args.dry_run:
+    if token and chat_id and not args.dry_run and not is_automatic_fallback_decision(decision):
         action = decision.get('action', 'UNKNOWN')
         summary_text = decision.get('summary', '')
         btc = context['binance']['spot_price']
@@ -230,6 +241,8 @@ def main() -> None:
             )
         except Exception as exc:
             print(f'[telegram] Failed to send cycle summary: {exc}')
+    elif is_automatic_fallback_decision(decision):
+        print('[telegram] Skipping Telegram summary for automatic Codex fallback NO_ACTION.')
 
     print(json.dumps(run_summary, ensure_ascii=False, indent=2))
 
