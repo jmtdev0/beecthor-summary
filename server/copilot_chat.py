@@ -806,6 +806,20 @@ def _normalize_execution_details(raw_details: Any) -> list[dict[str, Any]]:
     return []
 
 
+def _timeline_sort_key(value: str) -> float:
+    raw = str(value or '').strip()
+    if not raw:
+        return 0.0
+    try:
+        return float(raw)
+    except ValueError:
+        pass
+    try:
+        return datetime.fromisoformat(raw.replace('Z', '+00:00')).timestamp()
+    except Exception:
+        return 0.0
+
+
 def build_operations_timeline() -> list[dict[str, Any]]:
     trade_log = load_json(TRADE_LOG_PATH, [])
     closed_positions = fetch_closed_positions_live()
@@ -927,7 +941,7 @@ def build_operations_timeline() -> list[dict[str, Any]]:
             }
         )
 
-    timeline.sort(key=lambda item: item.get('timestamp', ''), reverse=True)
+    timeline.sort(key=lambda item: _timeline_sort_key(item.get('timestamp', '')))
     return timeline
 
 
