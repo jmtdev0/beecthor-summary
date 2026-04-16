@@ -499,12 +499,16 @@ def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
         size = safe_float(item.get('size'))
         if size <= 0:
             continue
+        if item.get('redeemable'):
+            continue  # market resolved — position is redeemable, exclude from active
         end_date_str = item.get('endDate')
         if end_date_str:
             try:
                 end_dt = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+                if end_dt.tzinfo is None:
+                    end_dt = end_dt.replace(tzinfo=UTC)  # treat bare date as UTC midnight
                 if end_dt < now_utc:
-                    continue  # market already resolved — exclude from active positions
+                    continue  # market already expired — exclude from active positions
             except Exception:
                 pass
         normalized.append({
