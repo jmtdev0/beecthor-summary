@@ -970,6 +970,7 @@ TRIGGER_LABELS = {
 }
 
 PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@localhost']
+PHONE_REPO_CMD = "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true && python {script}'"
 
 
 @app.route('/private/trigger/<process>', methods=['POST'])
@@ -983,7 +984,7 @@ def trigger_process(process: str):
         )
     elif process == 'summarizer':
         subprocess.Popen(
-            PHONE_SSH + ['python ~/beecthor_summarizer.py'],
+            PHONE_SSH + [PHONE_REPO_CMD.format(script='phone/beecthor_summarizer.py')],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -995,13 +996,13 @@ def trigger_process(process: str):
         )
     elif process == 'executor':
         subprocess.Popen(
-            PHONE_SSH + ['python ~/polymarket_executor.py'],
+            PHONE_SSH + [PHONE_REPO_CMD.format(script='phone/polymarket_executor.py')],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
     elif process == 'monitor_executor':
         subprocess.Popen(
-            PHONE_SSH + ['python ~/polymarket_monitor_executor.py'],
+            PHONE_SSH + [PHONE_REPO_CMD.format(script='phone/polymarket_monitor_executor.py')],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
