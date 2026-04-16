@@ -1,5 +1,20 @@
 # Changelog
 
+### 16/04/2026
+* `fetch_positions()` fix: posiciones resueltas ya no se muestran a GPT. Doble filtro: (1) `redeemable: true` excluye inmediatamente la posición; (2) comparación de fecha ahora timezone-aware (`end_dt.replace(tzinfo=UTC)` para fechas sin hora), eliminando el `TypeError` silencioso que dejaba pasar posiciones expiradas.
+
+### 14/04/2026
+* Multi-position opening implemented: `run_cycle.py` now proposes up to 3 independent position slots per cycle (1 daily price-hit + 1 weekly price-hit + 1 floor). `execution.details` changed from a single dict to a list to accommodate multiple orders per cycle.
+* "Bitcoin above $X" floor markets added: new `_fetch_floor_event_slugs()`, `parse_floor_market()`, and `fetch_active_floor_markets()` functions discover and expose contested (45–82% YES probability) floor markets to GPT. GPT can now bet YES on floor markets when Beecthor identifies strong support levels.
+* `infer_position_market_type()` added to `run_cycle.py`: infers `floor`, `daily`, or `weekly` from position slug/event_slug patterns, since `fetch_positions()` does not return a `market_type` field natively.
+* `validate_decision()` rewritten to enforce per-type slot limits independently: max 1 daily, max 1 weekly, max 1 floor, total cap 3 (`max_open_positions` raised from 2 → 3 in `account_state.json`, `max_floor_positions: 1` added).
+* `copilot_prompt.md` updated with `new_floor_position` schema and floor market decision rules.
+* `phone/polymarket_executor.py` rewritten to read from `pending_orders.json` (multi-order queue) instead of `last_run_summary.json`, with order-ID-based dedup via `~/.polymarket_executed_order_ids` (24h pruning).
+* Dashboard (`server/copilot_chat.py`) fixed: `build_polymarket_snapshot()` and `build_cycle_trace_entries()` now handle `execution.details` as either a list or a dict — previously caused `AttributeError: 'list' object has no attribute 'get'`.
+* **RDP fix (Hetzner VPS)**: resolved black-screen-on-login issue. Root cause: orphaned `xfce4-session` (PID 22258) running since March 26 held `org.xfce.SessionManager` on the systemd user dbus — every new xrdp connection tried to start a second XFCE session, which exited in 0 seconds. Fix: identified the conflict via `dbus-send ListNames` + xrdp-sesman log, then killed all orphaned XFCE processes (`xfce4-session`, `xfwm4`, `xfce4-panel`, `xfdesktop`, etc.) and removed the stale `/tmp/.X10-lock`. RDP login restored.
+* Phantom position fix verified: `account_state.open_positions` reconciliation against live Polymarket slugs confirmed working — expired 70k dip position no longer shown to GPT.
+* First profitable closed trade confirmed: `will-bitcoin-dip-to-74k-on-april-13` YES opened at BTC $74,779 — monitor auto-closed at take-profit when BTC touched $73,007. Realized PnL: +$1.2194.
+
 ### 10/04/2026
 * `phone/polymarket_monitor_executor.py`: fix bug crítico en `build_order_dict` para órdenes SELL — `taker_amount` se computaba con el `amount` sin redondear, produciendo un precio efectivo `taker/maker > 1` que Polymarket rechazaba con 400. Ahora `taker_amount` se deriva del `maker_amount` ya redondeado. **Primer take-profit ejecutado correctamente** (`will-bitcoin-reach-73k-on-april-10`, YES, 1.92 shares @ 0.999).
 * `phone/polymarket_monitor_executor.py`: detecta error 404 del order book (mercado ya resuelto) y lo trata como señal de auto-redención de Polymarket — cierre graceful sin error ni Telegram de fallo.

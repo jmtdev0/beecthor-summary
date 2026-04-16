@@ -18,6 +18,7 @@ Each automated cycle must follow these steps strictly in order:
 4. **Scout opportunities** — For each market type (daily / weekly / monthly), check if the slot is already filled. If not, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
+   - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
    - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
    - For weekly and monthly markets: prioritize entering early in the period with the most obvious strike.
 5. **Place bet (if valid)** — If a viable market is found, open a position following the entry rules below. Only one new position per cycle.
