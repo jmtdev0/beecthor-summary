@@ -15,12 +15,12 @@ Each automated cycle must follow these steps strictly in order:
 1. **Stop-loss check** — Skipped. No automated stop-loss while portfolio is in early stage (below $15). Positions are held until take-profit or natural resolution.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
-4. **Scout opportunities** — For each market type (daily / weekly / monthly), check if the slot is already filled. If not, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
+4. **Scout opportunities** — For each market type (daily / weekly), check if the slot is already filled. If not, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
    - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
-   - For weekly and monthly markets: prioritize entering early in the period with the most obvious strike.
+   - For weekly markets: prioritize entering early in the period with the most obvious strike.
 5. **Place bet (if valid)** — If a viable market is found, open a position following the entry rules below. Only one new position per cycle.
 
 ## Market scope
@@ -30,7 +30,7 @@ Two allowed market types, each tracked separately:
 | Slot | Type | Example URL pattern |
 |------|------|---------------------|
 | 1 daily | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
-| 2 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
+| 1 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
 
 - The goal for weekly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
 - Not allowed:
@@ -58,7 +58,7 @@ Two allowed market types, each tracked separately:
 - Maximum simultaneous exposure: **3 open positions total**.
 - Position cap by type:
   - **1 daily** position maximum
-  - **2 weekly** positions maximum
+  - **1 weekly** position maximum
 - Monthly or longer-dated positions are not allowed, so they do not count toward the cap.
 - Base stake per entry: `15%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 15% rule.
