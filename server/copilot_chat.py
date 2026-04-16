@@ -14,6 +14,11 @@ from pathlib import Path
 from typing import Any
 
 import requests
+from codex_chat_bridge import (
+    bridge_request_status as get_bridge_request_status,
+    reconcile_bridge_requests,
+    start_bridge_request,
+)
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
 
@@ -171,18 +176,6 @@ img{display:block;max-width:100%}
 .metric-foot{color:#9fb0c7}
 .private-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
 .metric-card{padding:22px}
-.metric-card-link{
-  display:block;
-  color:inherit;
-  text-decoration:none;
-}
-.metric-card-link:hover .metric-card{
-  border-color:rgba(62,166,255,.28);
-  transform:translateY(-2px);
-}
-.metric-card-link .metric-card{
-  transition:border-color .18s ease, transform .18s ease;
-}
 .metric-card .big{font-size:2.25rem;line-height:1;font-weight:800;margin:8px 0 10px}
 .good{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--amber)}
 .panel-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
@@ -223,25 +216,6 @@ img{display:block;max-width:100%}
 .position-market{font-weight:700;line-height:1.35}
 .position-sub,.position-kv,.log-filter-note{color:#98a7bb}
 .position-kv{margin-top:8px;font-size:.95rem}
-.timeline-list{display:flex;flex-direction:column;gap:14px}
-.timeline-item{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:16px 18px;
-}
-.timeline-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
-.timeline-title{font-weight:700;line-height:1.4;color:#eef4ff}
-.timeline-meta{font-size:.9rem;color:#98a7bb;margin-top:8px;line-height:1.5}
-.badge{
-  display:inline-flex;align-items:center;justify-content:center;
-  border-radius:999px;padding:6px 10px;font-size:.76rem;font-weight:800;
-  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap
-}
-.badge.good{background:rgba(34,197,94,.14);color:#7cf29f}
-.badge.bad{background:rgba(239,68,68,.14);color:#ff9a9a}
-.badge.warn{background:rgba(245,158,11,.14);color:#ffd27a}
-.badge.info{background:rgba(62,166,255,.14);color:#91cbff}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;vertical-align:top}
 .table th{font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:#95a3b8}
@@ -318,6 +292,12 @@ def save_history(history: list[dict[str, Any]]) -> None:
 
 def load_history() -> list[dict[str, Any]]:
     return load_json(HISTORY_FILE, [])
+
+
+def visible_chat_history() -> list[dict[str, Any]]:
+    history = load_history()
+    bridge_items = [item for item in history if item.get('bridge_request_id')]
+    return bridge_items if bridge_items else []
 
 
 def utc_now() -> str:
@@ -775,177 +755,6 @@ def normalize_live_position(position: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _format_detail_timestamp(timestamp: str) -> str:
-    try:
-        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(_CET)
-        return dt.strftime('%d/%m/%Y %H:%M')
-    except Exception:
-        return timestamp
-
-
-def _format_epoch_timestamp(timestamp: Any) -> str:
-    try:
-        dt = datetime.fromtimestamp(float(timestamp), tz=UTC).astimezone(_CET)
-        return dt.strftime('%d/%m/%Y %H:%M')
-    except Exception:
-        return str(timestamp)
-
-
-def _format_probability(probability: Any) -> str:
-    value = safe_float(probability, default=-1.0)
-    if value < 0:
-        return ''
-    return f'{value:.2f}'
-
-
-def _normalize_execution_details(raw_details: Any) -> list[dict[str, Any]]:
-    if isinstance(raw_details, list):
-        return [item for item in raw_details if isinstance(item, dict)]
-    if isinstance(raw_details, dict) and raw_details:
-        return [raw_details]
-    return []
-
-
-def _timeline_sort_key(value: str) -> float:
-    raw = str(value or '').strip()
-    if not raw:
-        return 0.0
-    try:
-        return float(raw)
-    except ValueError:
-        pass
-    try:
-        return datetime.fromisoformat(raw.replace('Z', '+00:00')).timestamp()
-    except Exception:
-        return 0.0
-
-
-def build_operations_timeline(sort_order: str = 'asc') -> list[dict[str, Any]]:
-    trade_log = load_json(TRADE_LOG_PATH, [])
-    closed_positions = fetch_closed_positions_live()
-
-    close_reason_map: dict[str, str] = {}
-    for entry in trade_log:
-        if entry.get('type') != 'trade_closed':
-            continue
-        market_slug = entry.get('market_slug', '')
-        if market_slug and market_slug not in close_reason_map:
-            close_reason_map[market_slug] = str(entry.get('close_reason', '')).strip()
-
-    timeline: list[dict[str, Any]] = []
-
-    for entry in trade_log:
-        entry_type = entry.get('type')
-        if entry_type == 'trade_opened':
-            market_title = entry.get('market_title') or entry.get('market_slug') or 'Unknown market'
-            side = entry.get('position_side') or '?'
-            stake = safe_float(entry.get('entry_cost_usd'))
-            probability = _format_probability(entry.get('entry_probability'))
-            meta_bits = [f'{stake:.2f}$ {side}']
-            if probability:
-                meta_bits.append(f'at {probability} chance')
-            timeline.append(
-                {
-                    'timestamp': entry.get('timestamp', ''),
-                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
-                    'title': market_title,
-                    'status': 'OPEN',
-                    'status_class': 'info',
-                    'details': ' '.join(meta_bits),
-                    'market_slug': entry.get('market_slug', ''),
-                }
-            )
-            continue
-
-        if entry_type == 'force_bet':
-            decision = entry.get('decision') or {}
-            new_position = decision.get('new_position') or {}
-            if not (entry.get('execution') or {}).get('performed'):
-                continue
-            market_title = new_position.get('market_slug') or 'Unknown market'
-            side = new_position.get('outcome') or '?'
-            stake = safe_float(new_position.get('stake_usd'))
-            timeline.append(
-                {
-                    'timestamp': entry.get('timestamp', ''),
-                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
-                    'title': market_title,
-                    'status': 'OPEN',
-                    'status_class': 'info',
-                    'details': f'{stake:.2f}$ {side} via force-bet',
-                    'market_slug': new_position.get('market_slug', ''),
-                }
-            )
-            continue
-
-        if entry_type != 'cycle_run':
-            continue
-
-        decision = entry.get('decision') or {}
-        if decision.get('action') != 'OPEN_POSITION':
-            continue
-        if not (entry.get('execution') or {}).get('performed'):
-            continue
-
-        details_list = _normalize_execution_details((entry.get('execution') or {}).get('details'))
-        for details in details_list:
-            market_slug = details.get('market_slug', '')
-            outcome = details.get('outcome', '')
-            stake = safe_float(details.get('stake_usd'))
-            probability = _format_probability((decision.get('new_position') or {}).get('max_entry_probability'))
-            detail_text = f'{stake:.2f}$ {outcome}'.strip()
-            if probability and probability != '0.00':
-                detail_text += f' at {probability} chance'
-            timeline.append(
-                {
-                    'timestamp': entry.get('timestamp', ''),
-                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
-                    'title': market_slug or 'Unknown market',
-                    'status': 'OPEN',
-                    'status_class': 'info',
-                    'details': detail_text,
-                    'market_slug': market_slug,
-                }
-            )
-
-    for item in closed_positions:
-        market_slug = item.get('slug', '')
-        pnl = safe_float(item.get('realizedPnl'))
-        close_reason = close_reason_map.get(market_slug, '')
-        if close_reason == 'take_profit':
-            status = 'TAKE PROFIT'
-            status_class = 'warn'
-        elif pnl > 0:
-            status = 'WON'
-            status_class = 'good'
-        elif pnl < 0:
-            status = 'LOST'
-            status_class = 'bad'
-        else:
-            status = 'CLOSED'
-            status_class = 'info'
-        probability = _format_probability(item.get('curPrice'))
-        details = []
-        if probability:
-            details.append(f'at {probability} chance')
-        details.append(f'PnL {pnl:+.2f}$')
-        timeline.append(
-            {
-                'timestamp': str(item.get('timestamp', '')),
-                'timestamp_label': _format_epoch_timestamp(item.get('timestamp')),
-                'title': item.get('title') or market_slug or 'Unknown market',
-                'status': status,
-                'status_class': status_class,
-                'details': ' · '.join(details),
-                'market_slug': market_slug,
-            }
-        )
-
-    reverse = str(sort_order).lower() == 'desc'
-    timeline.sort(key=lambda item: _timeline_sort_key(item.get('timestamp', '')), reverse=reverse)
-    return timeline
-
-
 def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
@@ -995,9 +804,6 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions', 'css_class': 'good' if win_rate >= 50 else 'bad'},
         {'label': 'Daily / Weekly', 'value': f'{daily_count} / {weekly_count}', 'caption': 'classified positions', 'css_class': ''},
     ]
-    for metric in metrics:
-        if metric['label'] == 'Operaciones':
-            metric['url'] = url_for('private_operations')
     positions = open_positions
     recent_operations = []
     for entry in reversed(trade_log):
@@ -1161,7 +967,7 @@ TRIGGER_LABELS = {
     'monitor_executor': 'Monitor Executor (phone)',
 }
 
-PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'jmart@localhost']
+PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@localhost']
 
 
 @app.route('/private/trigger/<process>', methods=['POST'])
@@ -1265,9 +1071,6 @@ def private_polymarket():
       </div>
       <div class="private-grid">
         {% for metric in metrics[1:] %}
-        {% if metric.url is defined %}
-        <a class="metric-card-link" href="{{ metric.url }}">
-        {% endif %}
         <section class="metric-card">
           <div class="metric-label">{{ metric.label }}</div>
           <div class="big {{ metric.css_class }}">{{ metric.value }}</div>
@@ -1289,9 +1092,6 @@ def private_polymarket():
           </details>
           {% endif %}
         </section>
-        {% if metric.url is defined %}
-        </a>
-        {% endif %}
         {% endfor %}
       </div>
       {% if triggered %}
@@ -1340,53 +1140,6 @@ def private_polymarket():
     triggered = request.args.get('triggered', '')
     triggered_label = TRIGGER_LABELS.get(triggered, triggered)
     return render_template_string(html, trace_lanes=trace_lanes, triggered=triggered, triggered_label=triggered_label, **snapshot)
-
-
-@app.route('/private/operations')
-@require_private
-def private_operations():
-    sort_order = request.args.get('sort', 'asc').strip().lower()
-    if sort_order not in {'asc', 'desc'}:
-        sort_order = 'asc'
-    timeline = build_operations_timeline(sort_order=sort_order)
-    html = page_start('Operaciones | Beecthor') + """
-    <div class="shell private-shell">
-      <div class="private-header">
-        <div>
-          <h1 class="private-title">Operaciones</h1>
-          <div class="section-subtitle">Histórico combinado de aperturas y resoluciones usando el log local y Polymarket live.</div>
-        </div>
-        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/operations" style="font-weight:700;color:#fff">Operaciones</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
-      </div>
-      <section class="surface-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-          <h2 class="section-title" style="margin:0">Timeline completo</h2>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <a class="button-link {{ '' if sort_order == 'asc' else 'secondary' }}" href="{{ url_for('private_operations', sort='asc') }}">Antiguas primero</a>
-            <a class="button-link {{ '' if sort_order == 'desc' else 'secondary' }}" href="{{ url_for('private_operations', sort='desc') }}">Recientes primero</a>
-          </div>
-        </div>
-        <div class="timeline-list">
-          {% for item in timeline %}
-          <article class="timeline-item">
-            <div class="timeline-top">
-              <div>
-                <div class="muted">{{ item.timestamp_label }}</div>
-                <div class="timeline-title">{{ item.title }}</div>
-                <div class="timeline-meta">{{ item.details }}</div>
-              </div>
-              <div class="badge {{ item.status_class }}">{{ item.status }}</div>
-            </div>
-          </article>
-          {% else %}
-          <article class="timeline-item">
-            <div class="timeline-title">No operations found.</div>
-          </article>
-          {% endfor %}
-        </div>
-      </section>
-    </div>""" + PAGE_END
-    return render_template_string(html, timeline=timeline, sort_order=sort_order)
 
 
 @app.route('/private/logs')
@@ -1440,18 +1193,35 @@ def legacy_chat():
 @app.route('/private/chat')
 @require_private
 def private_chat():
-    history = load_history()
+    reconcile_bridge_requests(load_history, save_history, append_jsonl_event)
+    history = visible_chat_history()
     html = page_start('Chat | Beecthor') + """
     <div class="shell private-shell">
-      <div class="private-header"><div><h1 class="private-title">Chat</h1><div class="section-subtitle">Superficie técnica para seguir usando la sesión de Copilot del servidor.</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat" style="font-weight:700;color:#fff">Chat</a><a href="/logout">Logout</a></div></div>
+      <div class="private-header"><div><h1 class="private-title">Chat</h1><div class="section-subtitle">Bridge hacia esta misma conversación de Codex en VS Code.</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat" style="font-weight:700;color:#fff">Chat</a><a href="/logout">Logout</a></div></div>
       <div class="chat" id="history">{% for msg in history %}<div class="bubble {{ 'user' if msg.role == 'user' else 'bot' }}">{{ msg.text }}<div class="muted" style="margin-top:8px">{{ msg.timestamp }}</div></div>{% else %}<div class="muted">No messages yet.</div>{% endfor %}</div>
-      <div class="chat-card" style="margin-top:16px"><textarea id="input" placeholder="Message to Copilot..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="status-line"></div></div>
+      <div class="chat-card" style="margin-top:16px"><textarea id="input" placeholder="Message to Codex..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="status-line"></div></div>
     </div>
     <script>
       const hist=document.getElementById('history'); hist.scrollTop=hist.scrollHeight;
       function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       function appendBubble(role,text,timestamp){const el=document.createElement('div'); el.className='bubble '+(role==='user'?'user':'bot'); el.innerHTML=esc(text)+'<div class="muted" style="margin-top:8px">'+esc(timestamp)+'</div>'; hist.appendChild(el); hist.scrollTop=hist.scrollHeight;}
-      async function send(){const input=document.getElementById('input'); const btn=document.getElementById('btn'); const status=document.getElementById('status'); const text=input.value.trim(); if(!text) return; btn.disabled=true; input.value=''; status.textContent='Waiting for Copilot...'; appendBubble('user', text, new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC'); try{const resp=await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})}); const data=await resp.json(); if(data.error){status.textContent=data.error;} else {appendBubble('bot', data.response, data.timestamp); status.textContent='';}}catch(err){status.textContent='Network error';} btn.disabled=false; input.focus();}
+      async function waitForBridgeReply(requestId){
+        const status=document.getElementById('status');
+        const started=Date.now();
+        while((Date.now()-started) < 180000){
+          const resp=await fetch('/api/private/chat/status/'+encodeURIComponent(requestId));
+          const data=await resp.json();
+          if(data.status === 'completed' || data.status === 'failed' || data.status === 'timeout'){
+            appendBubble('bot', data.response || '(empty response)', data.timestamp || (new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC'));
+            status.textContent='';
+            return;
+          }
+          status.textContent='Waiting for Codex...';
+          await new Promise(resolve => setTimeout(resolve, data.poll_after_ms || 1500));
+        }
+        status.textContent='Bridge wait window expired. Refresh in a moment if Codex replies later.';
+      }
+      async function send(){const input=document.getElementById('input'); const btn=document.getElementById('btn'); const status=document.getElementById('status'); const text=input.value.trim(); if(!text) return; btn.disabled=true; input.value=''; status.textContent='Sending to Codex...'; appendBubble('user', text, new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC'); try{const resp=await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})}); const data=await resp.json(); if(data.error){status.textContent=data.error;} else if(data.request_id){await waitForBridgeReply(data.request_id);} else {status.textContent='Bridge did not return a request id.';}}catch(err){status.textContent='Network error';} btn.disabled=false; input.focus();}
     </script>""" + PAGE_END
     return render_template_string(html, history=history)
 
@@ -1463,14 +1233,36 @@ def send():
     message = data.get('message', '').strip()
     if not message:
         return {'error': 'Empty message'}, 400
-    response = run_copilot(message)
-    timestamp = datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')
-    history = load_history()
-    history.append({'role': 'user', 'text': message, 'timestamp': timestamp})
-    history.append({'role': 'copilot', 'text': response, 'timestamp': timestamp})
-    save_history(history)
-    append_jsonl_event('app.chat', 'message_saved', 'info', 'Chat history updated')
-    return {'response': response, 'timestamp': timestamp}
+    meta, error = start_bridge_request(
+        message,
+        history_loader=load_history,
+        history_saver=save_history,
+        logger=append_jsonl_event,
+    )
+    if error:
+        return {'error': error}, 409
+    if not meta:
+        return {'error': 'Bridge could not start'}, 500
+    if meta.get('status') in {'failed', 'timeout'}:
+        return {
+            'request_id': meta['request_id'],
+            'status': meta.get('status'),
+            'response': meta.get('response_text', ''),
+            'timestamp': meta.get('response_timestamp', datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')),
+        }
+    return {'request_id': meta['request_id'], 'status': 'pending'}
+
+
+@app.route('/api/private/chat/status/<request_id>')
+@require_private
+def private_chat_status(request_id: str):
+    payload, status = get_bridge_request_status(
+        request_id,
+        history_loader=load_history,
+        history_saver=save_history,
+        logger=append_jsonl_event,
+    )
+    return jsonify(payload), status
 
 
 @app.route('/api/public/summaries')
