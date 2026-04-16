@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-16T17:31:06Z",
-  "run_id": "2026-04-16T17-29-54Z",
+  "timestamp": "2026-04-16T18:01:41Z",
+  "run_id": "2026-04-16T18-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-16T17-29-54Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.69,
-    "summary": "Beecthor's latest thesis still favors another upside leg first, so the cleanest open slot is the weekly BTC $78k reach market.",
-    "rationale": "The fresh April 16 transcript keeps the macro path bearish later but explicitly shifts the short-term bias to correction-and-continuation higher while no clear bearish impulse appears. Recent transcripts and summaries all support one more upside leg toward 78k-79k before the larger decline resumes. Binance execution reality at 74228.62 does not support forcing fresh downside exposure: price is close to the lower end of the 24h range after already flushing into support, while the market still has room to rebound. With no open positions, the nearest daily reach line is 76k on April 16, but this late in the UTC session it is too short-dated and too discounted to be the clean conservative expression of the thesis. Within the weekly slot, the nearest reasonable upside target is 78k April 13-19, and after the market-type fix it is the correct nearest weekly reach candidate. Its probability is below the preferred band, but that is a soft filter, and the thesis alignment is strong enough to justify a small early-stage entry.",
+    "run_id": "2026-04-16T18-00-02Z",
+    "action": "NO_ACTION",
+    "confidence": 0.88,
+    "summary": "A weekly $78k reach position was already opened very recently, so this cycle should not duplicate the same thesis.",
+    "rationale": "The latest Beecthor thesis still supports another upside leg first, but the context snapshot already includes a successful OPEN_POSITION cycle at 2026-04-16T17:31:06Z for `will-bitcoin-reach-78k-april-13-19` Yes with performed execution. Even though open_positions has not yet reflected it, the recent trade log shows that the weekly slot has effectively just been used. Under the playbook, only one new position should be opened per cycle and the weekly slot should not be duplicated. The correct action is to wait for account state and phone execution state to settle before considering any further trade.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -16,14 +16,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
+      "should_open": false,
       "event_slug": "",
-      "market_slug": "will-bitcoin-reach-78k-april-13-19",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.1365
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -40,22 +40,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-16T17:31:06Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "20922007142334087641367898956489644982070173903229478915791322649387031501617",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "market": "Will Bitcoin reach $78,000 April 13-19?",
-        "market_slug": "will-bitcoin-reach-78k-april-13-19",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 74292.6,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 74450.95,
+  "positions_before": 1,
+  "positions_after": 1
 }

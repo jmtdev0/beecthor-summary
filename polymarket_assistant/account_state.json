@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 10.197715,
+  "cash_available": 9.197715,
   "realized_pnl": 0.3412,
-  "open_exposure": 0,
+  "open_exposure": 0.8896,
   "max_open_positions": 3,
   "max_floor_positions": 1,
   "base_stake_pct": 0.15,
@@ -13,7 +13,22 @@
   "stop_loss_probability": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "event_slug": "what-price-will-bitcoin-hit-april-13-19",
+      "market_slug": "will-bitcoin-reach-78k-april-13-19",
+      "market_title": "Will Bitcoin reach $78,000 April 13-19?",
+      "position_side": "Yes",
+      "token_id": "20922007142334087641367898956489644982070173903229478915791322649387031501617",
+      "shares": 5.872,
+      "avg_price": 0.16,
+      "entry_cost_usd": 0.9395,
+      "current_price": 0.1515,
+      "current_value_usd": 0.8896,
+      "cash_pnl_usd": -0.0499,
+      "status": "open"
+    }
+  ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-16T17:31:06Z"
+  "last_synced_at": "2026-04-16T18:01:41Z"
 }
