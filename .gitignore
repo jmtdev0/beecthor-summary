@@ -26,3 +26,11 @@ polymarket_assistant/credentials_snapshot.json
 
 CHAT.md
 .claude/settings.local.json
+.codex
+COMMENTS.md
+SETUP.md
+beecthor_summarizer.py
+polymarket_executor.py
+polymarket_monitor_executor.py
+server/copilot_chat_history.json
+polymarket_assistant/notified_claims.json
