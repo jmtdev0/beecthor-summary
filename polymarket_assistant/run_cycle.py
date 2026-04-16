@@ -280,7 +280,22 @@ def fetch_binance_snapshot() -> dict[str, Any]:
     return snapshot
 
 
-def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
+def infer_btc_market_type(question: str, event_slug: str = '', fallback_event_slug: str = '') -> str:
+    slug = (event_slug or fallback_event_slug or '').lower()
+    if '-on-' in slug:
+        return 'daily'
+    if slug:
+        return 'weekly'
+
+    lowered_question = question.lower()
+    if re.search(r'\bon [a-z]+ \d{1,2}\b', lowered_question):
+        return 'daily'
+    if re.search(r'\b[a-z]+ \d{1,2}-\d{1,2}\b', lowered_question):
+        return 'weekly'
+    return 'weekly'
+
+
+def parse_market(record: dict[str, Any], fallback_event_slug: str = '') -> dict[str, Any] | None:
     question = str(record.get('question', ''))
     title = question.lower()
     if 'bitcoin' not in title:
@@ -311,11 +326,8 @@ def parse_market(record: dict[str, Any]) -> dict[str, Any] | None:
             'probability': outcome_prices[idx] if idx < len(outcome_prices) else None,
             'token_id': token_ids[idx] if idx < len(token_ids) else None,
         }
-    event_slug = record.get('eventSlug', '')
-    if '-on-' in event_slug:
-        market_type = 'daily'
-    else:
-        market_type = 'weekly'
+    event_slug = record.get('eventSlug', '') or fallback_event_slug
+    market_type = infer_btc_market_type(question, event_slug=event_slug, fallback_event_slug=fallback_event_slug)
     return {
         'event_id': record.get('eventId'),
         'event_slug': event_slug,
@@ -473,7 +485,7 @@ def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
             response.raise_for_status()
             event = response.json()
             for item in event.get('markets', []):
-                parsed = parse_market(item)
+                parsed = parse_market(item, fallback_event_slug=event_slug)
                 if parsed and parsed['accepting_orders'] and not parsed['closed']:
                     all_markets.append(parsed)
         except requests.RequestException:
@@ -677,11 +689,10 @@ def infer_position_market_type(position: dict[str, Any]) -> str:
     """Infer market_type from position slugs (positions don't carry this field natively)."""
     market_slug = position.get('market_slug') or ''
     event_slug = position.get('event_slug') or ''
+    market_title = position.get('market_title') or ''
     if market_slug.startswith('bitcoin-above') or event_slug.startswith('bitcoin-above'):
         return 'floor'
-    if '-on-' in event_slug:
-        return 'daily'
-    return 'weekly'
+    return infer_btc_market_type(market_title, event_slug=event_slug)
 
 
 def nearest_strike_ok(market: dict[str, Any], markets: list[dict[str, Any]], spot_price: float) -> bool:
