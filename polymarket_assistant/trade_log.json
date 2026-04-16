@@ -3238,5 +3238,57 @@
     "binance_spot_price": 74689.67,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-04-16T17:17:14Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-16T17-15-33Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-16T17-15-33Z",
+      "action": "OPEN_POSITION",
+      "confidence": 0.67,
+      "summary": "Beecthor now favors correction-and-continuation higher, so the cleanest open slot is the weekly BTC $78k reach market.",
+      "rationale": "The latest April 16 transcript shifts the short-term thesis away from chasing downside and toward correction followed by continuation to 78k-79k while no clear bearish impulse appears. Recent summaries support that same structure: macro still bearish later, but one more upside leg first. Binance execution reality at 73956.96 supports not forcing fresh downside exposure: spot is only 0.88% above the 24h low, 1.95% below the 24h high, open interest is contracting, and shorts still dominate, which fits a squeeze/rebound setup better than a new breakdown. With no open positions and both slots free, the nearest daily upside strike (76k on April 16) is too discounted and too noisy for a conservative entry this late in the session, so under nearest-strike-first the next cleaner expression is the weekly 78k April 13-19 reach market. It is below the preferred 45%-84% band, but the playbook treats that as a soft filter, and here the thesis is unusually consistent across transcripts while the weekly horizon gives the move time to play out.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "",
+        "market_slug": "will-bitcoin-reach-78k-april-13-19",
+        "outcome": "Yes",
+        "direction": "bullish",
+        "strike": 78000,
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.1595
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": false,
+      "message": "Nearest-strike-first rule rejected the proposed market"
+    },
+    "execution": {
+      "performed": false,
+      "details": {
+        "rejected": "Nearest-strike-first rule rejected the proposed market"
+      }
+    },
+    "binance_spot_price": 74042.98,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
