@@ -486,6 +486,7 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
                 limit=TRACE_LANE_LIMIT,
                 payload_keys=['video_id', 'robot_score'],
             ),
+            'triggers': [{'process': 'summarizer', 'label': '▶ Run Summaries', 'primary': True}],
         },
         {
             'title': 'Server cycles',
@@ -965,6 +966,7 @@ TRIGGER_LABELS = {
     'monitor': 'Monitor (server)',
     'executor': 'Executor (phone)',
     'monitor_executor': 'Monitor Executor (phone)',
+    'summarizer': 'Beecthor Summaries (phone)',
 }
 
 PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@localhost']
@@ -976,6 +978,12 @@ def trigger_process(process: str):
     if process == 'cycle':
         subprocess.Popen(
             ['bash', '/root/run_polymarket_cycle.sh'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    elif process == 'summarizer':
+        subprocess.Popen(
+            PHONE_SSH + ['python ~/beecthor_summarizer.py'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
