@@ -171,6 +171,18 @@ img{display:block;max-width:100%}
 .metric-foot{color:#9fb0c7}
 .private-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
 .metric-card{padding:22px}
+.metric-card-link{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.metric-card-link:hover .metric-card{
+  border-color:rgba(62,166,255,.28);
+  transform:translateY(-2px);
+}
+.metric-card-link .metric-card{
+  transition:border-color .18s ease, transform .18s ease;
+}
 .metric-card .big{font-size:2.25rem;line-height:1;font-weight:800;margin:8px 0 10px}
 .good{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--amber)}
 .panel-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
@@ -211,6 +223,25 @@ img{display:block;max-width:100%}
 .position-market{font-weight:700;line-height:1.35}
 .position-sub,.position-kv,.log-filter-note{color:#98a7bb}
 .position-kv{margin-top:8px;font-size:.95rem}
+.timeline-list{display:flex;flex-direction:column;gap:14px}
+.timeline-item{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  padding:16px 18px;
+}
+.timeline-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.timeline-title{font-weight:700;line-height:1.4;color:#eef4ff}
+.timeline-meta{font-size:.9rem;color:#98a7bb;margin-top:8px;line-height:1.5}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:999px;padding:6px 10px;font-size:.76rem;font-weight:800;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap
+}
+.badge.good{background:rgba(34,197,94,.14);color:#7cf29f}
+.badge.bad{background:rgba(239,68,68,.14);color:#ff9a9a}
+.badge.warn{background:rgba(245,158,11,.14);color:#ffd27a}
+.badge.info{background:rgba(62,166,255,.14);color:#91cbff}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;vertical-align:top}
 .table th{font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:#95a3b8}
@@ -744,6 +775,162 @@ def normalize_live_position(position: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _format_detail_timestamp(timestamp: str) -> str:
+    try:
+        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(_CET)
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return timestamp
+
+
+def _format_epoch_timestamp(timestamp: Any) -> str:
+    try:
+        dt = datetime.fromtimestamp(float(timestamp), tz=UTC).astimezone(_CET)
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return str(timestamp)
+
+
+def _format_probability(probability: Any) -> str:
+    value = safe_float(probability, default=-1.0)
+    if value < 0:
+        return ''
+    return f'{value:.2f}'
+
+
+def _normalize_execution_details(raw_details: Any) -> list[dict[str, Any]]:
+    if isinstance(raw_details, list):
+        return [item for item in raw_details if isinstance(item, dict)]
+    if isinstance(raw_details, dict) and raw_details:
+        return [raw_details]
+    return []
+
+
+def build_operations_timeline() -> list[dict[str, Any]]:
+    trade_log = load_json(TRADE_LOG_PATH, [])
+    closed_positions = fetch_closed_positions_live()
+
+    close_reason_map: dict[str, str] = {}
+    for entry in trade_log:
+        if entry.get('type') != 'trade_closed':
+            continue
+        market_slug = entry.get('market_slug', '')
+        if market_slug and market_slug not in close_reason_map:
+            close_reason_map[market_slug] = str(entry.get('close_reason', '')).strip()
+
+    timeline: list[dict[str, Any]] = []
+
+    for entry in trade_log:
+        entry_type = entry.get('type')
+        if entry_type == 'trade_opened':
+            market_title = entry.get('market_title') or entry.get('market_slug') or 'Unknown market'
+            side = entry.get('position_side') or '?'
+            stake = safe_float(entry.get('entry_cost_usd'))
+            probability = _format_probability(entry.get('entry_probability'))
+            meta_bits = [f'{stake:.2f}$ {side}']
+            if probability:
+                meta_bits.append(f'at {probability} chance')
+            timeline.append(
+                {
+                    'timestamp': entry.get('timestamp', ''),
+                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
+                    'title': market_title,
+                    'status': 'OPEN',
+                    'status_class': 'info',
+                    'details': ' '.join(meta_bits),
+                    'market_slug': entry.get('market_slug', ''),
+                }
+            )
+            continue
+
+        if entry_type == 'force_bet':
+            decision = entry.get('decision') or {}
+            new_position = decision.get('new_position') or {}
+            if not (entry.get('execution') or {}).get('performed'):
+                continue
+            market_title = new_position.get('market_slug') or 'Unknown market'
+            side = new_position.get('outcome') or '?'
+            stake = safe_float(new_position.get('stake_usd'))
+            timeline.append(
+                {
+                    'timestamp': entry.get('timestamp', ''),
+                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
+                    'title': market_title,
+                    'status': 'OPEN',
+                    'status_class': 'info',
+                    'details': f'{stake:.2f}$ {side} via force-bet',
+                    'market_slug': new_position.get('market_slug', ''),
+                }
+            )
+            continue
+
+        if entry_type != 'cycle_run':
+            continue
+
+        decision = entry.get('decision') or {}
+        if decision.get('action') != 'OPEN_POSITION':
+            continue
+        if not (entry.get('execution') or {}).get('performed'):
+            continue
+
+        details_list = _normalize_execution_details((entry.get('execution') or {}).get('details'))
+        for details in details_list:
+            market_slug = details.get('market_slug', '')
+            outcome = details.get('outcome', '')
+            stake = safe_float(details.get('stake_usd'))
+            probability = _format_probability((decision.get('new_position') or {}).get('max_entry_probability'))
+            detail_text = f'{stake:.2f}$ {outcome}'.strip()
+            if probability and probability != '0.00':
+                detail_text += f' at {probability} chance'
+            timeline.append(
+                {
+                    'timestamp': entry.get('timestamp', ''),
+                    'timestamp_label': _format_detail_timestamp(entry.get('timestamp', '')),
+                    'title': market_slug or 'Unknown market',
+                    'status': 'OPEN',
+                    'status_class': 'info',
+                    'details': detail_text,
+                    'market_slug': market_slug,
+                }
+            )
+
+    for item in closed_positions:
+        market_slug = item.get('slug', '')
+        pnl = safe_float(item.get('realizedPnl'))
+        close_reason = close_reason_map.get(market_slug, '')
+        if close_reason == 'take_profit':
+            status = 'TAKE PROFIT'
+            status_class = 'warn'
+        elif pnl > 0:
+            status = 'WON'
+            status_class = 'good'
+        elif pnl < 0:
+            status = 'LOST'
+            status_class = 'bad'
+        else:
+            status = 'CLOSED'
+            status_class = 'info'
+        probability = _format_probability(item.get('curPrice'))
+        details = []
+        if probability:
+            details.append(f'at {probability} chance')
+        details.append(f'PnL {pnl:+.2f}$')
+        timeline.append(
+            {
+                'timestamp': str(item.get('timestamp', '')),
+                'timestamp_label': _format_epoch_timestamp(item.get('timestamp')),
+                'title': item.get('title') or market_slug or 'Unknown market',
+                'status': status,
+                'status_class': status_class,
+                'details': ' · '.join(details),
+                'market_slug': market_slug,
+            }
+        )
+
+    timeline.sort(key=lambda item: item.get('timestamp', ''), reverse=True)
+    return timeline
+
+
 def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
@@ -793,6 +980,9 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions', 'css_class': 'good' if win_rate >= 50 else 'bad'},
         {'label': 'Daily / Weekly', 'value': f'{daily_count} / {weekly_count}', 'caption': 'classified positions', 'css_class': ''},
     ]
+    for metric in metrics:
+        if metric['label'] == 'Operaciones':
+            metric['url'] = url_for('private_operations')
     positions = open_positions
     recent_operations = []
     for entry in reversed(trade_log):
@@ -1060,6 +1250,9 @@ def private_polymarket():
       </div>
       <div class="private-grid">
         {% for metric in metrics[1:] %}
+        {% if metric.url is defined %}
+        <a class="metric-card-link" href="{{ metric.url }}">
+        {% endif %}
         <section class="metric-card">
           <div class="metric-label">{{ metric.label }}</div>
           <div class="big {{ metric.css_class }}">{{ metric.value }}</div>
@@ -1081,6 +1274,9 @@ def private_polymarket():
           </details>
           {% endif %}
         </section>
+        {% if metric.url is defined %}
+        </a>
+        {% endif %}
         {% endfor %}
       </div>
       {% if triggered %}
@@ -1129,6 +1325,44 @@ def private_polymarket():
     triggered = request.args.get('triggered', '')
     triggered_label = TRIGGER_LABELS.get(triggered, triggered)
     return render_template_string(html, trace_lanes=trace_lanes, triggered=triggered, triggered_label=triggered_label, **snapshot)
+
+
+@app.route('/private/operations')
+@require_private
+def private_operations():
+    timeline = build_operations_timeline()
+    html = page_start('Operaciones | Beecthor') + """
+    <div class="shell private-shell">
+      <div class="private-header">
+        <div>
+          <h1 class="private-title">Operaciones</h1>
+          <div class="section-subtitle">Histórico combinado de aperturas y resoluciones usando el log local y Polymarket live.</div>
+        </div>
+        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/operations" style="font-weight:700;color:#fff">Operaciones</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
+      </div>
+      <section class="surface-card">
+        <h2 class="section-title">Timeline completo</h2>
+        <div class="timeline-list">
+          {% for item in timeline %}
+          <article class="timeline-item">
+            <div class="timeline-top">
+              <div>
+                <div class="muted">{{ item.timestamp_label }}</div>
+                <div class="timeline-title">{{ item.title }}</div>
+                <div class="timeline-meta">{{ item.details }}</div>
+              </div>
+              <div class="badge {{ item.status_class }}">{{ item.status }}</div>
+            </div>
+          </article>
+          {% else %}
+          <article class="timeline-item">
+            <div class="timeline-title">No operations found.</div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+    </div>""" + PAGE_END
+    return render_template_string(html, timeline=timeline)
 
 
 @app.route('/private/logs')
