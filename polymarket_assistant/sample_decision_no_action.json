@@ -1,4 +1,5 @@
 {
+  "run_id": "sample-no-action",
   "action": "NO_ACTION",
   "confidence": 0.61,
   "summary": "Dry-run fixture: no valid unattended action.",
@@ -17,6 +18,15 @@
     "outcome": "",
     "direction": "neutral",
     "strike": 0,
+    "stake_usd": 0,
+    "max_entry_probability": 0.0
+  },
+  "new_floor_position": {
+    "should_open": false,
+    "event_slug": "",
+    "market_slug": "",
+    "outcome": "Yes",
+    "floor_level": 0,
     "stake_usd": 0,
     "max_entry_probability": 0.0
   }
