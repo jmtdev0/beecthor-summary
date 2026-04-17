@@ -1,21 +1,29 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-17T13:19:16Z
+- Timestamp: 2026-04-17T13:28:32Z
 - Dry run: False
-- BTC price: 76836.4
+- BTC price: None
 - Decision action: OPEN_POSITION
-- Decision summary: The weekly $78k thesis is still alive, and the cleanest free slot is now the daily BTC $78k reach market.
-- Validation: False (Nearest-strike-first rule rejected the proposed market)
-- Open positions before: 1
-- Open positions after: 1
+- Decision summary: Force bet: Yes on Will Bitcoin reach $78,000 on April 17? stake=$1.0
+- Validation: True (force-bet bypass)
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 
 ```json
 {
-  "performed": false,
+  "performed": true,
   "details": {
-    "rejected": "Nearest-strike-first rule rejected the proposed market"
+    "order_id": "2026-04-17T13:28:32Z",
+    "status": "pending_phone_execution",
+    "type": "OPEN_POSITION",
+    "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
+    "side": "BUY",
+    "stake_usd": 1.0,
+    "market": "Will Bitcoin reach $78,000 on April 17?",
+    "market_slug": "will-bitcoin-reach-78k-on-april-17",
+    "outcome": "Yes"
   }
 }
 ```
