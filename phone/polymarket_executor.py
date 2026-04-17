@@ -35,6 +35,7 @@ ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 20
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
+BUY_FOK_REPRICE_OFFSETS = (0.0, 0.01, 0.02, 0.03, 0.05)
 PENDING_ORDERS_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
     '/polymarket_assistant/pending_orders.json'
@@ -176,6 +177,10 @@ def get_market_price(token_id: str, side: str, amount: float) -> float:
 def round_down(value: float, decimals: int) -> float:
     factor = 10 ** decimals
     return int(value * factor) / factor
+
+
+def clamp_price(value: float) -> float:
+    return min(0.999, max(0.001, round(value, 3)))
 
 
 def to_usdc(value: float) -> int:
@@ -371,6 +376,22 @@ def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
     )
 
 
+def is_fill_or_kill_rejection(resp: requests.Response) -> bool:
+    return resp.status_code == 400 and 'fully filled or killed' in resp.text.lower()
+
+
+def build_price_candidates(base_price: float, side: str, order_type: str) -> list[float]:
+    if side != 'BUY' or order_type != 'OPEN_POSITION':
+        return [clamp_price(base_price)]
+
+    candidates: list[float] = []
+    for offset in BUY_FOK_REPRICE_OFFSETS:
+        price = clamp_price(base_price + offset)
+        if price not in candidates:
+            candidates.append(price)
+    return candidates
+
+
 def execute_order(pending: dict, dry_run: bool = False) -> bool:
     """Execute a single pending order. Returns True on success."""
     order_id = pending.get('order_id', '')
@@ -445,9 +466,9 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
     for attempt in range(1, max_attempts + 1):
         print(f'[executor] Attempt {attempt}/{max_attempts} — querying order book...')
         try:
-            price = get_market_price(token_id, side, amount)
-            print(f'[executor] Market price: {price}')
-            order_dict = build_order_dict(token_id, side, amount, price)
+            base_price = get_market_price(token_id, side, amount)
+            price_candidates = build_price_candidates(base_price, side, order_type)
+            print(f'[executor] Market price: {base_price} | candidates={price_candidates}')
         except MarketResolvedException as exc:
             print(f'[executor] Skipping stale order because market is already resolved: {exc}')
             send_server_log(
@@ -471,38 +492,66 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 time.sleep(retry_delay)
             continue
 
-        body = {
-            'order': order_dict,
-            'owner': POLY_API_KEY,
-            'orderType': 'FOK',
-            'postOnly': False,
-        }
-        if dry_run:
-            print('[executor] DRY RUN payload:')
-            print(json.dumps(body, indent=2))
-            send_server_log(
-                'phone.executor',
-                'order_dry_run',
-                'Built order payload successfully',
-                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'price': price},
-            )
-            return True
+        for candidate_index, price in enumerate(price_candidates, 1):
+            order_dict = build_order_dict(token_id, side, amount, price)
+            body = {
+                'order': order_dict,
+                'owner': POLY_API_KEY,
+                'orderType': 'FOK',
+                'postOnly': False,
+            }
+            if dry_run:
+                print('[executor] DRY RUN payload:')
+                print(json.dumps(body, indent=2))
+                send_server_log(
+                    'phone.executor',
+                    'order_dry_run',
+                    'Built order payload successfully',
+                    payload={
+                        'order_id': order_id,
+                        'market_slug': pending.get('market_slug'),
+                        'price': price,
+                        'price_candidates': price_candidates,
+                    },
+                )
+                return True
 
-        resp = post_order(order_dict)
-        if resp.ok:
-            print(f'[executor] SUCCESS: {resp.text}')
-            send_server_log(
-                'phone.executor',
-                'order_executed',
-                'Order executed successfully on phone',
-                payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'response': resp.text[:500]},
-            )
-            save_executed_order_id(order_id)
-            send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
-            return True
+            resp = post_order(order_dict)
+            if resp.ok:
+                print(f'[executor] SUCCESS: {resp.text}')
+                send_server_log(
+                    'phone.executor',
+                    'order_executed',
+                    'Order executed successfully on phone',
+                    payload={
+                        'order_id': order_id,
+                        'market_slug': pending.get('market_slug'),
+                        'price': price,
+                        'response': resp.text[:500],
+                    },
+                )
+                save_executed_order_id(order_id)
+                send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
+                return True
 
-        last_error = f'{resp.status_code}: {resp.text}'
-        print(f'[executor] Attempt {attempt} FAILED {last_error}')
+            last_error = f'{resp.status_code}: {resp.text}'
+            print(f'[executor] Attempt {attempt} candidate {candidate_index}/{len(price_candidates)} FAILED {last_error}')
+            if is_fill_or_kill_rejection(resp) and candidate_index < len(price_candidates):
+                send_server_log(
+                    'phone.executor',
+                    'order_repriced',
+                    'FOK order failed to fully fill; retrying with a more aggressive price',
+                    payload={
+                        'order_id': order_id,
+                        'market_slug': pending.get('market_slug'),
+                        'attempt': attempt,
+                        'failed_price': price,
+                        'next_price': price_candidates[candidate_index],
+                    },
+                )
+                continue
+            break
+
         if attempt < max_attempts:
             print(f'[executor] Retrying in {retry_delay}s...')
             time.sleep(retry_delay)
