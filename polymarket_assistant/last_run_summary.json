@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-04-16T22:07:36Z",
-  "run_id": "2026-04-16T22-00-02Z",
+  "timestamp": "2026-04-17T00:07:36Z",
+  "run_id": "2026-04-17T00-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-16T22-00-02Z",
+    "run_id": "2026-04-17T00-00-02Z",
     "action": "NO_ACTION",
     "confidence": 0.0,
     "summary": "Automatic Codex cycle fallback: NO_ACTION.",
@@ -43,7 +43,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75080.0,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 74993.83,
+  "positions_before": 1,
+  "positions_after": 1
 }
