@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-17T20:01:33Z
+- Timestamp: 2026-04-17T22:22:46Z
 - Dry run: False
-- BTC price: 77429.84
+- BTC price: 77407.67
 - Decision action: NO_ACTION
-- Decision summary: The weekly BTC $80k thesis was already queued in the previous cycle, and there is no clean new edge to add with only four hours left in the daily session.
+- Decision summary: Automatic Codex cycle fallback: NO_ACTION.
 - Validation: True (ok)
-- Open positions before: 0
-- Open positions after: 0
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 

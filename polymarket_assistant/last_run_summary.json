@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-17T20:01:33Z",
-  "run_id": "2026-04-17T20-00-16Z",
+  "timestamp": "2026-04-17T22:22:46Z",
+  "run_id": "2026-04-17T22-15-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-17T20-00-16Z",
+    "run_id": "2026-04-17T22-15-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.92,
-    "summary": "The weekly BTC $80k thesis was already queued in the previous cycle, and there is no clean new edge to add with only four hours left in the daily session.",
-    "rationale": "The latest Beecthor thesis still allows one more push higher, but the context already contains a successful OPEN_POSITION cycle at 2026-04-17T18:01:56Z for `will-bitcoin-reach-80k-april-13-19` Yes with pending phone execution. Even though live Polymarket positions are still empty, cash remains unchanged only because that order has not yet settled into account state; duplicating the same weekly thesis would be premature and contrary to the slot discipline. On the daily side, only four hours remain to expiry, and the available upside markets are both too time-compressed and too low-probability to justify a fresh entry this late: 79k is only about 6.1% and 80k about 2.0%. Binance at 77406 with flat open interest and BTC still below the 24h high does not force a late-session daily chase. The correct action is to wait for the already-queued weekly 80k order to settle and avoid opening any new position this cycle.",
+    "confidence": 0.0,
+    "summary": "Automatic Codex cycle fallback: NO_ACTION.",
+    "rationale": "Codex auto-cycle fallback: no valid decision file was produced in time.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -43,7 +43,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77429.84,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 77407.67,
+  "positions_before": 1,
+  "positions_after": 1
 }
