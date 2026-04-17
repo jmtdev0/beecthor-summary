@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 8.197716,
+  "cash_available": 7.197716,
   "realized_pnl": 0.3412,
-  "open_exposure": 3.5143,
+  "open_exposure": 5.9722,
   "max_open_positions": 3,
   "max_floor_positions": 1,
   "base_stake_pct": 0.15,
@@ -23,12 +23,26 @@
       "shares": 5.872,
       "avg_price": 0.16,
       "entry_cost_usd": 0.9395,
-      "current_price": 0.5985,
-      "current_value_usd": 3.5143,
-      "cash_pnl_usd": 2.5747,
+      "current_price": 0.758,
+      "current_value_usd": 4.4509,
+      "cash_pnl_usd": 3.5113,
+      "status": "open"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-17",
+      "market_slug": "will-bitcoin-reach-78k-on-april-17",
+      "market_title": "Will Bitcoin reach $78,000 on April 17?",
+      "position_side": "Yes",
+      "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
+      "shares": 2.392,
+      "avg_price": 0.3999,
+      "entry_cost_usd": 0.9567,
+      "current_price": 0.636,
+      "current_value_usd": 1.5213,
+      "cash_pnl_usd": 0.5645,
       "status": "open"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-17T13:19:16Z"
+  "last_synced_at": "2026-04-17T14:01:15Z"
 }

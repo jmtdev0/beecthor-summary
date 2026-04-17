@@ -1,11 +1,13 @@
 {
-  "timestamp": "2026-04-17T13:28:32Z",
+  "timestamp": "2026-04-17T14:01:15Z",
+  "run_id": "2026-04-17T14-00-02Z",
   "dry_run": false,
   "decision": {
-    "action": "OPEN_POSITION",
-    "confidence": 1.0,
-    "summary": "Force bet: Yes on Will Bitcoin reach $78,000 on April 17? stake=$1.0",
-    "rationale": "--force-bet manual override, no GPT analysis",
+    "run_id": "2026-04-17T14-00-02Z",
+    "action": "NO_ACTION",
+    "confidence": 0.92,
+    "summary": "The bullish thesis is still working, but both the weekly and daily price-hit slots are already occupied and neither position is near take-profit yet.",
+    "rationale": "The latest Beecthor thesis remains short-term bullish toward 78k-79k while no clear bearish impulse has appeared, and Binance strongly confirms that execution reality at 77391.73 with expanding open interest and shorts still dominant. However, the account already has the weekly 78k April 13-19 Yes position open at about 75.14% probability and the daily 78k April 17 Yes position open at about 63.7% probability. Under the playbook, there is a maximum of one daily and one weekly price-hit position at a time, so both relevant slots are already filled. Neither open position is yet in the 90-95% take-profit zone, so there is nothing to close or reduce. The correct action for this cycle is to hold existing exposure and avoid opening any additional position.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -14,35 +16,34 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-17",
-      "market_slug": "will-bitcoin-reach-78k-on-april-17",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
+    },
+    "new_floor_position": {
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
       "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 1.0
+      "floor_level": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     }
   },
   "validation": {
     "ok": true,
-    "message": "force-bet bypass"
+    "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": {
-      "order_id": "2026-04-17T13:28:32Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "market": "Will Bitcoin reach $78,000 on April 17?",
-      "market_slug": "will-bitcoin-reach-78k-on-april-17",
-      "outcome": "Yes"
-    }
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": null,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 77494.16,
+  "positions_before": 2,
+  "positions_after": 2
 }

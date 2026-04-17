@@ -1,29 +1,19 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-17T13:28:32Z
+- Timestamp: 2026-04-17T14:01:15Z
 - Dry run: False
-- BTC price: None
-- Decision action: OPEN_POSITION
-- Decision summary: Force bet: Yes on Will Bitcoin reach $78,000 on April 17? stake=$1.0
-- Validation: True (force-bet bypass)
-- Open positions before: 0
-- Open positions after: 0
+- BTC price: 77494.16
+- Decision action: NO_ACTION
+- Decision summary: The bullish thesis is still working, but both the weekly and daily price-hit slots are already occupied and neither position is near take-profit yet.
+- Validation: True (ok)
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 
 ```json
 {
-  "performed": true,
-  "details": {
-    "order_id": "2026-04-17T13:28:32Z",
-    "status": "pending_phone_execution",
-    "type": "OPEN_POSITION",
-    "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
-    "side": "BUY",
-    "stake_usd": 1.0,
-    "market": "Will Bitcoin reach $78,000 on April 17?",
-    "market_slug": "will-bitcoin-reach-78k-on-april-17",
-    "outcome": "Yes"
-  }
+  "performed": false,
+  "details": null
 }
 ```
