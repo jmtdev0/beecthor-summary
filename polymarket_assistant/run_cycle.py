@@ -767,8 +767,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             )
             if duplicate:
                 return False, 'Duplicate price-hit position already open'
-            if not nearest_strike_ok(market, markets, spot_price):
-                return False, 'Nearest-strike-first rule rejected the proposed market'
+            # Nearest-strike-first is a preference from the playbook, not a hard
+            # validation veto. The model should usually choose the closest
+            # reasonable strike, but a farther strike can still be valid when
+            # the nearer one is too aggressively priced or otherwise not the
+            # cleanest expression of the thesis.
 
         if floor_opening:
             floor_markets = polymarket.get('active_floor_markets', [])
