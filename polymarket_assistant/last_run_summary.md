@@ -1,8 +1,8 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-17T10:07:37Z
+- Timestamp: 2026-04-17T12:07:32Z
 - Dry run: False
-- BTC price: 75801.06
+- BTC price: 75577.29
 - Decision action: NO_ACTION
 - Decision summary: Automatic Codex cycle fallback: NO_ACTION.
 - Validation: True (ok)
