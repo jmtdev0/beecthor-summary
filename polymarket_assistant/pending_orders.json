@@ -9,5 +9,16 @@
     "market": "Will Bitcoin dip to $76,000 on April 18?",
     "market_slug": "will-bitcoin-dip-to-76k-on-april-18",
     "outcome": "Yes"
+  },
+  {
+    "order_id": "2026-04-18T14:01:09Z",
+    "status": "pending_phone_execution",
+    "type": "OPEN_POSITION",
+    "token_id": "78560215579871055220253438338177391358246312042065466500608287377700724157361",
+    "side": "BUY",
+    "stake_usd": 1.0,
+    "market": "Will Bitcoin dip to $75,000 on April 18?",
+    "market_slug": "will-bitcoin-dip-to-75k-on-april-18",
+    "outcome": "Yes"
   }
 ]
