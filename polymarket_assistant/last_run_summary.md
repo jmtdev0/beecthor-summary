@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-18T00:27:11Z
+- Timestamp: 2026-04-18T02:07:46Z
 - Dry run: False
-- BTC price: 77208.07
+- BTC price: 77185.44
 - Decision action: NO_ACTION
-- Decision summary: The weekly $80k thesis is still live, but there is no clean new edge to add right now.
+- Decision summary: Automatic Codex cycle fallback: NO_ACTION.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
