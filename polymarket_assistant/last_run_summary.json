@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-18T08:41:10Z",
-  "run_id": "2026-04-18T08-40-04Z",
+  "timestamp": "2026-04-18T10:01:06Z",
+  "run_id": "2026-04-18T10-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-18T08-40-04Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.66,
-    "summary": "The cleanest free slot is now the daily BTC $76k dip market.",
-    "rationale": "Beecthor's latest thesis is no longer to chase longs into resistance; after the 78k-79k sweep, he wants to watch for exhaustion and short setups. BTC has already rolled over from that upper zone and is trading near 76.6k, so the nearest bearish daily expression is the Apr 18 $76k dip market. The weekly slot is already occupied by the 80k reach position, but the daily slot is still free and there are roughly 15 hours left for the daily move to resolve. Portfolio value remains below $15, so the early-stage cap keeps the stake at $1.",
+    "run_id": "2026-04-18T10-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.72,
+    "summary": "Both the weekly and daily BTC slots are already filled, so there is no clean new edge to add.",
+    "rationale": "Beecthor's latest view is still to treat the 78k-79k sweep as a corrective exhaustion zone and to watch for shorts rather than add fresh longs. The current portfolio already has the weekly BTC 80k reach position open and the daily BTC 76k dip position open, so both allowed BTC price-hit slots are occupied. Neither open position is near take-profit yet, and there is no floor setup in context, so the correct action is to hold and avoid adding exposure.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -16,14 +16,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-18",
-      "market_slug": "will-bitcoin-dip-to-76k-on-april-18",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 76000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.37
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -40,22 +40,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-18T08:41:10Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "51062765410794142377828481350231348968358876036280873172300942674274696959425",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "market": "Will Bitcoin dip to $76,000 on April 18?",
-        "market_slug": "will-bitcoin-dip-to-76k-on-april-18",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 76591.21,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 76546.6,
+  "positions_before": 2,
+  "positions_after": 2
 }
