@@ -623,7 +623,7 @@ def git_commit_and_push(video_id: str) -> None:
     files_to_add = [
         str(LAST_VIDEO_FILE),
         str(LOG_FILE),
-        str(REPO_ROOT / "CHANGELOG.md"),
+        str(REPO_ROOT / "doc" / "CHANGELOG.md"),
     ]
     for f in TRANSCRIPTS_DIR.glob(f"{video_id}_*.txt"):
         files_to_add.append(str(f))

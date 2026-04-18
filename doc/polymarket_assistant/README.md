@@ -18,7 +18,7 @@ The assistant should:
 
 ## Files
 
-- `PLAYBOOK.md` — operating rules and hard constraints
+- `doc/polymarket_assistant/PLAYBOOK.md` — operating rules and hard constraints
 - `account_state.json` — bankroll, cash, open positions, realized PnL
 - `trade_log.json` — daily decisions, entries, exits, and no-bet days
 - `context_helper.py` — optional helper script for quick context snapshots

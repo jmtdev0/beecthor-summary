@@ -45,5 +45,5 @@ This project summarizes Beecthor's daily Bitcoin videos and turns them into Tele
 - `scripts/summarize_beecthor.py`: main workflow
 - `analyses_log.json`: historical sent messages
 - `transcripts/`: source material for interpretation
-- `CHANGELOG.md`: notable session progress
-- `bets_real.md` and `bets_simulation.md`: position tracking only when the user asks
+- `doc/CHANGELOG.md`: notable session progress
+- `doc/bets_real.md` and `doc/bets_simulation.md`: position tracking only when the user asks

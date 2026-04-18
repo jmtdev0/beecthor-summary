@@ -70,8 +70,8 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 | `polymarket_assistant/run_cycle.py` | Main base cycle: builds context, calls GPT, validates, executes |
 | `polymarket_assistant/run_cycle_codex.py` | Codex-specific variant: accepts normalized JSON decisions with `run_id` |
 | `polymarket_assistant/run_monitor.py` | Runs every 2h (odd UTC hours), checks take-profit, writes SELL orders |
-| `polymarket_assistant/PLAYBOOK.md` | Binding trading rules for GPT |
-| `polymarket_assistant/copilot_prompt.md` | GPT prompt template + JSON schema |
+| `doc/polymarket_assistant/PLAYBOOK.md` | Binding trading rules for GPT |
+| `doc/polymarket_assistant/copilot_prompt.md` | GPT prompt template + JSON schema |
 
 ### State & Logs
 | File | Purpose |
@@ -80,7 +80,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 | `polymarket_assistant/trade_log.json` | Full history of every cycle + trade |
 | `polymarket_assistant/pending_orders.json` | Queue of orders awaiting phone execution |
 | `polymarket_assistant/last_run_summary.json` | Output of the last cycle (JSON) |
-| `polymarket_assistant/last_run_summary.md` | Output of the last cycle (Markdown) |
+| `doc/polymarket_assistant/last_run_summary.md` | Output of the last cycle (Markdown) |
 | `analyses_log.json` | Beecthor video summaries history |
 | `transcripts/` | Raw video transcripts (one file per video) |
 
@@ -142,7 +142,7 @@ run_cycle.py
        - fetch_active_btc_markets() → daily + weekly markets from GAMMA API
        - fetch_active_floor_markets() → "bitcoin-above-X" markets from GAMMA API
        - load account_state.json, trade_log.json, transcripts, analyses_log.json
-  4. render_prompt() → copilot_prompt.md + full context JSON
+  4. render_prompt() → doc/polymarket_assistant/copilot_prompt.md + full context JSON
   5. run_copilot() → GPT returns JSON decision
      (or --decision-file to skip this step)
   6. validate_decision() → enforces all playbook rules

@@ -1,5 +1,11 @@
 # Changelog
 
+### 18/04/2026
+* Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.
+* El ciclo automático de Codex ahora usa `doc/polymarket_assistant/codex_cycle_prompt.md` como template mínimo de una sola línea y delega las instrucciones detalladas en `doc/polymarket_assistant/codex_cycle_instructions.md`.
+* `run_cycle.py` y `scripts/summarize_beecthor.py` actualizados para leer/escribir sus Markdown canónicos desde `doc/`.
+* `/root/run_polymarket_cycle.sh` actualizado para renderizar el nuevo prompt corto referenciando el `.md` de instrucciones.
+
 ### 16/04/2026
 * `fetch_positions()` fix: posiciones resueltas ya no se muestran a GPT. Doble filtro: (1) `redeemable: true` excluye inmediatamente la posición; (2) comparación de fecha ahora timezone-aware (`end_dt.replace(tzinfo=UTC)` para fechas sin hora), eliminando el `TypeError` silencioso que dejaba pasar posiciones expiradas.
 * Nuevo flujo automático del operador: `/root/run_polymarket_cycle.sh` deja de llamar a Copilot CLI directamente y pasa a usar a Codex en el chat de VS Code como motor de decisión. Cada ciclo exporta un snapshot fresh, envía un prompt corto con `run_id`, espera un `decision_file`, y luego ejecuta `run_cycle_codex.py --decision-file`. Si Codex no responde o el JSON es inválido, el wrapper fuerza `NO_ACTION`.
