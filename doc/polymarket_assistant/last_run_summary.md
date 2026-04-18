@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-18T10:01:06Z
+- Timestamp: 2026-04-18T12:00:54Z
 - Dry run: False
-- BTC price: 76546.6
+- BTC price: 76121.67
 - Decision action: NO_ACTION
-- Decision summary: Both the weekly and daily BTC slots are already filled, so there is no clean new edge to add.
+- Decision summary: There is no clean new edge to add right now.
 - Validation: True (ok)
-- Open positions before: 2
-- Open positions after: 2
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
