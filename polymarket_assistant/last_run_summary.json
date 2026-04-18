@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-18T18:00:52Z",
-  "run_id": "2026-04-18T18-00-06Z",
+  "timestamp": "2026-04-18T20:00:48Z",
+  "run_id": "2026-04-18T20-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-18T18-00-06Z",
+    "run_id": "2026-04-18T20-00-02Z",
     "action": "NO_ACTION",
-    "confidence": 0.78,
+    "confidence": 0.82,
     "summary": "Both BTC price-hit slots are already filled, so there is no clean new edge to add.",
-    "rationale": "Beecthor's new video keeps the broader bearish-corrective thesis but still favors one more upside push toward 78.5k and the 79k-80k area before the cleaner short setup. The portfolio already has the weekly BTC $80k reach position open and the daily BTC $75k dip position open, so both allowed BTC price-hit slots are occupied. Neither position is near take-profit, there is no floor setup in context, and adding a third correlated BTC position would break slot discipline without improving setup quality.",
+    "rationale": "Beecthor's latest view still favors one more upside push before the cleaner short setup, but the portfolio already has the weekly BTC $80k reach position open and the daily BTC $75k dip position open. Both allowed BTC price-hit slots are therefore occupied. The daily position is in profit but far from take-profit thresholds, the weekly position is still open and not ready to manage, and there is no floor setup in context. With only about 4 hours left for the daily market window, forcing any additional exposure would break slot discipline without improving the setup quality.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -43,7 +43,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75813.0,
+  "binance_spot_price": 75655.6,
   "positions_before": 2,
   "positions_after": 2
 }
