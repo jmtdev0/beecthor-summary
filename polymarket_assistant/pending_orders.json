@@ -1,24 +1,13 @@
 [
   {
-    "order_id": "2026-04-17T13:28:32Z",
+    "order_id": "2026-04-18T08:41:10Z",
     "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
+    "token_id": "51062765410794142377828481350231348968358876036280873172300942674274696959425",
     "side": "BUY",
     "stake_usd": 1.0,
-    "market": "Will Bitcoin reach $78,000 on April 17?",
-    "market_slug": "will-bitcoin-reach-78k-on-april-17",
-    "outcome": "Yes"
-  },
-  {
-    "order_id": "2026-04-17T18:01:56Z",
-    "status": "pending_phone_execution",
-    "type": "OPEN_POSITION",
-    "token_id": "86548219855394698995422111382366111422829393840626370054096386572640574841065",
-    "side": "BUY",
-    "stake_usd": 2.32,
-    "market": "Will Bitcoin reach $80,000 April 13-19?",
-    "market_slug": "will-bitcoin-reach-80k-april-13-19",
+    "market": "Will Bitcoin dip to $76,000 on April 18?",
+    "market_slug": "will-bitcoin-dip-to-76k-on-april-18",
     "outcome": "Yes"
   }
 ]
