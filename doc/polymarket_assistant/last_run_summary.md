@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-19T14:00:48Z
+- Timestamp: 2026-04-19T16:01:16Z
 - Dry run: False
-- BTC price: 75965.47
+- BTC price: 75757.4
 - Decision action: NO_ACTION
-- Decision summary: The clean daily BTC $76k reach has already become too priced-in, and there is no cleaner replacement right now.
+- Decision summary: There is still no cleaner daily edge than the already-resolved 76k reach, so the right move is to stay patient.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1

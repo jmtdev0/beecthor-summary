@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-19T14:00:48Z",
-  "run_id": "2026-04-19T14-00-00Z",
+  "timestamp": "2026-04-19T16:01:16Z",
+  "run_id": "2026-04-19T16-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T14-00-00Z",
+    "run_id": "2026-04-19T16-00-06Z",
     "action": "NO_ACTION",
-    "confidence": 0.78,
-    "summary": "The clean daily BTC $76k reach has already become too priced-in, and there is no cleaner replacement right now.",
-    "rationale": "The latest Beecthor thesis still allows one more upside push before the broader bearish continuation, but at this point the daily 76k reach market is already effectively resolved at 99.9%-1.0%, so it is no longer a valid entry under the hard 85% cap. The next upside daily strike is 77k around 38%-41%, but with BTC spot still below 76k and only modest intraday momentum, that step now looks more like forcing a second extension than taking the cleanest remaining expression. The weekly 80k reach is still open but effectively discarded for slot purposes at sub-20% probability, and there is no clearly superior floor setup in the current snapshot. The correct action is to hold and avoid chasing the next daily strike late.",
+    "confidence": 0.79,
+    "summary": "There is still no cleaner daily edge than the already-resolved 76k reach, so the right move is to stay patient.",
+    "rationale": "The latest Beecthor thesis still allows one more upside push before the broader bearish continuation, but the original clean daily expression has already become the 76k reach market and that line remains fully priced at 99.9%-1.0%, which is invalid under the hard 85% cap. BTC spot is around 75,850, only modestly above the session midpoint and still well below the 24h high, so upgrading immediately to the 77k reach would mean forcing a second extension rather than taking the cleanest same-day setup. The weekly 80k reach remains open but effectively discarded for slot purposes at sub-20% probability, and there is still no clearly superior floor setup. The correct action is to hold and avoid chasing the next daily strike late in the session.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -33,7 +33,9 @@
       "floor_level": 0,
       "stake_usd": 0,
       "max_entry_probability": 0.0
-    }
+    },
+    "position_managements": [],
+    "new_positions": []
   },
   "validation": {
     "ok": true,
@@ -43,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75965.47,
+  "binance_spot_price": 75757.4,
   "positions_before": 1,
   "positions_after": 1
 }
