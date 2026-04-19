@@ -5465,5 +5465,55 @@
     "binance_spot_price": 75653.27,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-19T14:00:48Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-19T14-00-00Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-19T14-00-00Z",
+      "action": "NO_ACTION",
+      "confidence": 0.78,
+      "summary": "The clean daily BTC $76k reach has already become too priced-in, and there is no cleaner replacement right now.",
+      "rationale": "The latest Beecthor thesis still allows one more upside push before the broader bearish continuation, but at this point the daily 76k reach market is already effectively resolved at 99.9%-1.0%, so it is no longer a valid entry under the hard 85% cap. The next upside daily strike is 77k around 38%-41%, but with BTC spot still below 76k and only modest intraday momentum, that step now looks more like forcing a second extension than taking the cleanest remaining expression. The weekly 80k reach is still open but effectively discarded for slot purposes at sub-20% probability, and there is no clearly superior floor setup in the current snapshot. The correct action is to hold and avoid chasing the next daily strike late.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 75965.47,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]

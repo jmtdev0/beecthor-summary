@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-19T12:16:31Z",
-  "run_id": "2026-04-19T12-15-37Z",
+  "timestamp": "2026-04-19T14:00:48Z",
+  "run_id": "2026-04-19T14-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T12-15-37Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.69,
-    "summary": "The cleanest fresh expression of Beecthor's thesis is now the daily BTC $76k reach market.",
-    "rationale": "The latest Beecthor view still expects one more upside push before the clearer bearish continuation, with the more aggressive downside case only gaining priority if structure breaks much lower. Binance spot is around 75,689, still well below the 24h high but also clearly above the session low, which keeps a same-day rebound alive. The existing weekly 80k reach position is effectively discarded for slot purposes at roughly 1.1% probability, so it should not block a fresher setup. Under the updated playbook, the nearest clean bullish daily expression is the April 19 $76k reach market, and its live price remains below the 85% hard cap while still conservative enough for a same-day move.",
+    "run_id": "2026-04-19T14-00-00Z",
+    "action": "NO_ACTION",
+    "confidence": 0.78,
+    "summary": "The clean daily BTC $76k reach has already become too priced-in, and there is no cleaner replacement right now.",
+    "rationale": "The latest Beecthor thesis still allows one more upside push before the broader bearish continuation, but at this point the daily 76k reach market is already effectively resolved at 99.9%-1.0%, so it is no longer a valid entry under the hard 85% cap. The next upside daily strike is 77k around 38%-41%, but with BTC spot still below 76k and only modest intraday momentum, that step now looks more like forcing a second extension than taking the cleanest remaining expression. The weekly 80k reach is still open but effectively discarded for slot purposes at sub-20% probability, and there is no clearly superior floor setup in the current snapshot. The correct action is to hold and avoid chasing the next daily strike late.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -16,14 +16,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-19",
-      "market_slug": "will-bitcoin-reach-76k-on-april-19",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 76000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.78
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -40,23 +40,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-19T12:16:31Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "82886921149530725799743132428284858766172718009762076068796705485153381031141",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.78,
-        "market": "Will Bitcoin reach $76,000 on April 19?",
-        "market_slug": "will-bitcoin-reach-76k-on-april-19",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 75653.27,
+  "binance_spot_price": 75965.47,
   "positions_before": 1,
   "positions_after": 1
 }

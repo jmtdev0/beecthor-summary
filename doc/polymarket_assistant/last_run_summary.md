@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-19T12:16:31Z
+- Timestamp: 2026-04-19T14:00:48Z
 - Dry run: False
-- BTC price: 75653.27
-- Decision action: OPEN_POSITION
-- Decision summary: The cleanest fresh expression of Beecthor's thesis is now the daily BTC $76k reach market.
+- BTC price: 75965.47
+- Decision action: NO_ACTION
+- Decision summary: The clean daily BTC $76k reach has already become too priced-in, and there is no cleaner replacement right now.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
@@ -13,20 +13,7 @@
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-04-19T12:16:31Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "82886921149530725799743132428284858766172718009762076068796705485153381031141",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.78,
-      "market": "Will Bitcoin reach $76,000 on April 19?",
-      "market_slug": "will-bitcoin-reach-76k-on-april-19",
-      "outcome": "Yes"
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```
