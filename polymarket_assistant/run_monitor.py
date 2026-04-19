@@ -4,7 +4,7 @@ Polymarket Position Monitor
 
 Runs every 2 hours (odd UTC hours) via systemd timer.
 No GPT/Copilot — hard-coded thresholds only:
-  - Take-profit: cur_price >= 0.88
+  - Take-profit: cur_price >= 0.90
 
 On trigger: writes order params to last_monitor_action.json, commits to GitHub,
 and sends a Telegram notification. The phone executor picks it up 5 min later,
@@ -32,7 +32,7 @@ from polymarket_assistant.run_cycle import (
 
 MONITOR_ACTION_PATH = ASSISTANT_DIR / 'last_monitor_action.json'
 
-TAKE_PROFIT_THRESHOLD = 0.88
+TAKE_PROFIT_THRESHOLD = 0.90
 
 
 def send_telegram(token: str, chat_id: str, text: str) -> None:

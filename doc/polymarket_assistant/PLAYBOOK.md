@@ -109,7 +109,7 @@ Three allowed market types, each tracked separately:
   - around `08:00`
 - Review window 2:
   - after the new Beecthor video is available
-- Automated cycles run every `4 hours` on the server
+- Automated cycles run every `2 hours` on the server
 
 ## Required log fields
 
