@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 12.890169,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.3034,
+  "open_exposure": 0.3768,
   "max_open_positions": 3,
   "max_floor_positions": 1,
   "base_stake_pct": 0.15,
@@ -27,22 +27,8 @@
       "current_value_usd": 0.3768,
       "cash_pnl_usd": -1.7898,
       "status": "open"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-18",
-      "market_slug": "will-bitcoin-dip-to-75k-on-april-18",
-      "market_title": "Will Bitcoin dip to $75,000 on April 18?",
-      "position_side": "Yes",
-      "token_id": "78560215579871055220253438338177391358246312042065466500608287377700724157361",
-      "shares": 7.1559,
-      "avg_price": 0.1309,
-      "entry_cost_usd": 0.9374,
-      "current_price": 0.1295,
-      "current_value_usd": 0.9266,
-      "cash_pnl_usd": -0.0108,
-      "status": "open"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-18T22:01:01Z"
+  "last_synced_at": "2026-04-19T00:01:09Z"
 }
