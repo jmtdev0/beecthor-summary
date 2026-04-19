@@ -19,6 +19,7 @@ import subprocess
 import sys
 import argparse
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +37,8 @@ BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price'
 COPILOT_MODEL = 'gpt-5.4'
 NUM_EXAMPLES = 2  # entries from analyses_log used as format examples
 TELEGRAM_MAX_MESSAGE_CHARS = 4000
+TRANSCRIPT_RETRY_ATTEMPTS = 2
+TRANSCRIPT_RETRY_DELAY_SECONDS = 5 * 60
 
 load_dotenv(ENV_FILE)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
@@ -60,6 +63,30 @@ if str(REPO_DIR) not in sys.path:
 
 def now_utc() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+class TranscriptRetryableError(RuntimeError):
+    """Raised when the latest video exists but subtitles/transcript are not ready yet."""
+
+
+def shorten_error(value: Exception | str, limit: int = 300) -> str:
+    text = str(value).replace('\n', ' ').strip()
+    return text[:limit]
+
+
+def is_retryable_transcript_error(exc: Exception) -> bool:
+    if isinstance(exc, TranscriptRetryableError):
+        return True
+    text = shorten_error(exc).lower()
+    markers = (
+        'produced no vtt file',
+        'could not retrieve a transcript',
+        'no transcripts were found',
+        'subtitles are unavailable',
+        'subtitles are disabled',
+        'failed to extract any player response',
+    )
+    return any(marker in text for marker in markers)
 
 
 def split_telegram_message(text: str, max_chars: int = TELEGRAM_MAX_MESSAGE_CHARS) -> list[str]:
@@ -206,8 +233,15 @@ def get_transcript(video_id: str) -> str:
         return ' '.join(
             (s.text if hasattr(s, 'text') else s['text']) for s in fetched
         )
-    except Exception:
-        return get_transcript_via_ytdlp(video_id)
+    except Exception as api_exc:
+        try:
+            return get_transcript_via_ytdlp(video_id)
+        except TranscriptRetryableError as fallback_exc:
+            raise TranscriptRetryableError(
+                'Transcript not ready yet. '
+                f'youtube-transcript-api: {shorten_error(api_exc)} | '
+                f'yt-dlp: {shorten_error(fallback_exc)}'
+            ) from fallback_exc
 
 
 def parse_vtt(vtt_text: str) -> str:
@@ -241,8 +275,11 @@ def get_transcript_via_ytdlp(video_id: str) -> str:
         )
         vtt_files = list(Path(tmpdir).glob('*.vtt'))
         if not vtt_files:
-            raise RuntimeError(f'yt-dlp produced no VTT file. stderr: {result.stderr[:300]}')
-        return parse_vtt(vtt_files[0].read_text(encoding='utf-8'))
+            raise TranscriptRetryableError(f'yt-dlp produced no VTT file. stderr: {result.stderr[:300]}')
+        transcript = parse_vtt(vtt_files[0].read_text(encoding='utf-8'))
+        if not transcript.strip():
+            raise TranscriptRetryableError('yt-dlp produced an empty VTT transcript.')
+        return transcript
 
 
 def save_transcript(video_id: str, transcript: str) -> Path:
@@ -473,6 +510,43 @@ def build_summary_entry(video_id: str) -> tuple[dict, str]:
     return entry, transcript
 
 
+def build_summary_entry_with_retry(video_id: str) -> tuple[dict, str, int]:
+    last_exc: Exception | None = None
+
+    for attempt in range(1, TRANSCRIPT_RETRY_ATTEMPTS + 1):
+        try:
+            entry, transcript = build_summary_entry(video_id)
+            return entry, transcript, attempt
+        except Exception as exc:
+            last_exc = exc
+            if attempt >= TRANSCRIPT_RETRY_ATTEMPTS or not is_retryable_transcript_error(exc):
+                raise
+
+            wait_minutes = TRANSCRIPT_RETRY_DELAY_SECONDS // 60
+            print(
+                '[summarizer] Transcript not ready yet. '
+                f'Waiting {wait_minutes} minutes before retry {attempt + 1}/{TRANSCRIPT_RETRY_ATTEMPTS}...'
+            )
+            send_server_log(
+                'phone.summarizer',
+                'retry_scheduled',
+                'Transcript not ready yet; summarizer retry scheduled',
+                level='warning',
+                payload={
+                    'video_id': video_id,
+                    'attempt': attempt,
+                    'retry_attempt': attempt + 1,
+                    'retry_in_seconds': TRANSCRIPT_RETRY_DELAY_SECONDS,
+                    'reason': shorten_error(exc),
+                },
+            )
+            time.sleep(TRANSCRIPT_RETRY_DELAY_SECONDS)
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError('Unexpected summarizer retry flow without a result')
+
+
 def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_processed: bool) -> None:
     git_pull_rebase_if_configured()
     log = load_log()
@@ -531,9 +605,17 @@ def main() -> None:
         send_server_log('phone.summarizer', 'backfill_completed', 'Backfill stored without Telegram send', payload={'video_id': video_id})
         return
 
-    entry, transcript = build_summary_entry(video_id)
+    entry, transcript, attempts = build_summary_entry_with_retry(video_id)
     write_entry(entry, transcript, send_telegram=True, update_last_processed=True)
-    send_server_log('phone.summarizer', 'summary_stored', 'Daily summary stored and sent to Telegram', payload={'video_id': video_id, 'robot_score': entry['robot_score']})
+    if attempts > 1:
+        send_server_log(
+            'phone.summarizer',
+            'retry_succeeded',
+            'Transcript retry succeeded; daily summary stored and sent to Telegram',
+            payload={'video_id': video_id, 'robot_score': entry['robot_score'], 'attempts': attempts},
+        )
+    else:
+        send_server_log('phone.summarizer', 'summary_stored', 'Daily summary stored and sent to Telegram', payload={'video_id': video_id, 'robot_score': entry['robot_score'], 'attempts': attempts})
 
     print('[summarizer] Committing and pushing...')
     git_commit_and_push(video_id, transcript)

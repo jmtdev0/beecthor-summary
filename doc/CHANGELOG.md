@@ -12,6 +12,7 @@
 * El operador de Polymarket ya acepta decisiones batch compatibles hacia atrás: hasta `2` aperturas por ciclo (`new_positions`) y hasta `2` cierres/reducciones del mismo tipo por ciclo (`position_managements`), con validación de slots, caja y targets duplicados.
 * `phone/polymarket_monitor_executor.py` y el monitor legado del servidor ahora pueden ejecutar hasta `2` take profits por pasada, priorizados por probabilidad, y las órdenes encoladas usan `order_id` con microsegundos para evitar colisiones al abrir varias posiciones a la vez.
 * El modal manual `SELL` del dashboard acepta ahora porcentajes personalizados además de los presets, validando el rango y encolando `REDUCE_POSITION` o `CLOSE_POSITION` con el porcentaje exacto pedido.
+* `phone/beecthor_summarizer.py` ahora trata como transitorio el caso de transcript aún no disponible en vídeos recién subidos: espera `5` minutos, reintenta una vez y solo avisa por Telegram si el segundo intento también falla.
 
 ### 18/04/2026
 * Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.
