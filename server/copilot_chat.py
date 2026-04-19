@@ -1487,7 +1487,7 @@ def private_polymarket():
                     optionForms.forEach(function (form) {
                         form.addEventListener('submit', function (event) {
                             var percent = form.dataset.percent || '';
-                            var message = 'Confirmar SELL ' + percent + ' para ' + buildPositionLabel() + '?\n\nEsto encolará una orden manual para el executor del móvil.';
+                            var message = 'Confirmar SELL ' + percent + ' para ' + buildPositionLabel() + '?\\n\\nEsto encolará una orden manual para el executor del móvil.';
                             if (!window.confirm(message)) {
                                 event.preventDefault();
                             }

@@ -8,6 +8,7 @@
 * `/private/chat` ahora incluye una vista read-only del display de VS Code en el VPS, con refresco disparado solo desde el navegador cliente y captura bajo demanda en el servidor.
 * Añadidos botones manuales `SELL 25% / 50% / 75% / 100%` en el dashboard de Polymarket para posiciones abiertas: encolan `REDUCE_POSITION` o `CLOSE_POSITION`, evitan duplicados y lanzan el executor del móvil en background.
 * El dashboard de Polymarket mueve la venta manual a un modal con confirmación explícita por porcentaje, evitando que los controles `SELL` se solapen con el título de la posición en tarjetas estrechas.
+* Corregido el modal de venta manual del dashboard: el confirm de JavaScript ya no rompe el script renderizado, así que el botón `SELL...` vuelve a abrir el popup correctamente.
 
 ### 18/04/2026
 * Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.
