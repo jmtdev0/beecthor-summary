@@ -254,6 +254,88 @@ img{display:block;max-width:100%}
     object-fit:contain;
     background:#05070b;
 }
+.position-open-item{
+    font-size:.78rem;
+    padding:12px;
+    background:#1e1e1e;
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.position-open-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.position-open-info{min-width:0;display:flex;flex-direction:column;gap:6px;flex:1 1 auto}
+.position-open-title{
+    color:#ccc;
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    line-height:1.35;
+}
+.position-open-meta{display:flex;flex-wrap:wrap;gap:6px 10px;color:#888}
+.position-open-shares{color:#666}
+.position-open-action{display:flex;justify-content:flex-end;flex-shrink:0}
+.sell-trigger{
+    width:auto;
+    background:#2a3340;
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:7px 12px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:.72rem;
+    white-space:nowrap;
+}
+.sell-modal-backdrop{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(4,6,9,.78);
+    backdrop-filter:blur(10px);
+    z-index:1000;
+}
+.sell-modal-backdrop.is-open{display:flex}
+.sell-modal{
+    width:min(520px, 100%);
+    background:linear-gradient(180deg,#111827 0%, #0f172a 100%);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:24px;
+    box-shadow:var(--shadow);
+}
+.sell-modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.sell-modal-kicker{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#8fb9ff;font-weight:800;margin-bottom:8px}
+.sell-modal-title{font-size:1.25rem;line-height:1.1;font-weight:800;margin:0}
+.sell-modal-close{
+    width:auto;
+    background:transparent;
+    color:#d7dee7;
+    border:1px solid rgba(255,255,255,.14);
+    padding:8px 12px;
+}
+.sell-modal-body{color:#dce6f5;font-size:.95rem;line-height:1.6}
+.sell-modal-position{font-weight:700;color:#fff}
+.sell-modal-stats{margin-top:8px;color:#9fb0c7}
+.sell-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.sell-option-form{margin:0}
+.sell-option-button{
+    width:100%;
+    background:#2a3340;
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    padding:14px 12px;
+    font-weight:800;
+    font-size:.9rem;
+}
+.sell-option-button.full{background:#8b1e2d}
+.sell-modal-note{margin-top:14px;font-size:.84rem;color:#93a0b4}
 @media (max-width: 1180px){
   .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
 }
@@ -279,6 +361,12 @@ img{display:block;max-width:100%}
   .summary-body{padding:18px 0 0}
   .raw{font-size:.9rem}
   .log-controls{flex-direction:column}
+    .position-open-head{flex-direction:column}
+    .position-open-action{width:100%}
+    .sell-trigger{width:100%}
+    .sell-option-grid{grid-template-columns:1fr}
+    .sell-modal{padding:20px}
+    .sell-modal-close{width:auto}
 }
 </style>
 """
@@ -1212,27 +1300,31 @@ def private_polymarket():
             <summary style="cursor:pointer;font-size:.78rem;color:#aaa;list-style:none">▸ ver abiertas</summary>
             <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
               {% for pos in metric.open_positions %}
-                            <div style="font-size:.78rem;padding:7px;background:#1e1e1e;border-radius:6px;display:flex;justify-content:space-between;gap:10px;align-items:center">
-                                <div style="min-width:0;display:flex;flex-direction:column;gap:4px;flex:1 1 auto">
-                                    <span style="color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
-                                    <span style="white-space:nowrap">
-                                        <span style="color:#888">{{ pos.prob }}</span>
-                                        <span style="margin-left:6px;{{ 'color:#4caf50' if pos.pnl >= 0 else 'color:#f44336' }}">{{ '%+.2f$' % pos.pnl }}</span>
-                                        <span style="margin-left:6px;color:#666">{{ '%.2f' % pos.shares }} sh</span>
-                                    </span>
+                            <div class="position-open-item">
+                                <div class="position-open-head">
+                                    <div class="position-open-info">
+                                        <span class="position-open-title" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
+                                        <div class="position-open-meta">
+                                            <span>{{ pos.prob }}</span>
+                                            <span class="{{ 'good' if pos.pnl >= 0 else 'bad' }}">{{ '%+.2f$' % pos.pnl }}</span>
+                                            <span class="position-open-shares">{{ '%.2f' % pos.shares }} sh</span>
+                                        </div>
+                                    </div>
+                                    {% if pos.can_sell %}
+                                    <div class="position-open-action">
+                                        <button
+                                            type="button"
+                                            class="sell-trigger"
+                                            data-market-slug="{{ pos.market_slug }}"
+                                            data-outcome="{{ pos.outcome }}"
+                                            data-title="{{ pos.title }}"
+                                            data-shares="{{ '%.2f' % pos.shares }}"
+                                            data-prob="{{ pos.prob }}"
+                                            data-pnl="{{ '%+.2f$' % pos.pnl }}"
+                                        >SELL...</button>
+                                    </div>
+                                    {% endif %}
                                 </div>
-                                {% if pos.can_sell %}
-                                <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
-                                    {% for option in [0.25, 0.5, 0.75, 1.0] %}
-                                    <form method="POST" action="/private/position/sell" onsubmit="return confirm('Vender {{ (option * 100)|int }}% de la posición {{ pos.outcome }} en {{ pos.title }}?');" style="margin:0">
-                                        <input type="hidden" name="market_slug" value="{{ pos.market_slug }}">
-                                        <input type="hidden" name="outcome" value="{{ pos.outcome }}">
-                                        <input type="hidden" name="fraction" value="{{ option }}">
-                                        <button type="submit" style="background:{{ '#8b1e2d' if option == 1.0 else '#2a3340' }};color:#fff;border:none;border-radius:999px;padding:5px 8px;cursor:pointer;font-weight:700;font-size:.7rem">SELL {{ (option * 100)|int }}%</button>
-                                    </form>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
                             </div>
               {% endfor %}
             </div>
@@ -1288,6 +1380,121 @@ def private_polymarket():
         </section>
         {% endfor %}
       </div>
+            <div id="sell-modal-backdrop" class="sell-modal-backdrop" hidden>
+                <div class="sell-modal" role="dialog" aria-modal="true" aria-labelledby="sell-modal-title">
+                    <div class="sell-modal-head">
+                        <div>
+                            <div class="sell-modal-kicker">Manual SELL</div>
+                            <h2 id="sell-modal-title" class="sell-modal-title">Selecciona un porcentaje</h2>
+                        </div>
+                        <button type="button" id="sell-modal-close" class="sell-modal-close">Cerrar</button>
+                    </div>
+                    <div class="sell-modal-body">
+                        <div id="sell-modal-position" class="sell-modal-position"></div>
+                        <div id="sell-modal-stats" class="sell-modal-stats"></div>
+                        <div class="sell-option-grid">
+                            {% for option in [0.25, 0.5, 0.75, 1.0] %}
+                            <form class="sell-option-form" method="POST" action="/private/position/sell" data-percent="{{ (option * 100)|int }}">
+                                <input type="hidden" name="market_slug">
+                                <input type="hidden" name="outcome">
+                                <input type="hidden" name="fraction" value="{{ option }}">
+                                <button type="submit" class="sell-option-button{{ ' full' if option == 1.0 else '' }}">SELL {{ (option * 100)|int }}%</button>
+                            </form>
+                            {% endfor %}
+                        </div>
+                        <div class="sell-modal-note">La orden se encolará como venta manual y lanzará el executor del móvil en background.</div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var backdrop = document.getElementById('sell-modal-backdrop');
+                    if (!backdrop) {
+                        return;
+                    }
+                    var titleEl = document.getElementById('sell-modal-title');
+                    var positionEl = document.getElementById('sell-modal-position');
+                    var statsEl = document.getElementById('sell-modal-stats');
+                    var closeBtn = document.getElementById('sell-modal-close');
+                    var optionForms = Array.prototype.slice.call(backdrop.querySelectorAll('.sell-option-form'));
+                    var optionButtons = Array.prototype.slice.call(backdrop.querySelectorAll('.sell-option-button'));
+                    var currentState = null;
+
+                    function buildPositionLabel() {
+                        if (!currentState) {
+                            return 'esta posición';
+                        }
+                        return [currentState.outcome, currentState.title].filter(Boolean).join(' en ');
+                    }
+
+                    function closeSellModal() {
+                        backdrop.hidden = true;
+                        backdrop.classList.remove('is-open');
+                        backdrop.setAttribute('aria-hidden', 'true');
+                        document.body.style.overflow = '';
+                        currentState = null;
+                    }
+
+                    function openSellModal(trigger) {
+                        currentState = {
+                            marketSlug: trigger.dataset.marketSlug || '',
+                            outcome: trigger.dataset.outcome || '',
+                            title: trigger.dataset.title || '',
+                            shares: trigger.dataset.shares || '',
+                            prob: trigger.dataset.prob || '',
+                            pnl: trigger.dataset.pnl || '',
+                        };
+                        titleEl.textContent = 'Selecciona un porcentaje';
+                        positionEl.textContent = [currentState.outcome, currentState.title].filter(Boolean).join(' · ');
+                        statsEl.textContent = [
+                            currentState.shares ? currentState.shares + ' sh' : '',
+                            currentState.prob,
+                            currentState.pnl,
+                        ].filter(Boolean).join(' · ');
+                        optionForms.forEach(function (form) {
+                            form.querySelector('input[name="market_slug"]').value = currentState.marketSlug;
+                            form.querySelector('input[name="outcome"]').value = currentState.outcome;
+                        });
+                        backdrop.hidden = false;
+                        backdrop.classList.add('is-open');
+                        backdrop.setAttribute('aria-hidden', 'false');
+                        document.body.style.overflow = 'hidden';
+                        if (optionButtons.length) {
+                            optionButtons[0].focus();
+                        }
+                    }
+
+                    document.querySelectorAll('.sell-trigger').forEach(function (button) {
+                        button.addEventListener('click', function () {
+                            openSellModal(button);
+                        });
+                    });
+
+                    closeBtn.addEventListener('click', closeSellModal);
+
+                    backdrop.addEventListener('click', function (event) {
+                        if (event.target === backdrop) {
+                            closeSellModal();
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' && !backdrop.hidden) {
+                            closeSellModal();
+                        }
+                    });
+
+                    optionForms.forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            var percent = form.dataset.percent || '';
+                            var message = 'Confirmar SELL ' + percent + ' para ' + buildPositionLabel() + '?\n\nEsto encolará una orden manual para el executor del móvil.';
+                            if (!window.confirm(message)) {
+                                event.preventDefault();
+                            }
+                        });
+                    });
+                })();
+            </script>
     </div>""" + PAGE_END
     triggered = request.args.get('triggered', '')
     triggered_label = TRIGGER_LABELS.get(triggered, triggered)
