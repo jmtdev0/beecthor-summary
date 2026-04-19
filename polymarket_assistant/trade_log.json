@@ -5649,5 +5649,57 @@
     "binance_spot_price": 74810.03,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-19T20:01:15Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-19T20-00-01Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-19T20-00-01Z",
+      "action": "NO_ACTION",
+      "confidence": 0.86,
+      "summary": "The clean bearish daily trade was already queued in the previous cycle, so there is no new edge to add right now.",
+      "rationale": "The latest Beecthor video still supports downside continuation and the daily 74k dip remains the cleanest bearish expression, but that exact market was already enqueued at 2026-04-19 18:01 UTC with a valid max entry probability and is still pending phone execution. Opening it again now would only duplicate the same trade rather than add a genuinely new edge. The older 76k reach pending order also remains in the queue, which further argues for patience until execution and state catch up. The weekly 80k reach stays discarded for slot purposes, but that does not justify duplicating an already queued daily.",
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "position_managements": [],
+      "new_positions": []
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 74929.39,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]

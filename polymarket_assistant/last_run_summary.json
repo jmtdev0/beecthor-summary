@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-19T18:01:22Z",
-  "run_id": "2026-04-19T18-00-16Z",
+  "timestamp": "2026-04-19T20:01:15Z",
+  "run_id": "2026-04-19T20-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T18-00-16Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.74,
-    "summary": "The cleanest fresh expression of the new bearish thesis is now the daily BTC $74k dip market.",
-    "rationale": "The latest Beecthor video has shifted the immediate setup from waiting for one more upside push to actively favoring downside continuation. He now frames the recent rebound as corrective, keeps the broader bearish structure intact, and highlights 74.4k as the first relevant downside zone, with 73k-71k becoming important if the move accelerates. Binance spot is around 74,784, already leaning into that downside path without having completed the 74k target yet. Under the updated playbook, the nearest clean bearish daily expression is the April 19 $74k dip market, and its live price around 39%-40% is slightly below the preferred band but still acceptable as a soft-filter exception because the thesis is fresh, clear, and directly aligned with current momentum.",
+    "run_id": "2026-04-19T20-00-01Z",
+    "action": "NO_ACTION",
+    "confidence": 0.86,
+    "summary": "The clean bearish daily trade was already queued in the previous cycle, so there is no new edge to add right now.",
+    "rationale": "The latest Beecthor video still supports downside continuation and the daily 74k dip remains the cleanest bearish expression, but that exact market was already enqueued at 2026-04-19 18:01 UTC with a valid max entry probability and is still pending phone execution. Opening it again now would only duplicate the same trade rather than add a genuinely new edge. The older 76k reach pending order also remains in the queue, which further argues for patience until execution and state catch up. The weekly 80k reach stays discarded for slot purposes, but that does not justify duplicating an already queued daily.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -16,17 +16,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-19",
-      "market_slug": "will-bitcoin-dip-to-74k-on-april-19",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 74000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.4,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -38,44 +35,17 @@
       "max_entry_probability": 0.0
     },
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "event_slug": "what-price-will-bitcoin-hit-on-april-19",
-        "market_slug": "will-bitcoin-dip-to-74k-on-april-19",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 74000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.4
-      }
-    ]
+    "new_positions": []
   },
   "validation": {
     "ok": true,
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-19T18:01:22.497167Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "100845451631187432291197056832098182859664549926267417864584066606932618116156",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.4,
-        "market": "Will Bitcoin dip to $74,000 on April 19?",
-        "market_slug": "will-bitcoin-dip-to-74k-on-april-19",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 74810.03,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 74929.39,
+  "positions_before": 2,
+  "positions_after": 2
 }
