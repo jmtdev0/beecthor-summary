@@ -1,13 +1,15 @@
 {
-  "timestamp": "2026-04-19T20:01:15Z",
-  "run_id": "2026-04-19T20-00-01Z",
+  "timestamp": "2026-04-19T22:06:12Z",
+  "run_id": "2026-04-19T22-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T20-00-01Z",
+    "run_id": "2026-04-19T22-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "The clean bearish daily trade was already queued in the previous cycle, so there is no new edge to add right now.",
-    "rationale": "The latest Beecthor video still supports downside continuation and the daily 74k dip remains the cleanest bearish expression, but that exact market was already enqueued at 2026-04-19 18:01 UTC with a valid max entry probability and is still pending phone execution. Opening it again now would only duplicate the same trade rather than add a genuinely new edge. The older 76k reach pending order also remains in the queue, which further argues for patience until execution and state catch up. The weekly 80k reach stays discarded for slot purposes, but that does not justify duplicating an already queued daily.",
+    "confidence": 0.91,
+    "summary": "No new action: reconciliation is broken and the active 74k daily dip still has time to play out.",
+    "rationale": "The latest Beecthor thesis remains bearish and the live daily 74k dip position is still aligned with it, with roughly two hours left before expiry and no take-profit or invalidation trigger. However, the reconciliation gate is currently broken because account_state open_exposure does not match live positions, so the playbook blocks any new entry until state is coherent again. The discarded weekly 80k reach no longer blocks the slot, but it does not justify forcing a fresh trade while reconciliation is failing.",
+    "position_managements": [],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -33,9 +35,7 @@
       "floor_level": 0,
       "stake_usd": 0,
       "max_entry_probability": 0.0
-    },
-    "position_managements": [],
-    "new_positions": []
+    }
   },
   "validation": {
     "ok": true,
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 74929.39,
+  "binance_spot_price": 74015.2,
   "positions_before": 2,
   "positions_after": 2
 }

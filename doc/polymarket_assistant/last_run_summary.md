@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-19T20:01:15Z
+- Timestamp: 2026-04-19T22:06:12Z
 - Dry run: False
-- BTC price: 74929.39
+- BTC price: 74015.2
 - Decision action: NO_ACTION
-- Decision summary: The clean bearish daily trade was already queued in the previous cycle, so there is no new edge to add right now.
+- Decision summary: No new action: reconciliation is broken and the active 74k daily dip still has time to play out.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
