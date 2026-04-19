@@ -14,48 +14,7 @@ import run_cycle as base
 
 
 def normalize_decision(decision: dict[str, Any]) -> dict[str, Any]:
-    normalized = dict(decision)
-    normalized.setdefault('run_id', '')
-    normalized.setdefault('action', 'NO_ACTION')
-    normalized.setdefault('confidence', 0.0)
-    normalized.setdefault('summary', '')
-    normalized.setdefault('rationale', '')
-    normalized.setdefault(
-        'position_management',
-        {
-            'should_manage_existing': False,
-            'target_market_slug': '',
-            'target_outcome': '',
-            'reason': 'none',
-            'reduce_fraction': 0.5,
-        },
-    )
-    normalized.setdefault(
-        'new_position',
-        {
-            'should_open': False,
-            'event_slug': '',
-            'market_slug': '',
-            'outcome': '',
-            'direction': 'neutral',
-            'strike': 0,
-            'stake_usd': 0,
-            'max_entry_probability': 0.0,
-        },
-    )
-    normalized.setdefault(
-        'new_floor_position',
-        {
-            'should_open': False,
-            'event_slug': '',
-            'market_slug': '',
-            'outcome': 'Yes',
-            'floor_level': 0,
-            'stake_usd': 0,
-            'max_entry_probability': 0.0,
-        },
-    )
-    return normalized
+    return base.normalize_decision(decision)
 
 
 def extract_json(text: str) -> dict[str, Any]:
@@ -153,36 +112,36 @@ def main() -> None:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = []
-            if (decision.get('new_position') or {}).get('should_open'):
-                order = base.prepare_and_send_order_via_phone(
-                    decision,
-                    context['polymarket']['active_btc_markets'],
+            for open_target in base.iter_requested_open_targets(decision):
+                target_markets = (
+                    context['polymarket']['active_floor_markets']
+                    if open_target.get('position_kind') == 'floor'
+                    else context['polymarket']['active_btc_markets']
+                )
+                order = base.prepare_open_order_via_phone(
+                    open_target,
+                    target_markets,
                     telegram_token,
                     telegram_chat_id,
                     context['binance']['spot_price'],
                 )
                 execution['details'].append(order)
-            if (decision.get('new_floor_position') or {}).get('should_open'):
-                floor_order = base.prepare_and_send_order_via_phone(
-                    {'new_position': decision['new_floor_position']},
-                    context['polymarket']['active_floor_markets'],
-                    telegram_token,
-                    telegram_chat_id,
-                    context['binance']['spot_price'],
-                )
-                execution['details'].append(floor_order)
             execution['performed'] = bool(execution['details'])
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
-            execution['details'] = base.prepare_close_or_reduce_via_phone(
-                decision,
-                context['polymarket']['positions'],
-                telegram_token,
-                telegram_chat_id,
-                context['binance']['spot_price'],
-            )
-            execution['performed'] = True
+            execution['details'] = []
+            for management_target in base.iter_requested_management_targets(decision):
+                order = base.prepare_position_management_via_phone(
+                    decision['action'],
+                    management_target,
+                    context['polymarket']['positions'],
+                    telegram_token,
+                    telegram_chat_id,
+                    context['binance']['spot_price'],
+                )
+                execution['details'].append(order)
+            execution['performed'] = bool(execution['details'])
     elif not ok:
         execution['details'] = {'rejected': message}
 

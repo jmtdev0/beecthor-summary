@@ -45,6 +45,53 @@ FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
+DEFAULT_NEW_POSITION = {
+    'should_open': False,
+    'event_slug': '',
+    'market_slug': '',
+    'outcome': '',
+    'direction': 'neutral',
+    'strike': 0,
+    'stake_usd': 0,
+    'max_entry_probability': 0.0,
+}
+DEFAULT_NEW_FLOOR_POSITION = {
+    'should_open': False,
+    'event_slug': '',
+    'market_slug': '',
+    'outcome': 'Yes',
+    'floor_level': 0,
+    'stake_usd': 0,
+    'max_entry_probability': 0.0,
+}
+DEFAULT_POSITION_MANAGEMENT = {
+    'should_manage_existing': False,
+    'target_market_slug': '',
+    'target_outcome': '',
+    'reason': 'none',
+    'reduce_fraction': 0.5,
+}
+DEFAULT_OPEN_TARGET = {
+    'should_open': True,
+    'position_kind': 'price_hit',
+    'market_type': '',
+    'event_slug': '',
+    'market_slug': '',
+    'outcome': '',
+    'direction': 'neutral',
+    'strike': 0,
+    'floor_level': 0,
+    'stake_usd': 0,
+    'max_entry_probability': 0.0,
+}
+DEFAULT_MANAGEMENT_TARGET = {
+    'should_manage_existing': True,
+    'action': 'CLOSE_POSITION',
+    'target_market_slug': '',
+    'target_outcome': '',
+    'reason': 'none',
+    'reduce_fraction': 0.5,
+}
 
 
 def load_env() -> dict[str, str]:
@@ -82,6 +129,129 @@ def safe_float(value: Any, default: float = 0.0) -> float:
 
 def now_utc() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def new_order_id() -> str:
+    return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+def normalize_open_target(raw: dict[str, Any] | None, default_kind: str = 'price_hit') -> dict[str, Any]:
+    target = dict(DEFAULT_OPEN_TARGET)
+    if raw:
+        target.update(raw)
+    if 'should_open' not in target:
+        target['should_open'] = True
+    kind = str(target.get('position_kind') or '').strip().lower()
+    if not kind:
+        market_slug = str(target.get('market_slug') or '')
+        if market_slug.startswith('bitcoin-above') or safe_float(target.get('floor_level')) > 0:
+            kind = 'floor'
+        else:
+            kind = default_kind
+    target['position_kind'] = 'floor' if kind == 'floor' else 'price_hit'
+    if target['position_kind'] == 'floor':
+        target['market_type'] = 'floor'
+        if not target.get('outcome'):
+            target['outcome'] = 'Yes'
+    return target
+
+
+def normalize_management_target(raw: dict[str, Any] | None, default_action: str = 'CLOSE_POSITION') -> dict[str, Any]:
+    target = dict(DEFAULT_MANAGEMENT_TARGET)
+    if raw:
+        target.update(raw)
+    if 'should_manage_existing' not in target:
+        target['should_manage_existing'] = True
+    action = str(target.get('action') or '').strip()
+    if action not in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
+        action = default_action if default_action in {'CLOSE_POSITION', 'REDUCE_POSITION'} else 'CLOSE_POSITION'
+    target['action'] = action
+    return target
+
+
+def normalize_decision(decision: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(decision or {})
+    normalized.setdefault('run_id', '')
+    normalized.setdefault('action', 'NO_ACTION')
+    normalized.setdefault('confidence', 0.0)
+    normalized.setdefault('summary', '')
+    normalized.setdefault('rationale', '')
+
+    legacy_management = dict(DEFAULT_POSITION_MANAGEMENT)
+    legacy_management.update(normalized.get('position_management') or {})
+    normalized['position_management'] = legacy_management
+
+    legacy_new_position = dict(DEFAULT_NEW_POSITION)
+    legacy_new_position.update(normalized.get('new_position') or {})
+    normalized['new_position'] = legacy_new_position
+
+    legacy_new_floor_position = dict(DEFAULT_NEW_FLOOR_POSITION)
+    legacy_new_floor_position.update(normalized.get('new_floor_position') or {})
+    normalized['new_floor_position'] = legacy_new_floor_position
+
+    raw_managements = normalized.get('position_managements') or []
+    management_targets: list[dict[str, Any]] = []
+    if isinstance(raw_managements, list):
+        for item in raw_managements:
+            if isinstance(item, dict):
+                management_targets.append(normalize_management_target(item, default_action=normalized['action']))
+    if not management_targets:
+        if (
+            legacy_management.get('should_manage_existing')
+            and legacy_management.get('target_market_slug')
+            and legacy_management.get('target_outcome')
+        ):
+            management_targets.append(normalize_management_target(legacy_management, default_action=normalized['action']))
+    normalized['position_managements'] = management_targets
+    if management_targets:
+        first_management = dict(DEFAULT_POSITION_MANAGEMENT)
+        first_management.update(management_targets[0])
+        first_management['should_manage_existing'] = True
+        normalized['position_management'] = first_management
+
+    raw_new_positions = normalized.get('new_positions') or []
+    open_targets: list[dict[str, Any]] = []
+    if isinstance(raw_new_positions, list):
+        for item in raw_new_positions:
+            if isinstance(item, dict):
+                open_targets.append(normalize_open_target(item))
+    if not open_targets:
+        if legacy_new_position.get('should_open'):
+            open_targets.append(normalize_open_target(legacy_new_position, default_kind='price_hit'))
+        if legacy_new_floor_position.get('should_open'):
+            floor_target = dict(legacy_new_floor_position)
+            floor_target['position_kind'] = 'floor'
+            open_targets.append(normalize_open_target(floor_target, default_kind='floor'))
+    normalized['new_positions'] = open_targets
+
+    price_hit_target = next((item for item in open_targets if item.get('position_kind') == 'price_hit'), None)
+    floor_target = next((item for item in open_targets if item.get('position_kind') == 'floor'), None)
+
+    normalized['new_position'] = dict(DEFAULT_NEW_POSITION)
+    if price_hit_target:
+        normalized['new_position'].update(price_hit_target)
+        normalized['new_position']['should_open'] = True
+
+    normalized['new_floor_position'] = dict(DEFAULT_NEW_FLOOR_POSITION)
+    if floor_target:
+        normalized['new_floor_position'].update(floor_target)
+        normalized['new_floor_position']['should_open'] = True
+
+    return normalized
+
+
+def iter_requested_open_targets(decision: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        target for target in (decision.get('new_positions') or [])
+        if target.get('should_open') and target.get('market_slug') and target.get('outcome')
+    ]
+
+
+def iter_requested_management_targets(decision: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        target for target in (decision.get('position_managements') or [])
+        if target.get('should_manage_existing') and target.get('target_market_slug') and target.get('target_outcome')
+    ]
 
 
 def build_private_client(config: dict[str, str]) -> ClobClient:
@@ -663,7 +833,7 @@ def extract_json(text: str) -> dict[str, Any]:
     if stripped.startswith('```'):
         stripped = re.sub(r'^```(?:json)?', '', stripped).strip()
         stripped = re.sub(r'```$', '', stripped).strip()
-    return json.loads(stripped)
+    return normalize_decision(json.loads(stripped))
 
 
 def run_copilot(prompt: str, model: str) -> dict[str, Any]:
@@ -688,7 +858,7 @@ def run_copilot(prompt: str, model: str) -> dict[str, Any]:
 
 
 def load_decision_from_file(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding='utf-8'))
+    return normalize_decision(json.loads(path.read_text(encoding='utf-8')))
 
 
 def find_market_by_slug(markets: list[dict[str, Any]], slug: str) -> dict[str, Any] | None:
@@ -790,6 +960,7 @@ def build_reconciliation_status(
 
 
 def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tuple[bool, str]:
+    decision = normalize_decision(decision)
     action = decision.get('action')
     allowed_actions = {'NO_ACTION', 'OPEN_POSITION', 'CLOSE_POSITION', 'REDUCE_POSITION'}
     if action not in allowed_actions:
@@ -807,38 +978,81 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             issues = '; '.join(reconciliation.get('issues', [])[:2])
             return False, f'Reconciliation required before opening new position: {issues}'
 
-        new_position = decision.get('new_position') or {}
-        floor_position = decision.get('new_floor_position') or {}
+        open_targets = iter_requested_open_targets(decision)
+        if not open_targets:
+            return False, 'OPEN_POSITION requires at least one requested position'
+
         cash_available = polymarket['cash_balance_usdc']
         portfolio_value = cash_available + safe_float(account_state.get('open_exposure'))
         early_stage_cap = safe_float(account_state.get('early_stage_max_stake', 1.0))
         early_stage_threshold = safe_float(account_state.get('early_stage_threshold', 15.0))
         base_stake_pct = safe_float(account_state.get('base_stake_pct', 0.15))
         max_open = int(account_state.get('max_open_positions', 3))
-        price_hit_opening = bool(new_position.get('should_open'))
-        floor_opening = bool(floor_position.get('should_open'))
+        max_new_positions = int(account_state.get('max_new_positions_per_cycle', 2))
         active_positions = [pos for pos in positions if not is_slot_discarded(pos, account_state)]
+        floor_markets = polymarket.get('active_floor_markets', [])
 
-        # Total active positions after this cycle must not exceed max_open_positions.
-        # Discarded daily/weekly positions stay open, but no longer block a fresh slot.
-        pending_opens = (1 if price_hit_opening else 0) + (1 if floor_opening else 0)
-        if len(active_positions) + pending_opens > max_open:
-            return False, f'Opening {pending_opens} active position(s) would exceed max_open_positions ({max_open})'
+        if len(open_targets) > max_new_positions:
+            return False, f'Opening {len(open_targets)} position(s) exceeds max_new_positions_per_cycle ({max_new_positions})'
 
-        if price_hit_opening:
-            market = find_market_by_slug(markets, new_position.get('market_slug', ''))
+        if len(active_positions) + len(open_targets) > max_open:
+            return False, f'Opening {len(open_targets)} active position(s) would exceed max_open_positions ({max_open})'
+
+        total_requested_stake = 0.0
+        requested_keys: set[tuple[str, str]] = set()
+        requested_type_counts = {'daily': 0, 'weekly': 0, 'floor': 0}
+
+        for target in open_targets:
+            target_key = (target.get('market_slug', ''), target.get('outcome', ''))
+            if target_key in requested_keys:
+                return False, f'Duplicate requested opening for {target_key[0]}:{target_key[1]}'
+            requested_keys.add(target_key)
+
+            if target.get('position_kind') == 'floor':
+                floor_market = find_market_by_slug(floor_markets, target.get('market_slug', ''))
+                if not floor_market:
+                    return False, 'Floor market slug not found among active floor markets'
+                if target.get('outcome', 'Yes') != 'Yes':
+                    return False, 'Floor positions must always bet Yes'
+                floor_max_entry_probability = safe_float(target.get('max_entry_probability'))
+                floor_live_probability = outcome_probability(floor_market, 'Yes')
+                if floor_max_entry_probability <= 0 or floor_max_entry_probability > 1:
+                    return False, 'Floor max_entry_probability must be between 0 and 1'
+                if floor_max_entry_probability < floor_live_probability:
+                    return False, 'Floor max_entry_probability is below the current live market probability'
+                floor_stake = safe_float(target.get('stake_usd'))
+                if floor_stake <= 0 or floor_stake > cash_available:
+                    return False, 'Floor stake is invalid or exceeds available cash'
+                if portfolio_value < early_stage_threshold and floor_stake > early_stage_cap:
+                    return False, f'Early-stage cap applies to floor stake too'
+                if portfolio_value >= early_stage_threshold:
+                    max_stake = round(cash_available * base_stake_pct, 2)
+                    if floor_stake > max_stake:
+                        return False, f'Floor stake ${floor_stake} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
+                requested_type_counts['floor'] += 1
+                floor_open_count = len(polymarket.get('open_floor_positions', []))
+                max_floor = int(account_state.get('max_floor_positions', 1))
+                if floor_open_count + requested_type_counts['floor'] > max_floor:
+                    return False, f'Floor position slot already occupied ({floor_open_count}/{max_floor})'
+                duplicate_floor = any(pos['market_slug'] == floor_market['market_slug'] for pos in positions)
+                if duplicate_floor:
+                    return False, 'Duplicate floor position already open'
+                total_requested_stake += floor_stake
+                continue
+
+            market = find_market_by_slug(markets, target.get('market_slug', ''))
             if not market:
                 return False, 'Selected market slug not found among active BTC markets'
-            outcome = new_position.get('outcome')
+            outcome = target.get('outcome')
             if outcome not in market['outcomes']:
                 return False, 'Selected outcome not valid for chosen market'
-            max_entry_probability = safe_float(new_position.get('max_entry_probability'))
+            max_entry_probability = safe_float(target.get('max_entry_probability'))
             live_probability = outcome_probability(market, outcome)
             if max_entry_probability <= 0 or max_entry_probability > 1:
                 return False, 'Price-hit max_entry_probability must be between 0 and 1'
             if max_entry_probability < live_probability:
                 return False, 'Price-hit max_entry_probability is below the current live market probability'
-            stake_usd = safe_float(new_position.get('stake_usd'))
+            stake_usd = safe_float(target.get('stake_usd'))
             if stake_usd <= 0 or stake_usd > cash_available:
                 return False, 'Price-hit stake is invalid or exceeds available cash'
             if portfolio_value < early_stage_threshold and stake_usd > early_stage_cap:
@@ -847,14 +1061,15 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 max_stake = round(cash_available * base_stake_pct, 2)
                 if stake_usd > max_stake:
                     return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
-            # Per-type slot: max 1 active daily, max 1 active weekly.
-            # Discarded positions at <= discarded_probability_threshold no longer block the slot.
             mtype = market.get('market_type', 'daily')
+            requested_type_counts[mtype] = requested_type_counts.get(mtype, 0) + 1
+            if requested_type_counts[mtype] > 1:
+                return False, f'Max 1 requested {mtype} position per cycle'
             type_open = sum(
                 1 for p in positions
                 if infer_position_market_type(p) == mtype and not is_slot_discarded(p, account_state)
             )
-            if type_open >= 1:
+            if type_open + requested_type_counts[mtype] > 1:
                 return False, f'{mtype.capitalize()} price-hit active slot already occupied'
             duplicate = any(
                 pos['market_slug'] == market['market_slug'] and pos['outcome'] == outcome
@@ -862,50 +1077,38 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             )
             if duplicate:
                 return False, 'Duplicate price-hit position already open'
-            # Nearest-strike-first is a preference from the playbook, not a hard
-            # validation veto. The model should usually choose the closest
-            # reasonable strike, but a farther strike can still be valid when
-            # the nearer one is too aggressively priced or otherwise not the
-            # cleanest expression of the thesis.
+            total_requested_stake += stake_usd
 
-        if floor_opening:
-            floor_markets = polymarket.get('active_floor_markets', [])
-            floor_market = find_market_by_slug(floor_markets, floor_position.get('market_slug', ''))
-            if not floor_market:
-                return False, 'Floor market slug not found among active floor markets'
-            if floor_position.get('outcome', 'Yes') != 'Yes':
-                return False, 'Floor positions must always bet Yes'
-            floor_max_entry_probability = safe_float(floor_position.get('max_entry_probability'))
-            floor_live_probability = outcome_probability(floor_market, 'Yes')
-            if floor_max_entry_probability <= 0 or floor_max_entry_probability > 1:
-                return False, 'Floor max_entry_probability must be between 0 and 1'
-            if floor_max_entry_probability < floor_live_probability:
-                return False, 'Floor max_entry_probability is below the current live market probability'
-            floor_stake = safe_float(floor_position.get('stake_usd'))
-            if floor_stake <= 0 or floor_stake > cash_available:
-                return False, 'Floor stake is invalid or exceeds available cash'
-            if portfolio_value < early_stage_threshold and floor_stake > early_stage_cap:
-                return False, f'Early-stage cap applies to floor stake too'
-            if portfolio_value >= early_stage_threshold:
-                max_stake = round(cash_available * base_stake_pct, 2)
-                if floor_stake > max_stake:
-                    return False, f'Floor stake ${floor_stake} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
-            # Max 1 floor position open at a time
-            floor_open_count = len(polymarket.get('open_floor_positions', []))
-            max_floor = int(account_state.get('max_floor_positions', 1))
-            if floor_open_count >= max_floor:
-                return False, f'Floor position slot already occupied ({floor_open_count}/{max_floor})'
-            duplicate_floor = any(pos['market_slug'] == floor_market['market_slug'] for pos in positions)
-            if duplicate_floor:
-                return False, 'Duplicate floor position already open'
+        if total_requested_stake > cash_available:
+            return False, f'Total requested stake ${total_requested_stake:.2f} exceeds available cash ${cash_available:.2f}'
 
     elif action in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
-        management = decision.get('position_management') or {}
-        target_slug = management.get('target_market_slug', '')
-        target_outcome = management.get('target_outcome', '')
-        match = next((pos for pos in positions if pos['market_slug'] == target_slug and pos['outcome'] == target_outcome), None)
-        if not match:
-            return False, 'Requested managed position is not currently open'
+        management_targets = iter_requested_management_targets(decision)
+        if not management_targets:
+            return False, f'{action} requires at least one requested target position'
+
+        max_managements = int(account_state.get('max_position_managements_per_cycle', 2))
+        if len(management_targets) > max_managements:
+            return False, f'Managing {len(management_targets)} position(s) exceeds max_position_managements_per_cycle ({max_managements})'
+
+        requested_keys: set[tuple[str, str]] = set()
+        for management in management_targets:
+            management_action = management.get('action', action)
+            if management_action != action:
+                return False, 'Mixed CLOSE/REDUCE actions are not allowed in the same cycle'
+            target_slug = management.get('target_market_slug', '')
+            target_outcome = management.get('target_outcome', '')
+            target_key = (target_slug, target_outcome)
+            if target_key in requested_keys:
+                return False, f'Duplicate requested position management for {target_slug}:{target_outcome}'
+            requested_keys.add(target_key)
+            match = next((pos for pos in positions if pos['market_slug'] == target_slug and pos['outcome'] == target_outcome), None)
+            if not match:
+                return False, 'Requested managed position is not currently open'
+            if management_action == 'REDUCE_POSITION':
+                fraction = safe_float(management.get('reduce_fraction'), 0.0)
+                if fraction <= 0.0 or fraction >= 1.0:
+                    return False, 'REDUCE_POSITION reduce_fraction must be between 0 and 1'
     return True, 'ok'
 
 
@@ -916,8 +1119,8 @@ def token_id_for_outcome(market: dict[str, Any], outcome: str) -> str:
     return token_id
 
 
-def prepare_and_send_order_via_phone(
-    decision: dict[str, Any],
+def prepare_open_order_via_phone(
+    new_position: dict[str, Any],
     markets: list[dict[str, Any]],
     telegram_token: str,
     telegram_chat_id: str,
@@ -929,7 +1132,7 @@ def prepare_and_send_order_via_phone(
     the private key, and POSTs to clob.polymarket.com using its residential IP.
     This avoids the datacenter IP geoblock and ensures the price is fresh at execution time.
     """
-    new_pos = decision['new_position']
+    new_pos = normalize_open_target(new_position)
     market = find_market_by_slug(markets, new_pos['market_slug'])
     if not market:
         raise RuntimeError(f'Market not found: {new_pos["market_slug"]}')
@@ -946,7 +1149,7 @@ def prepare_and_send_order_via_phone(
         timeout=30,
     )
     order = {
-        'order_id': now_utc(),
+        'order_id': new_order_id(),
         'status': 'pending_phone_execution',
         'type': 'OPEN_POSITION',
         'token_id': token_id,
@@ -960,6 +1163,16 @@ def prepare_and_send_order_via_phone(
     enqueue_pending_order(order)
     print(f'[execution] Order enqueued in pending_orders.json for phone execution.')
     return order
+
+
+def prepare_and_send_order_via_phone(
+    decision: dict[str, Any],
+    markets: list[dict[str, Any]],
+    telegram_token: str,
+    telegram_chat_id: str,
+    btc_price: float,
+) -> dict[str, Any]:
+    return prepare_open_order_via_phone(decision['new_position'], markets, telegram_token, telegram_chat_id, btc_price)
 
 
 def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str, stake: float) -> None:
@@ -1014,6 +1227,20 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
             'stake_usd': stake,
             'max_entry_probability': 1.0,
         },
+        'new_positions': [
+            {
+                'should_open': True,
+                'position_kind': 'price_hit',
+                'market_type': market.get('market_type', 'daily'),
+                'event_slug': event_slug,
+                'market_slug': market['market_slug'],
+                'outcome': outcome,
+                'direction': 'bearish' if outcome == 'No' else 'bullish',
+                'strike': strike,
+                'stake_usd': stake,
+                'max_entry_probability': 1.0,
+            }
+        ],
     }
 
     telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
@@ -1022,8 +1249,8 @@ def force_bet(config: dict[str, Any], event_date: str, strike: int, outcome: str
         raise SystemExit('TELEGRAM_BOT_TOKEN and TELEGRAM_PERSONAL_CHAT_ID must be set for phone execution')
 
     print('[force-bet] Preparing order params for phone execution...')
-    execution_details = prepare_and_send_order_via_phone(
-        decision, [market], telegram_token, telegram_chat_id, btc_price=0,
+    execution_details = prepare_open_order_via_phone(
+        decision['new_positions'][0], [market], telegram_token, telegram_chat_id, btc_price=0,
     )
     print(f'[force-bet] {execution_details}')
     print('[force-bet] Run the phone executor now: python ~/polymarket_executor.py')
@@ -1066,8 +1293,9 @@ def execute_open_position(client: ClobClient, decision: dict[str, Any], markets:
     }
 
 
-def prepare_close_or_reduce_via_phone(
-    decision: dict[str, Any],
+def prepare_position_management_via_phone(
+    action: str,
+    management: dict[str, Any],
     positions: list[dict[str, Any]],
     telegram_token: str,
     telegram_chat_id: str,
@@ -1079,15 +1307,14 @@ def prepare_close_or_reduce_via_phone(
     with the private key, and POSTs to clob.polymarket.com using its residential IP.
     No signing happens on the server — price is fresh at execution time.
     """
-    management = decision['position_management']
     target = next(
         pos for pos in positions
         if pos['market_slug'] == management['target_market_slug'] and pos['outcome'] == management['target_outcome']
     )
-    fraction = 1.0 if decision['action'] == 'CLOSE_POSITION' else min(max(safe_float(management.get('reduce_fraction', 0.5)), 0.05), 0.95)
+    fraction = 1.0 if action == 'CLOSE_POSITION' else min(max(safe_float(management.get('reduce_fraction', 0.5)), 0.05), 0.95)
     amount = target['size'] * fraction
 
-    action_label = 'CLOSE' if decision['action'] == 'CLOSE_POSITION' else f'REDUCE {fraction:.0%}'
+    action_label = 'CLOSE' if action == 'CLOSE_POSITION' else f'REDUCE {fraction:.0%}'
     message = (
         f'\U0001f514 {action_label} \u2192 {target["outcome"]}\n'
         f'{target["market_slug"]}\n'
@@ -1099,9 +1326,9 @@ def prepare_close_or_reduce_via_phone(
         timeout=30,
     )
     order = {
-        'order_id': now_utc(),
+        'order_id': new_order_id(),
         'status': 'pending_phone_execution',
-        'type': decision['action'],
+        'type': action,
         'token_id': target['asset'],
         'side': 'SELL',
         'amount': amount,
@@ -1112,6 +1339,23 @@ def prepare_close_or_reduce_via_phone(
     enqueue_pending_order(order)
     print(f'[execution] SELL order enqueued in pending_orders.json for phone execution.')
     return order
+
+
+def prepare_close_or_reduce_via_phone(
+    decision: dict[str, Any],
+    positions: list[dict[str, Any]],
+    telegram_token: str,
+    telegram_chat_id: str,
+    btc_price: float,
+) -> dict[str, Any]:
+    return prepare_position_management_via_phone(
+        decision['action'],
+        decision['position_management'],
+        positions,
+        telegram_token,
+        telegram_chat_id,
+        btc_price,
+    )
 
 
 def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1260,6 +1504,7 @@ def main() -> None:
         decision = load_decision_from_file(Path(args.decision_file))
     else:
         decision = run_copilot(prompt, args.model)
+    decision = normalize_decision(decision)
 
     ok, message = validate_decision(decision, context)
     execution: dict[str, Any] = {'performed': False, 'details': None}
@@ -1271,30 +1516,36 @@ def main() -> None:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = []
-            # Price-hit position (reach/dip markets)
-            if (decision.get('new_position') or {}).get('should_open'):
-                order = prepare_and_send_order_via_phone(
-                    decision, context['polymarket']['active_btc_markets'],
-                    telegram_token, telegram_chat_id, context['binance']['spot_price'],
+            for open_target in iter_requested_open_targets(decision):
+                target_markets = (
+                    context['polymarket']['active_floor_markets']
+                    if open_target.get('position_kind') == 'floor'
+                    else context['polymarket']['active_btc_markets']
+                )
+                order = prepare_open_order_via_phone(
+                    open_target,
+                    target_markets,
+                    telegram_token,
+                    telegram_chat_id,
+                    context['binance']['spot_price'],
                 )
                 execution['details'].append(order)
-            # Floor position (bitcoin-above-X markets)
-            if (decision.get('new_floor_position') or {}).get('should_open'):
-                floor_order = prepare_and_send_order_via_phone(
-                    {'new_position': decision['new_floor_position']},
-                    context['polymarket']['active_floor_markets'],
-                    telegram_token, telegram_chat_id, context['binance']['spot_price'],
-                )
-                execution['details'].append(floor_order)
             execution['performed'] = bool(execution['details'])
         elif decision['action'] in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
             telegram_token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
-            execution['details'] = prepare_close_or_reduce_via_phone(
-                decision, context['polymarket']['positions'],
-                telegram_token, telegram_chat_id, context['binance']['spot_price'],
-            )
-            execution['performed'] = True
+            execution['details'] = []
+            for management_target in iter_requested_management_targets(decision):
+                order = prepare_position_management_via_phone(
+                    decision['action'],
+                    management_target,
+                    context['polymarket']['positions'],
+                    telegram_token,
+                    telegram_chat_id,
+                    context['binance']['spot_price'],
+                )
+                execution['details'].append(order)
+            execution['performed'] = bool(execution['details'])
     elif not ok:
         execution['details'] = {'rejected': message}
 

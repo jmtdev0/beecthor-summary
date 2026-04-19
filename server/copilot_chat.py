@@ -335,6 +335,26 @@ img{display:block;max-width:100%}
     font-size:.9rem;
 }
 .sell-option-button.full{background:#8b1e2d}
+.sell-custom-form{margin-top:12px}
+.sell-custom-row{display:flex;gap:10px;align-items:center}
+.sell-custom-input{
+    flex:1 1 auto;
+    min-width:0;
+    background:#0d131d;
+    color:#e7edf6;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:14px;
+    padding:12px 13px;
+}
+.sell-custom-submit{
+    width:auto;
+    background:#153a57;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:12px 16px;
+    font-weight:800;
+}
 .sell-modal-note{margin-top:14px;font-size:.84rem;color:#93a0b4}
 @media (max-width: 1180px){
   .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
@@ -367,6 +387,8 @@ img{display:block;max-width:100%}
     .sell-option-grid{grid-template-columns:1fr}
     .sell-modal{padding:20px}
     .sell-modal-close{width:auto}
+    .sell-custom-row{flex-direction:column;align-items:stretch}
+    .sell-custom-submit{width:100%}
 }
 </style>
 """
@@ -418,6 +440,17 @@ def visible_chat_history() -> list[dict[str, Any]]:
 
 def utc_now() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def new_order_id() -> str:
+    return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+def format_fraction_percent(fraction: float) -> str:
+    percent_value = round(fraction * 100, 1)
+    if abs(percent_value - round(percent_value)) < 1e-9:
+        return f'{int(round(percent_value))}%'
+    return f'{percent_value:.1f}'.rstrip('0').rstrip('.') + '%'
 
 
 def safe_float(value: Any, default: float = 0.0) -> float:
@@ -477,7 +510,7 @@ def build_manual_sell_feedback(status: str, market_slug: str, outcome: str, frac
     if not status:
         return None
     label = f'{outcome} · {market_slug}' if market_slug else outcome
-    percent_label = f'{round(fraction * 100):.0f}%'
+    percent_label = format_fraction_percent(fraction)
     palette = {
         'queued': {
             'text': f'✓ SELL manual {percent_label} encolado para {label}. El executor del móvil se ha lanzado en background.',
@@ -504,7 +537,7 @@ def build_manual_sell_feedback(status: str, market_slug: str, outcome: str, frac
             'color': '#f87171',
         },
         'invalid': {
-            'text': f'⚠ Fracción SELL no válida para {label}. Usa 25%, 50%, 75% o 100%.',
+            'text': f'⚠ Fracción SELL no válida para {label}. Usa un porcentaje mayor que 0% y menor o igual que 100%.',
             'bg': 'rgba(245,158,11,.12)',
             'border': 'rgba(245,158,11,.24)',
             'color': '#fbbf24',
@@ -1402,6 +1435,14 @@ def private_polymarket():
                             </form>
                             {% endfor %}
                         </div>
+                        <form id="sell-custom-form" class="sell-custom-form" method="POST" action="/private/position/sell">
+                            <input type="hidden" name="market_slug">
+                            <input type="hidden" name="outcome">
+                            <div class="sell-custom-row">
+                                <input id="sell-custom-percent" class="sell-custom-input" type="number" name="percent" min="1" max="100" step="0.1" placeholder="62.5" required>
+                                <button type="submit" class="sell-custom-submit">SELL custom %</button>
+                            </div>
+                        </form>
                         <div class="sell-modal-note">La orden se encolará como venta manual y lanzará el executor del móvil en background.</div>
                     </div>
                 </div>
@@ -1418,6 +1459,8 @@ def private_polymarket():
                     var closeBtn = document.getElementById('sell-modal-close');
                     var optionForms = Array.prototype.slice.call(backdrop.querySelectorAll('.sell-option-form'));
                     var optionButtons = Array.prototype.slice.call(backdrop.querySelectorAll('.sell-option-button'));
+                    var customForm = document.getElementById('sell-custom-form');
+                    var customInput = document.getElementById('sell-custom-percent');
                     var currentState = null;
 
                     function buildPositionLabel() {
@@ -1427,11 +1470,22 @@ def private_polymarket():
                         return [currentState.outcome, currentState.title].filter(Boolean).join(' en ');
                     }
 
+                    function formatPercentLabel(value) {
+                        var rounded = Math.round(value * 10) / 10;
+                        if (Math.abs(rounded - Math.round(rounded)) < 0.0001) {
+                            return String(Math.round(rounded)) + '%';
+                        }
+                        return rounded.toFixed(1).replace(/\\.0$/, '') + '%';
+                    }
+
                     function closeSellModal() {
                         backdrop.hidden = true;
                         backdrop.classList.remove('is-open');
                         backdrop.setAttribute('aria-hidden', 'true');
                         document.body.style.overflow = '';
+                        if (customInput) {
+                            customInput.value = '';
+                        }
                         currentState = null;
                     }
 
@@ -1455,6 +1509,10 @@ def private_polymarket():
                             form.querySelector('input[name="market_slug"]').value = currentState.marketSlug;
                             form.querySelector('input[name="outcome"]').value = currentState.outcome;
                         });
+                        if (customForm) {
+                            customForm.querySelector('input[name="market_slug"]').value = currentState.marketSlug;
+                            customForm.querySelector('input[name="outcome"]').value = currentState.outcome;
+                        }
                         backdrop.hidden = false;
                         backdrop.classList.add('is-open');
                         backdrop.setAttribute('aria-hidden', 'false');
@@ -1493,6 +1551,21 @@ def private_polymarket():
                             }
                         });
                     });
+
+                    if (customForm) {
+                        customForm.addEventListener('submit', function (event) {
+                            var rawValue = customInput ? parseFloat(customInput.value) : NaN;
+                            if (!Number.isFinite(rawValue) || rawValue <= 0 || rawValue > 100) {
+                                window.alert('Introduce un porcentaje mayor que 0 y menor o igual que 100.');
+                                event.preventDefault();
+                                return;
+                            }
+                            var message = 'Confirmar SELL ' + formatPercentLabel(rawValue) + ' para ' + buildPositionLabel() + '?\\n\\nEsto encolará una orden manual para el executor del móvil.';
+                            if (!window.confirm(message)) {
+                                event.preventDefault();
+                            }
+                        });
+                    }
                 })();
             </script>
     </div>""" + PAGE_END
@@ -1513,12 +1586,15 @@ def private_polymarket():
 def private_sell_position():
     market_slug = request.form.get('market_slug', '').strip()
     outcome = request.form.get('outcome', '').strip()
-    fraction = safe_float(request.form.get('fraction', '1.0'), 1.0)
-    valid_fractions = {0.25, 0.5, 0.75, 1.0}
+    custom_percent = request.form.get('percent', '').strip()
+    if custom_percent:
+        fraction = safe_float(custom_percent, 0.0) / 100.0
+    else:
+        fraction = safe_float(request.form.get('fraction', '1.0'), 1.0)
     if not market_slug or not outcome:
         return redirect(url_for('private_polymarket', manual_sell='error', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
 
-    if fraction not in valid_fractions:
+    if fraction <= 0.0 or fraction > 1.0:
         return redirect(url_for('private_polymarket', manual_sell='invalid', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
 
     if active_manual_sell_order(market_slug, outcome):
@@ -1540,11 +1616,11 @@ def private_sell_position():
         return redirect(url_for('private_polymarket', manual_sell='missing', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
 
     amount = round(target['shares'] * fraction, 8)
-    if amount <= 0:
+    if amount <= 0 or round(amount, 2) <= 0:
         return redirect(url_for('private_polymarket', manual_sell='invalid', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
 
     order = {
-        'order_id': utc_now(),
+        'order_id': new_order_id(),
         'status': 'pending_phone_execution',
         'type': 'CLOSE_POSITION' if fraction >= 1.0 else 'REDUCE_POSITION',
         'token_id': target['token_id'],

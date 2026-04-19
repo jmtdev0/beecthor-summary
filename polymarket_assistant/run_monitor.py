@@ -33,6 +33,7 @@ from polymarket_assistant.run_cycle import (
 MONITOR_ACTION_PATH = ASSISTANT_DIR / 'last_monitor_action.json'
 
 TAKE_PROFIT_THRESHOLD = 0.90
+MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 
 
 def send_telegram(token: str, chat_id: str, text: str) -> None:
@@ -95,12 +96,13 @@ def main() -> None:
         print('[monitor] No open positions.')
         return
 
-    for pos in positions:
+    monitor_actions: list[dict[str, object]] = []
+    candidates = [pos for pos in positions if safe_float(pos.get('cur_price')) >= TAKE_PROFIT_THRESHOLD]
+    candidates.sort(key=lambda pos: safe_float(pos.get('cur_price')), reverse=True)
+
+    for pos in candidates[:MAX_TAKE_PROFIT_ACTIONS_PER_RUN]:
         prob = safe_float(pos.get('cur_price'))
-        if prob >= TAKE_PROFIT_THRESHOLD:
-            action = 'TAKE_PROFIT'
-        else:
-            continue
+        action = 'TAKE_PROFIT'
 
         market_slug = pos['market_slug']
         outcome = pos['outcome']
@@ -109,7 +111,6 @@ def main() -> None:
 
         print(f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | size={size:.4f}')
 
-        # Write order params — phone will sign and execute
         monitor_action = {
             'timestamp': now_utc(),
             'action': action,
@@ -122,7 +123,7 @@ def main() -> None:
             'side': 'SELL',
             'amount': size,
         }
-        save_json(MONITOR_ACTION_PATH, monitor_action)
+        monitor_actions.append(monitor_action)
 
         send_telegram(
             telegram_token,
@@ -130,10 +131,22 @@ def main() -> None:
             f'\U0001f514 MONITOR {action}\n{title}\n{outcome} @ {prob:.0%} | size={size:.4f}',
         )
 
-        git_commit_and_push(action, market_slug)
+    if not monitor_actions:
+        print('[monitor] No take-profit trigger in live positions.')
+        return
 
-        # One action per run to avoid race conditions
-        break
+    payload: dict[str, object] = {
+        'timestamp': now_utc(),
+        'action_count': len(monitor_actions),
+        'actions': monitor_actions,
+    }
+    payload.update(monitor_actions[0])
+    save_json(MONITOR_ACTION_PATH, payload)
+
+    summary_slug = monitor_actions[0]['market_slug']
+    if len(monitor_actions) > 1:
+        summary_slug = f'{summary_slug} +{len(monitor_actions) - 1}'
+    git_commit_and_push('TAKE_PROFIT', str(summary_slug))
 
     print(f'[monitor] Done at {now_utc()}')
 

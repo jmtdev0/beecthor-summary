@@ -39,6 +39,7 @@ DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
 TAKE_PROFIT_THRESHOLD = 0.88
+MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
 CHAIN_ID = 137
@@ -325,16 +326,24 @@ def position_priority_key(position: dict[str, Any]) -> tuple[int, float]:
     return (0, -prob)
 
 
-def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, dict[str, Any]] | tuple[None, None]:
+def choose_target_positions(
+    positions: list[dict[str, Any]],
+    limit: int = MAX_TAKE_PROFIT_ACTIONS_PER_RUN,
+) -> list[tuple[str, dict[str, Any]]]:
     candidates: list[tuple[str, dict[str, Any]]] = []
     for pos in positions:
         action = classify_action(pos)
         if action:
             candidates.append((action, pos))
-    if not candidates:
-        return None, None
     candidates.sort(key=lambda item: position_priority_key(item[1]))
-    return candidates[0]
+    return candidates[:max(0, limit)]
+
+
+def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, dict[str, Any]] | tuple[None, None]:
+    targets = choose_target_positions(positions, limit=1)
+    if not targets:
+        return None, None
+    return targets[0]
 
 
 def post_order(order_dict: dict[str, Any]) -> requests.Response:
@@ -394,54 +403,18 @@ def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
         print(f'[monitor-executor] Failed to update trade_log.json: {put_resp.status_code} {put_resp.text[:200]}')
 
 
-def main() -> None:
-    args = parse_args()
-    load_dotenv(args.env_file, override=True)
-    refresh_runtime_config()
-
-    ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-    print(f'[monitor-executor] {ts} dry_run={args.dry_run}')
-    send_server_log('phone.monitor', 'run_started', 'Monitor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
-
-    def maybe_send_telegram(text: str) -> None:
-        if not args.dry_run:
-            send_telegram(text)
-
-    missing = [
-        v
-        for v in (
-            'POLY_API_KEY',
-            'POLY_API_SECRET',
-            'POLY_API_PASSPHRASE',
-            'POLY_FUNDER',
-            'POLY_SIGNER_ADDRESS',
-            'POLY_PRIVATE_KEY',
-        )
-        if not os.environ.get(v)
-    ]
-    if missing:
-        print(f'[monitor-executor] Missing env vars: {missing}. Check {ENV_FILE}')
-        send_server_log('phone.monitor', 'run_failed', 'Missing required environment variables', level='error', payload={'missing': missing})
-        sys.exit(1)
-
-    positions = fetch_live_positions()
-    if not positions:
-        print('[monitor-executor] No open positions.')
-        send_server_log('phone.monitor', 'run_skipped', 'No open positions')
-        return
-
-    action, target = choose_target_position(positions)
-    if not target:
-        print('[monitor-executor] No take-profit trigger in live positions.')
-        send_server_log('phone.monitor', 'run_skipped', 'No take-profit trigger in live positions', payload={'open_positions': len(positions)})
-        return
-
+def execute_target_position(action: str, target: dict[str, Any], dry_run: bool = False) -> bool:
     market_slug = target.get('slug', '')
     title = target.get('title', market_slug)
     outcome = target.get('outcome', '')
     prob = safe_float(target.get('curPrice'))
     amount = safe_float(target.get('size'))
     token_id = str(target.get('asset', ''))
+
+    def maybe_send_telegram(text: str) -> None:
+        if not dry_run:
+            send_telegram(text)
+
     print(f'[monitor-executor] Trigger: {action} SELL {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}')
     send_server_log(
         'phone.monitor',
@@ -469,9 +442,8 @@ def main() -> None:
             'He visto una venta reciente en la actividad de la cuenta. '
             'Probablemente te adelantaste, impaciente.'
         )
-        return
+        return True
 
-    resp = None
     try:
         print('[monitor-executor] Querying order book...')
         price = get_market_price(token_id, 'SELL', amount)
@@ -491,12 +463,12 @@ def main() -> None:
             f'{outcome} @ {prob:.0%}\n'
             'El mercado ya est\u00e1 resuelto. Polymarket har\u00e1 el reembolso autom\u00e1ticamente.'
         )
-        return
+        return True
     except Exception as exc:
         print(f'[monitor-executor] Failed to build order: {exc}')
         send_server_log('phone.monitor', 'order_failed', f'Failed to build order: {exc}', level='error', payload={'market_slug': market_slug, 'action': action})
         maybe_send_telegram(f'\u274c Monitor order build failed ({action}):\n{title}\n{exc}')
-        return
+        return False
 
     body = {
         'order': order_dict,
@@ -504,11 +476,11 @@ def main() -> None:
         'orderType': 'FOK',
         'postOnly': False,
     }
-    if args.dry_run:
+    if dry_run:
         print('[monitor-executor] DRY RUN payload:')
         print(json.dumps(body, indent=2))
         send_server_log('phone.monitor', 'order_dry_run', 'Built SELL payload successfully', payload={'market_slug': market_slug, 'action': action, 'price': price})
-        return
+        return True
 
     resp = post_order(order_dict)
     if resp.ok:
@@ -542,10 +514,64 @@ def main() -> None:
             'pnl_pct': pnl_pct,
             'source': 'monitor_executor',
         })
-    else:
-        print(f'[monitor-executor] FAILED {resp.status_code}: {resp.text}')
-        send_server_log('phone.monitor', 'order_failed', f'{action} failed', level='error', payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]})
-        maybe_send_telegram(f'\u274c Monitor order failed ({action}):\n{title}\n{resp.status_code} {resp.text}')
+        return True
+
+    print(f'[monitor-executor] FAILED {resp.status_code}: {resp.text}')
+    send_server_log('phone.monitor', 'order_failed', f'{action} failed', level='error', payload={'market_slug': market_slug, 'action': action, 'status_code': resp.status_code, 'error': resp.text[:500]})
+    maybe_send_telegram(f'\u274c Monitor order failed ({action}):\n{title}\n{resp.status_code} {resp.text}')
+    return False
+
+
+def main() -> None:
+    args = parse_args()
+    load_dotenv(args.env_file, override=True)
+    refresh_runtime_config()
+
+    ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    print(f'[monitor-executor] {ts} dry_run={args.dry_run}')
+    send_server_log('phone.monitor', 'run_started', 'Monitor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
+
+    missing = [
+        v
+        for v in (
+            'POLY_API_KEY',
+            'POLY_API_SECRET',
+            'POLY_API_PASSPHRASE',
+            'POLY_FUNDER',
+            'POLY_SIGNER_ADDRESS',
+            'POLY_PRIVATE_KEY',
+        )
+        if not os.environ.get(v)
+    ]
+    if missing:
+        print(f'[monitor-executor] Missing env vars: {missing}. Check {ENV_FILE}')
+        send_server_log('phone.monitor', 'run_failed', 'Missing required environment variables', level='error', payload={'missing': missing})
+        sys.exit(1)
+
+    positions = fetch_live_positions()
+    if not positions:
+        print('[monitor-executor] No open positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No open positions')
+        return
+
+    targets = choose_target_positions(positions)
+    if not targets:
+        print('[monitor-executor] No take-profit trigger in live positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No take-profit trigger in live positions', payload={'open_positions': len(positions)})
+        return
+
+    send_server_log(
+        'phone.monitor',
+        'run_active',
+        'Take-profit targets selected for execution',
+        payload={'open_positions': len(positions), 'selected_targets': len(targets)},
+    )
+
+    for index, (action, target) in enumerate(targets, 1):
+        print(f'[monitor-executor] --- Target {index}/{len(targets)} ---')
+        execute_target_position(action, target, dry_run=args.dry_run)
+        if index < len(targets):
+            time.sleep(3)
 
 
 if __name__ == '__main__':

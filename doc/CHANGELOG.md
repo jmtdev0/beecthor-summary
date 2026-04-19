@@ -9,6 +9,9 @@
 * Añadidos botones manuales `SELL 25% / 50% / 75% / 100%` en el dashboard de Polymarket para posiciones abiertas: encolan `REDUCE_POSITION` o `CLOSE_POSITION`, evitan duplicados y lanzan el executor del móvil en background.
 * El dashboard de Polymarket mueve la venta manual a un modal con confirmación explícita por porcentaje, evitando que los controles `SELL` se solapen con el título de la posición en tarjetas estrechas.
 * Corregido el modal de venta manual del dashboard: el confirm de JavaScript ya no rompe el script renderizado, así que el botón `SELL...` vuelve a abrir el popup correctamente.
+* El operador de Polymarket ya acepta decisiones batch compatibles hacia atrás: hasta `2` aperturas por ciclo (`new_positions`) y hasta `2` cierres/reducciones del mismo tipo por ciclo (`position_managements`), con validación de slots, caja y targets duplicados.
+* `phone/polymarket_monitor_executor.py` y el monitor legado del servidor ahora pueden ejecutar hasta `2` take profits por pasada, priorizados por probabilidad, y las órdenes encoladas usan `order_id` con microsegundos para evitar colisiones al abrir varias posiciones a la vez.
+* El modal manual `SELL` del dashboard acepta ahora porcentajes personalizados además de los presets, validando el rango y encolando `REDUCE_POSITION` o `CLOSE_POSITION` con el porcentaje exacto pedido.
 
 ### 18/04/2026
 * Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.

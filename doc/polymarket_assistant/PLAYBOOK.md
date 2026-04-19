@@ -13,7 +13,7 @@
 Each automated cycle must follow these steps strictly in order:
 
 1. **Discarded-slot check** — No automated stop-loss. If a daily or weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks a fresher entry of the same type; it does **not** mean force-sell it.
-2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
+2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 4. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
 5. **Scout opportunities** — For each slot (daily / weekly / floor), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC markets of that type on Polymarket. Look for markets that are:
@@ -23,7 +23,7 @@ Each automated cycle must follow these steps strictly in order:
    - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
    - For weekly markets: prioritize entering early in the period with the most obvious strike.
   - For floor markets: only bet `Yes`, and only when Beecthor identifies a strong support zone that Binance still respects.
-6. **Place bet (if valid)** — If a viable market is found, open a position following the entry rules below. Only one new position per cycle.
+6. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions when they are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
 
 ## Market scope
 
@@ -72,6 +72,8 @@ Three allowed market types, each tracked separately:
 - **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
 - Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
 - Maximum simultaneous exposure: **3 active open positions total**. Daily / weekly positions marked as discarded for slot purposes do not count toward the active-position cap.
+- Maximum new openings per cycle: **2**.
+- Maximum managed positions per cycle: **2**.
 - Position cap by type:
   - **1 active daily** position maximum
   - **1 active weekly** position maximum
@@ -88,6 +90,7 @@ Three allowed market types, each tracked separately:
 - Take profit:
   - consider exit once market probability reaches `90%`
   - default full take profit range: `90-95%`
+  - if two positions independently hit the take-profit zone in the same review, exiting both is valid
   - exception: if resolution is near-certain (market is about to close and the outcome is obvious), the position may be held to resolve naturally at 100%
 
 ## Execution freshness
