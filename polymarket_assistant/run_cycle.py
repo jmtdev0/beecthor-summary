@@ -608,6 +608,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     balance = fetch_balance_allowance(client, config)
     orders = client.get_orders()
     perf = compute_performance_snapshot(trade_log)
+    reconciliation = build_reconciliation_status(account_state, positions, trade_log)
 
     # Reconcile account_state.open_positions against live positions before
     # passing to GPT. Any position whose market has expired (excluded from
@@ -627,6 +628,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'account_state': account_state,
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
+        'reconciliation': reconciliation,
         'market_time_context': build_market_time_context(),
         'binance': fetch_binance_snapshot(),
         'polymarket': {
@@ -634,6 +636,15 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
             'allowances': balance.get('allowances', {}),
             'open_orders': orders,
             'positions': positions,
+            'discarded_probability_threshold': discarded_probability_threshold(account_state),
+            'active_price_hit_positions': [
+                p for p in positions
+                if infer_position_market_type(p) in {'daily', 'weekly'} and not is_slot_discarded(p, account_state)
+            ],
+            'discarded_price_hit_positions': [
+                p for p in positions
+                if infer_position_market_type(p) in {'daily', 'weekly'} and is_slot_discarded(p, account_state)
+            ],
             'active_btc_markets': fetch_active_btc_markets(),
             'active_floor_markets': fetch_active_floor_markets(),
             'open_floor_positions': [p for p in positions if infer_position_market_type(p) == 'floor'],
@@ -713,6 +724,71 @@ def outcome_probability(market: dict[str, Any], outcome: str) -> float:
     return safe_float(market.get('outcomes', {}).get(outcome, {}).get('probability'))
 
 
+def discarded_probability_threshold(account_state: dict[str, Any]) -> float:
+    return safe_float(account_state.get('discarded_probability_threshold', 0.20))
+
+
+def position_probability(position: dict[str, Any]) -> float | None:
+    raw = position.get('cur_price')
+    if raw is None:
+        raw = position.get('current_price')
+    if raw is None:
+        return None
+    return safe_float(raw)
+
+
+def is_slot_discarded(position: dict[str, Any], account_state: dict[str, Any]) -> bool:
+    """Daily/weekly positions at or below the threshold stay open but stop blocking the slot."""
+    if infer_position_market_type(position) not in {'daily', 'weekly'}:
+        return False
+    prob = position_probability(position)
+    if prob is None:
+        return False
+    return prob <= discarded_probability_threshold(account_state)
+
+
+def build_reconciliation_status(
+    account_state: dict[str, Any],
+    live_positions: list[dict[str, Any]],
+    trade_log: list[dict[str, Any]],
+) -> dict[str, Any]:
+    tracked_positions = account_state.get('open_positions', [])
+
+    def key(position: dict[str, Any]) -> tuple[str, str]:
+        outcome = position.get('position_side') or position.get('outcome') or ''
+        return (position.get('market_slug') or '', outcome)
+
+    tracked_keys = {key(pos) for pos in tracked_positions if key(pos)[0]}
+    live_keys = {key(pos) for pos in live_positions if key(pos)[0]}
+    closed_keys = {
+        (entry.get('market_slug') or '', entry.get('outcome') or '')
+        for entry in trade_log
+        if entry.get('type') == 'trade_closed'
+    }
+
+    issues: list[str] = []
+
+    for position_key in sorted(tracked_keys - live_keys):
+        if position_key not in closed_keys:
+            issues.append(f'missing closure record for {position_key[0]}:{position_key[1]}')
+
+    for position_key in sorted(live_keys - tracked_keys):
+        issues.append(f'live position missing from account_state for {position_key[0]}:{position_key[1]}')
+
+    expected_open_exposure = round(sum(safe_float(pos.get('current_value')) for pos in live_positions), 8)
+    recorded_open_exposure = round(safe_float(account_state.get('open_exposure')), 8)
+    if abs(expected_open_exposure - recorded_open_exposure) > 0.05:
+        issues.append(
+            'open_exposure mismatch between account_state and live positions '
+            f'({recorded_open_exposure} vs {expected_open_exposure})'
+        )
+
+    return {
+        'ok': not issues,
+        'issues': issues,
+    }
+
+
 def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tuple[bool, str]:
     action = decision.get('action')
     allowed_actions = {'NO_ACTION', 'OPEN_POSITION', 'CLOSE_POSITION', 'REDUCE_POSITION'}
@@ -726,6 +802,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
     spot_price = context['binance']['spot_price']
 
     if action == 'OPEN_POSITION':
+        reconciliation = context.get('reconciliation') or {}
+        if not reconciliation.get('ok', True):
+            issues = '; '.join(reconciliation.get('issues', [])[:2])
+            return False, f'Reconciliation required before opening new position: {issues}'
+
         new_position = decision.get('new_position') or {}
         floor_position = decision.get('new_floor_position') or {}
         cash_available = polymarket['cash_balance_usdc']
@@ -736,11 +817,13 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         max_open = int(account_state.get('max_open_positions', 3))
         price_hit_opening = bool(new_position.get('should_open'))
         floor_opening = bool(floor_position.get('should_open'))
+        active_positions = [pos for pos in positions if not is_slot_discarded(pos, account_state)]
 
-        # Total positions after this cycle must not exceed max_open_positions
+        # Total active positions after this cycle must not exceed max_open_positions.
+        # Discarded daily/weekly positions stay open, but no longer block a fresh slot.
         pending_opens = (1 if price_hit_opening else 0) + (1 if floor_opening else 0)
-        if len(positions) + pending_opens > max_open:
-            return False, f'Opening {pending_opens} position(s) would exceed max_open_positions ({max_open})'
+        if len(active_positions) + pending_opens > max_open:
+            return False, f'Opening {pending_opens} active position(s) would exceed max_open_positions ({max_open})'
 
         if price_hit_opening:
             market = find_market_by_slug(markets, new_position.get('market_slug', ''))
@@ -749,6 +832,12 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             outcome = new_position.get('outcome')
             if outcome not in market['outcomes']:
                 return False, 'Selected outcome not valid for chosen market'
+            max_entry_probability = safe_float(new_position.get('max_entry_probability'))
+            live_probability = outcome_probability(market, outcome)
+            if max_entry_probability <= 0 or max_entry_probability > 1:
+                return False, 'Price-hit max_entry_probability must be between 0 and 1'
+            if max_entry_probability < live_probability:
+                return False, 'Price-hit max_entry_probability is below the current live market probability'
             stake_usd = safe_float(new_position.get('stake_usd'))
             if stake_usd <= 0 or stake_usd > cash_available:
                 return False, 'Price-hit stake is invalid or exceeds available cash'
@@ -758,11 +847,15 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 max_stake = round(cash_available * base_stake_pct, 2)
                 if stake_usd > max_stake:
                     return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
-            # Per-type slot: max 1 daily, max 1 weekly
+            # Per-type slot: max 1 active daily, max 1 active weekly.
+            # Discarded positions at <= discarded_probability_threshold no longer block the slot.
             mtype = market.get('market_type', 'daily')
-            type_open = sum(1 for p in positions if infer_position_market_type(p) == mtype)
+            type_open = sum(
+                1 for p in positions
+                if infer_position_market_type(p) == mtype and not is_slot_discarded(p, account_state)
+            )
             if type_open >= 1:
-                return False, f'{mtype.capitalize()} price-hit slot already occupied'
+                return False, f'{mtype.capitalize()} price-hit active slot already occupied'
             duplicate = any(
                 pos['market_slug'] == market['market_slug'] and pos['outcome'] == outcome
                 for pos in positions
@@ -782,6 +875,12 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 return False, 'Floor market slug not found among active floor markets'
             if floor_position.get('outcome', 'Yes') != 'Yes':
                 return False, 'Floor positions must always bet Yes'
+            floor_max_entry_probability = safe_float(floor_position.get('max_entry_probability'))
+            floor_live_probability = outcome_probability(floor_market, 'Yes')
+            if floor_max_entry_probability <= 0 or floor_max_entry_probability > 1:
+                return False, 'Floor max_entry_probability must be between 0 and 1'
+            if floor_max_entry_probability < floor_live_probability:
+                return False, 'Floor max_entry_probability is below the current live market probability'
             floor_stake = safe_float(floor_position.get('stake_usd'))
             if floor_stake <= 0 or floor_stake > cash_available:
                 return False, 'Floor stake is invalid or exceeds available cash'
@@ -853,6 +952,7 @@ def prepare_and_send_order_via_phone(
         'token_id': token_id,
         'side': 'BUY',
         'stake_usd': new_pos['stake_usd'],
+        'max_entry_probability': safe_float(new_pos.get('max_entry_probability', 0.0)),
         'market': market['question'],
         'market_slug': new_pos['market_slug'],
         'outcome': new_pos['outcome'],
@@ -1016,6 +1116,7 @@ def prepare_close_or_reduce_via_phone(
 
 def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions: list[dict[str, Any]]) -> dict[str, Any]:
     state = dict(existing)
+    discard_threshold = discarded_probability_threshold(state)
     state['cash_available'] = balance_usdc
     state['open_exposure'] = round(sum(pos['current_value'] for pos in positions), 8)
     state['open_positions'] = [
@@ -1032,6 +1133,11 @@ def sync_account_state(existing: dict[str, Any], balance_usdc: float, positions:
             'current_value_usd': pos['current_value'],
             'cash_pnl_usd': pos['cash_pnl'],
             'status': 'open',
+            'slot_status': (
+                'discarded_for_slot'
+                if infer_position_market_type(pos) in {'daily', 'weekly'} and safe_float(pos.get('cur_price')) <= discard_threshold
+                else 'active'
+            ),
         }
         for pos in positions
     ]

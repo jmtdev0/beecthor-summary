@@ -20,7 +20,7 @@ from codex_chat_bridge import (
     start_bridge_request,
 )
 from dotenv import load_dotenv
-from flask import Flask, jsonify, redirect, render_template_string, request, session, url_for
+from flask import Flask, Response, jsonify, redirect, render_template_string, request, session, url_for
 
 try:
     from py_clob_client.client import ClobClient
@@ -57,6 +57,15 @@ CHAIN_ID = 137
 LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (REPO_ROOT / 'server_runtime_logs'))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRACE_LANE_LIMIT = 5
+PRIVATE_CHAT_VSCODE_DISPLAY = os.environ.get('PRIVATE_CHAT_VSCODE_DISPLAY', ':10')
+PRIVATE_CHAT_VSCODE_XAUTHORITY = os.environ.get(
+    'PRIVATE_CHAT_VSCODE_XAUTHORITY',
+    str(Path.home() / '.Xauthority'),
+)
+PRIVATE_CHAT_VSCODE_CAPTURE_BIN = os.environ.get('PRIVATE_CHAT_VSCODE_CAPTURE_BIN', 'import')
+PRIVATE_CHAT_VSCODE_CAPTURE_TIMEOUT_SECONDS = float(
+    os.environ.get('PRIVATE_CHAT_VSCODE_CAPTURE_TIMEOUT_SECONDS', '8')
+)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -231,6 +240,20 @@ img{display:block;max-width:100%}
 .user{background:#0b57d0}
 .bot{background:#111827;border:1px solid rgba(255,255,255,.08)}
 .status-line{color:#9fb0c7;margin-top:10px}
+.inline-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.display-preview-shell{
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:18px;
+    overflow:hidden;
+    background:#05070b;
+}
+.display-preview-image{
+    width:100%;
+    display:block;
+    aspect-ratio:16/9;
+    object-fit:contain;
+    background:#05070b;
+}
 @media (max-width: 1180px){
   .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
 }
@@ -335,6 +358,33 @@ def append_jsonl_event(source: str, event_type: str, level: str, message: str, p
     with log_file_for_source(source).open('a', encoding='utf-8') as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + '\n')
     return event
+
+
+def capture_private_chat_display() -> tuple[bytes | None, str | None]:
+    env = os.environ.copy()
+    env['DISPLAY'] = PRIVATE_CHAT_VSCODE_DISPLAY
+    if PRIVATE_CHAT_VSCODE_XAUTHORITY:
+        env['XAUTHORITY'] = PRIVATE_CHAT_VSCODE_XAUTHORITY
+
+    try:
+        result = subprocess.run(
+            [PRIVATE_CHAT_VSCODE_CAPTURE_BIN, '-window', 'root', 'png:-'],
+            capture_output=True,
+            timeout=PRIVATE_CHAT_VSCODE_CAPTURE_TIMEOUT_SECONDS,
+            check=False,
+            env=env,
+        )
+    except FileNotFoundError:
+        return None, 'Display capture tool not installed on the server'
+    except subprocess.TimeoutExpired:
+        return None, 'Display capture timed out'
+
+    if result.returncode != 0:
+        stderr = (result.stderr or b'').decode('utf-8', errors='replace').strip()
+        return None, stderr or 'Display capture failed'
+    if not result.stdout:
+        return None, 'Display capture returned no image data'
+    return result.stdout, None
 
 
 def read_jsonl_logs(limit: int = 200, *, source: str = '', level: str = '', event_type: str = '') -> list[dict[str, Any]]:
@@ -1207,8 +1257,35 @@ def private_chat():
     html = page_start('Chat | Beecthor') + """
     <div class="shell private-shell">
       <div class="private-header"><div><h1 class="private-title">Chat</h1><div class="section-subtitle">Bridge hacia esta misma conversación de Codex en VS Code.</div></div><div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat" style="font-weight:700;color:#fff">Chat</a><a href="/logout">Logout</a></div></div>
-      <div class="chat" id="history">{% for msg in history %}<div class="bubble {{ 'user' if msg.role == 'user' else 'bot' }}">{{ msg.text }}<div class="muted" style="margin-top:8px">{{ msg.timestamp }}</div></div>{% else %}<div class="muted">No messages yet.</div>{% endfor %}</div>
-      <div class="chat-card" style="margin-top:16px"><textarea id="input" placeholder="Message to Codex..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="status-line"></div></div>
+            <div class="panel-grid">
+                <section class="stream-card">
+                    <h2 class="section-title">Bridge chat</h2>
+                    <div class="chat" id="history">{% for msg in history %}<div class="bubble {{ 'user' if msg.role == 'user' else 'bot' }}">{{ msg.text }}<div class="muted" style="margin-top:8px">{{ msg.timestamp }}</div></div>{% else %}<div class="muted">No messages yet.</div>{% endfor %}</div>
+                    <div class="chat-card" style="margin-top:16px"><textarea id="input" placeholder="Message to Codex..." style="width:100%;height:92px"></textarea><button id="btn" style="margin-top:10px" onclick="send()">Send</button><div id="status" class="status-line"></div></div>
+                </section>
+                <section class="stream-card">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+                        <div>
+                            <h2 class="section-title" style="margin-bottom:8px">VS Code display</h2>
+                            <div class="section-subtitle">Vista read-only del display del servidor. El refresco se dispara solo desde este navegador.</div>
+                        </div>
+                        <div class="inline-controls">
+                            <label class="muted" for="previewInterval">Refresh</label>
+                            <select id="previewInterval">
+                                <option value="0">Manual</option>
+                                <option value="3000">3 s</option>
+                                <option value="5000" selected>5 s</option>
+                                <option value="10000">10 s</option>
+                            </select>
+                            <button type="button" class="button-link secondary" onclick="refreshPreview(true)">Refresh now</button>
+                        </div>
+                    </div>
+                    <div id="previewMeta" class="muted" style="margin-bottom:12px">Waiting for first capture...</div>
+                    <div class="display-preview-shell">
+                        <img id="displayPreview" class="display-preview-image" alt="Read-only VS Code display preview">
+                    </div>
+                </section>
+            </div>
     </div>
     <script>
       const hist=document.getElementById('history'); hist.scrollTop=hist.scrollHeight;
@@ -1231,6 +1308,20 @@ def private_chat():
         status.textContent='Bridge wait window expired. Refresh in a moment if Codex replies later.';
       }
       async function send(){const input=document.getElementById('input'); const btn=document.getElementById('btn'); const status=document.getElementById('status'); const text=input.value.trim(); if(!text) return; btn.disabled=true; input.value=''; status.textContent='Sending to Codex...'; appendBubble('user', text, new Date().toISOString().slice(0,16).replace('T',' ') + ' UTC'); try{const resp=await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})}); const data=await resp.json(); if(data.error){status.textContent=data.error;} else if(data.request_id){await waitForBridgeReply(data.request_id);} else {status.textContent='Bridge did not return a request id.';}}catch(err){status.textContent='Network error';} btn.disabled=false; input.focus();}
+            const preview=document.getElementById('displayPreview');
+            const previewMeta=document.getElementById('previewMeta');
+            const previewInterval=document.getElementById('previewInterval');
+            let previewTimer=null;
+            let previewPending=false;
+            let previewObjectUrl='';
+            function previewDelay(){return Number(previewInterval.value || 0);}
+            function clearPreviewTimer(){if(previewTimer){clearTimeout(previewTimer); previewTimer=null;}}
+            function schedulePreview(){clearPreviewTimer(); const delay=previewDelay(); if(delay <= 0 || document.hidden) return; previewTimer=setTimeout(()=>refreshPreview(false), delay);}
+            function setPreviewMeta(text){previewMeta.textContent=text;}
+            async function refreshPreview(manual){if(previewPending) return; previewPending=true; setPreviewMeta(manual?'Refreshing preview...':'Updating preview...'); try{const resp=await fetch('/api/private/chat/display.png?ts='+Date.now(), {cache:'no-store'}); if(!resp.ok) throw new Error('Preview unavailable'); const blob=await resp.blob(); const objectUrl=URL.createObjectURL(blob); if(previewObjectUrl) URL.revokeObjectURL(previewObjectUrl); previewObjectUrl=objectUrl; preview.src=objectUrl; setPreviewMeta('Last updated: '+new Date().toLocaleTimeString('es-ES',{hour12:false})+' · Browser-side refresh only');}catch(err){setPreviewMeta('Preview unavailable. The server captures only on demand when this page asks for it.');}finally{previewPending=false; schedulePreview();}}
+            previewInterval.addEventListener('change', ()=>{const delay=previewDelay(); if(delay <= 0){clearPreviewTimer(); setPreviewMeta('Auto-refresh disabled. Use Refresh now when needed.'); return;} refreshPreview(false);});
+            document.addEventListener('visibilitychange', ()=>{if(document.hidden){clearPreviewTimer(); return;} if(previewDelay() > 0){refreshPreview(false);}});
+            refreshPreview(false);
     </script>""" + PAGE_END
     return render_template_string(html, history=history)
 
@@ -1272,6 +1363,20 @@ def private_chat_status(request_id: str):
         logger=append_jsonl_event,
     )
     return jsonify(payload), status
+
+
+@app.route('/api/private/chat/display.png')
+@require_private
+def private_chat_display():
+    image_bytes, error = capture_private_chat_display()
+    headers = {
+        'Cache-Control': 'no-store, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+    }
+    if error or not image_bytes:
+        return Response(error or 'Display preview unavailable', status=503, mimetype='text/plain', headers=headers)
+    return Response(image_bytes, mimetype='image/png', headers=headers)
 
 
 @app.route('/api/public/summaries')

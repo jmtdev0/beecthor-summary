@@ -1,5 +1,12 @@
 # Changelog
 
+### 19/04/2026
+* `doc/polymarket_assistant/PLAYBOOK.md` actualizado con las lecciones recientes de `doc/JUGADA.md`: selección explícita entre daily/weekly/floor, `nearest strike first` rebajado a heurística y no veto, y nueva regla anti-chase para strikes que requieren una extensión extra tras un movimiento ya avanzado.
+* El playbook ahora exige reconciliar `account_state.json` con `trade_log.json` y registrar también los cierres por expiry/resolution, no solo los take profits.
+* Nuevo informe `doc/polymarket_assistant/ANALISIS_GENERAL_2026-04-19.md` con balance general del operador, principales fallos observados y escenarios prudentes de PnL mensual.
+* Aplicados tres cambios prioritarios al operador: reconciliación como bloqueo duro de nuevas entradas, liberación de slot daily/weekly cuando una posición cae a `<=20%` sin venderla, e invalidación de órdenes pendientes viejas o repriced por encima de `max_entry_probability`.
+* `/private/chat` ahora incluye una vista read-only del display de VS Code en el VPS, con refresco disparado solo desde el navegador cliente y captura bajo demanda en el servidor.
+
 ### 18/04/2026
 * Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.
 * El ciclo automático de Codex ahora usa `doc/polymarket_assistant/codex_cycle_prompt.md` como template mínimo de una sola línea y delega las instrucciones detalladas en `doc/polymarket_assistant/codex_cycle_instructions.md`.

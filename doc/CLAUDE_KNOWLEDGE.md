@@ -184,7 +184,7 @@ polymarket_executor.py (Termux cron)
     "should_manage_existing": false,
     "target_market_slug": "",
     "target_outcome": "",
-    "reason": "take_profit | stop_loss | thesis_invalidated | rebalance | none",
+    "reason": "take_profit | thesis_invalidated | rebalance | none",
     "reduce_fraction": 0.5
   },
   "new_position": {
@@ -259,7 +259,7 @@ Orphaned `xfce4-session` (PID 22258, running since 2026-03-26) held `org.xfce.Se
   "early_stage_threshold": 15.0,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "stop_loss_probability": 0.2
+  "discarded_probability_threshold": 0.2
 }
 ```
 

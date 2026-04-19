@@ -3,9 +3,9 @@
 Autonomous Polymarket phone monitor for exits.
 
 Runs on the phone every odd UTC hour + 5 minutes, reads live open positions
-directly from the Polymarket Data API, applies hard-coded stop-loss / take-
-profit thresholds, validates against recent account activity, and if needed
-builds and signs a SELL order locally before posting it to the CLOB.
+directly from the Polymarket Data API, applies a hard-coded take-profit
+threshold, validates against recent account activity, and if needed builds and
+signs a SELL order locally before posting it to the CLOB.
 
 No server-side action file or LLM is required for exits.
 """
@@ -38,7 +38,6 @@ ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
-STOP_LOSS_THRESHOLD = 0.20
 TAKE_PROFIT_THRESHOLD = 0.88
 
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'

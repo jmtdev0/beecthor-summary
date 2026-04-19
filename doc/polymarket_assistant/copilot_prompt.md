@@ -43,7 +43,7 @@ Return valid JSON only with this schema:
     "should_manage_existing": true,
     "target_market_slug": "",
     "target_outcome": "",
-    "reason": "take_profit | stop_loss | thesis_invalidated | rebalance | none",
+    "reason": "take_profit | thesis_invalidated | rebalance | none",
     "reduce_fraction": 0.5
   },
   "new_position": {
