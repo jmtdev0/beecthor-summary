@@ -6,6 +6,7 @@
 * Nuevo informe `doc/polymarket_assistant/ANALISIS_GENERAL_2026-04-19.md` con balance general del operador, principales fallos observados y escenarios prudentes de PnL mensual.
 * Aplicados tres cambios prioritarios al operador: reconciliación como bloqueo duro de nuevas entradas, liberación de slot daily/weekly cuando una posición cae a `<=20%` sin venderla, e invalidación de órdenes pendientes viejas o repriced por encima de `max_entry_probability`.
 * `/private/chat` ahora incluye una vista read-only del display de VS Code en el VPS, con refresco disparado solo desde el navegador cliente y captura bajo demanda en el servidor.
+* Añadidos botones manuales `SELL 25% / 50% / 75% / 100%` en el dashboard de Polymarket para posiciones abiertas: encolan `REDUCE_POSITION` o `CLOSE_POSITION`, evitan duplicados y lanzan el executor del móvil en background.
 
 ### 18/04/2026
 * Documentación centralizada bajo `doc/`, manteniendo `AGENTS.md` en la raíz como symlink de compatibilidad para tooling.

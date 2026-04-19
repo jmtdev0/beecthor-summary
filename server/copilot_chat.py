@@ -5,7 +5,7 @@ import json
 import os
 import re
 import subprocess
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 _CET = ZoneInfo('Europe/Madrid')
@@ -309,6 +309,11 @@ def load_json(path: Path, default: Any) -> Any:
         return default
 
 
+def save_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+
+
 def save_history(history: list[dict[str, Any]]) -> None:
     HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding='utf-8')
 
@@ -358,6 +363,66 @@ def append_jsonl_event(source: str, event_type: str, level: str, message: str, p
     with log_file_for_source(source).open('a', encoding='utf-8') as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + '\n')
     return event
+
+
+def enqueue_pending_order(order: dict[str, Any]) -> None:
+    queue: list[dict[str, Any]] = load_json(PENDING_ORDERS_PATH, [])
+    cutoff = (datetime.now(UTC) - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    queue = [item for item in queue if item.get('order_id', '') >= cutoff]
+    queue.append(order)
+    save_json(PENDING_ORDERS_PATH, queue)
+
+
+def active_manual_sell_order(market_slug: str, outcome: str) -> dict[str, Any] | None:
+    pending_orders = load_json(PENDING_ORDERS_PATH, [])
+    for order in pending_orders:
+        if order.get('status') != 'pending_phone_execution':
+            continue
+        if order.get('side') != 'SELL':
+            continue
+        if order.get('market_slug') == market_slug and order.get('outcome') == outcome:
+            return order
+    return None
+
+
+def build_manual_sell_feedback(status: str, market_slug: str, outcome: str, fraction: float = 1.0) -> dict[str, str] | None:
+    if not status:
+        return None
+    label = f'{outcome} · {market_slug}' if market_slug else outcome
+    percent_label = f'{round(fraction * 100):.0f}%'
+    palette = {
+        'queued': {
+            'text': f'✓ SELL manual {percent_label} encolado para {label}. El executor del móvil se ha lanzado en background.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        },
+        'duplicate': {
+            'text': f'⚠ Ya había una orden SELL pendiente para {label}. No se ha duplicado.',
+            'bg': 'rgba(245,158,11,.12)',
+            'border': 'rgba(245,158,11,.24)',
+            'color': '#fbbf24',
+        },
+        'missing': {
+            'text': f'⚠ La posición {label} ya no aparece como abierta. Refresca el panel.',
+            'bg': 'rgba(245,158,11,.12)',
+            'border': 'rgba(245,158,11,.24)',
+            'color': '#fbbf24',
+        },
+        'error': {
+            'text': f'✗ No se pudo preparar la orden SELL para {label}. Revisa los logs.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
+        },
+        'invalid': {
+            'text': f'⚠ Fracción SELL no válida para {label}. Usa 25%, 50%, 75% o 100%.',
+            'bg': 'rgba(245,158,11,.12)',
+            'border': 'rgba(245,158,11,.24)',
+            'color': '#fbbf24',
+        },
+    }
+    return palette.get(status)
 
 
 def capture_private_chat_display() -> tuple[bytes | None, str | None]:
@@ -844,10 +909,13 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         {'label': 'PnL no realizado', 'value': f'{unrealized_pnl:.2f}$', 'caption': 'posiciones abiertas', 'css_class': 'good' if unrealized_pnl >= 0 else 'bad'},
         {'label': 'Operaciones', 'value': str(total_operations), 'caption': f'{total_closed} cerradas · {len(open_positions)} abiertas', 'css_class': '', 'open_positions': [
             {
-                'title': p.get('title', p.get('market_slug', '')),
-                'outcome': p.get('outcome', ''),
-                'prob': f"{safe_float(p.get('cur_price')) * 100:.0f}¢",
+                'title': p.get('market_title', p.get('market_slug', '')),
+                'market_slug': p.get('market_slug', ''),
+                'outcome': p.get('position_side', ''),
+                'prob': f"{safe_float(p.get('current_price')) * 100:.0f}¢",
                 'pnl': safe_float(p.get('cash_pnl_usd')),
+                'shares': safe_float(p.get('shares')),
+                'can_sell': safe_float(p.get('shares')) > 0 and bool(p.get('token_id')),
             }
             for p in open_positions
         ]},
@@ -1107,6 +1175,11 @@ def private_root():
 def private_polymarket():
     snapshot = build_polymarket_snapshot()
     trace_lanes = build_private_trace_lanes()
+    manual_sell = request.args.get('manual_sell', '').strip()
+    manual_sell_market = request.args.get('manual_sell_market', '').strip()
+    manual_sell_outcome = request.args.get('manual_sell_outcome', '').strip()
+    manual_sell_fraction = safe_float(request.args.get('manual_sell_fraction', '1.0'), 1.0)
+    manual_sell_feedback = build_manual_sell_feedback(manual_sell, manual_sell_market, manual_sell_outcome, manual_sell_fraction)
     html = page_start('Polymarket | Beecthor') + """
     <div class="shell private-shell">
       <div class="private-header">
@@ -1139,13 +1212,28 @@ def private_polymarket():
             <summary style="cursor:pointer;font-size:.78rem;color:#aaa;list-style:none">▸ ver abiertas</summary>
             <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
               {% for pos in metric.open_positions %}
-              <div style="font-size:.78rem;padding:5px 7px;background:#1e1e1e;border-radius:6px;display:flex;justify-content:space-between;gap:8px">
-                <span style="color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
-                <span style="white-space:nowrap">
-                  <span style="color:#888">{{ pos.prob }}</span>
-                  <span style="margin-left:6px;{{ 'color:#4caf50' if pos.pnl >= 0 else 'color:#f44336' }}">{{ '%+.2f$' % pos.pnl }}</span>
-                </span>
-              </div>
+                            <div style="font-size:.78rem;padding:7px;background:#1e1e1e;border-radius:6px;display:flex;justify-content:space-between;gap:10px;align-items:center">
+                                <div style="min-width:0;display:flex;flex-direction:column;gap:4px;flex:1 1 auto">
+                                    <span style="color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
+                                    <span style="white-space:nowrap">
+                                        <span style="color:#888">{{ pos.prob }}</span>
+                                        <span style="margin-left:6px;{{ 'color:#4caf50' if pos.pnl >= 0 else 'color:#f44336' }}">{{ '%+.2f$' % pos.pnl }}</span>
+                                        <span style="margin-left:6px;color:#666">{{ '%.2f' % pos.shares }} sh</span>
+                                    </span>
+                                </div>
+                                {% if pos.can_sell %}
+                                <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
+                                    {% for option in [0.25, 0.5, 0.75, 1.0] %}
+                                    <form method="POST" action="/private/position/sell" onsubmit="return confirm('Vender {{ (option * 100)|int }}% de la posición {{ pos.outcome }} en {{ pos.title }}?');" style="margin:0">
+                                        <input type="hidden" name="market_slug" value="{{ pos.market_slug }}">
+                                        <input type="hidden" name="outcome" value="{{ pos.outcome }}">
+                                        <input type="hidden" name="fraction" value="{{ option }}">
+                                        <button type="submit" style="background:{{ '#8b1e2d' if option == 1.0 else '#2a3340' }};color:#fff;border:none;border-radius:999px;padding:5px 8px;cursor:pointer;font-weight:700;font-size:.7rem">SELL {{ (option * 100)|int }}%</button>
+                                    </form>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
               {% endfor %}
             </div>
           </details>
@@ -1153,6 +1241,11 @@ def private_polymarket():
         </section>
         {% endfor %}
       </div>
+            {% if manual_sell_feedback %}
+            <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ manual_sell_feedback.bg }};border:1px solid {{ manual_sell_feedback.border }};color:{{ manual_sell_feedback.color }};font-weight:600;font-size:.93rem">
+                {{ manual_sell_feedback.text }}
+            </div>
+            {% endif %}
       {% if triggered %}
       <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-weight:600;font-size:.93rem">
         ✓ {{ triggered_label }} lanzado en background — revisa los logs en unos minutos.
@@ -1198,7 +1291,97 @@ def private_polymarket():
     </div>""" + PAGE_END
     triggered = request.args.get('triggered', '')
     triggered_label = TRIGGER_LABELS.get(triggered, triggered)
-    return render_template_string(html, trace_lanes=trace_lanes, triggered=triggered, triggered_label=triggered_label, **snapshot)
+    return render_template_string(
+        html,
+        trace_lanes=trace_lanes,
+        triggered=triggered,
+        triggered_label=triggered_label,
+        manual_sell_feedback=manual_sell_feedback,
+        **snapshot,
+    )
+
+
+@app.route('/private/position/sell', methods=['POST'])
+@require_private
+def private_sell_position():
+    market_slug = request.form.get('market_slug', '').strip()
+    outcome = request.form.get('outcome', '').strip()
+    fraction = safe_float(request.form.get('fraction', '1.0'), 1.0)
+    valid_fractions = {0.25, 0.5, 0.75, 1.0}
+    if not market_slug or not outcome:
+        return redirect(url_for('private_polymarket', manual_sell='error', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    if fraction not in valid_fractions:
+        return redirect(url_for('private_polymarket', manual_sell='invalid', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    if active_manual_sell_order(market_slug, outcome):
+        return redirect(url_for('private_polymarket', manual_sell='duplicate', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    live_positions = [normalize_live_position(item) for item in fetch_live_positions()]
+    target = next(
+        (pos for pos in live_positions if pos['market_slug'] == market_slug and pos['position_side'] == outcome),
+        None,
+    )
+    if not target:
+        append_jsonl_event(
+            'app.polymarket',
+            'manual_sell_missing',
+            'warning',
+            'Manual SELL requested for a position that is no longer open',
+            {'market_slug': market_slug, 'outcome': outcome, 'fraction': fraction},
+        )
+        return redirect(url_for('private_polymarket', manual_sell='missing', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    amount = round(target['shares'] * fraction, 8)
+    if amount <= 0:
+        return redirect(url_for('private_polymarket', manual_sell='invalid', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    order = {
+        'order_id': utc_now(),
+        'status': 'pending_phone_execution',
+        'type': 'CLOSE_POSITION' if fraction >= 1.0 else 'REDUCE_POSITION',
+        'token_id': target['token_id'],
+        'side': 'SELL',
+        'amount': amount,
+        'market': target['market_title'],
+        'market_slug': market_slug,
+        'outcome': outcome,
+        'fraction': fraction,
+        'source': 'dashboard_manual_sell',
+    }
+
+    try:
+        enqueue_pending_order(order)
+        append_jsonl_event(
+            'app.polymarket',
+            'manual_sell_enqueued',
+            'info',
+            'Manual SELL order enqueued from dashboard',
+            {
+                'market_slug': market_slug,
+                'outcome': outcome,
+                'amount': amount,
+                'shares': target['shares'],
+                'fraction': fraction,
+                'token_id': target['token_id'],
+            },
+        )
+        subprocess.Popen(
+            PHONE_SSH + [PHONE_REPO_CMD.format(script='phone/polymarket_executor.py')],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception as exc:
+        append_jsonl_event(
+            'app.polymarket',
+            'manual_sell_error',
+            'error',
+            f'Manual SELL failed: {exc}',
+            {'market_slug': market_slug, 'outcome': outcome, 'fraction': fraction},
+        )
+        return redirect(url_for('private_polymarket', manual_sell='error', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
+
+    return redirect(url_for('private_polymarket', manual_sell='queued', manual_sell_market=market_slug, manual_sell_outcome=outcome, manual_sell_fraction=fraction))
 
 
 @app.route('/private/logs')
