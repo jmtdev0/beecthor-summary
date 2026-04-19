@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-19T10:02:24Z",
-  "run_id": "2026-04-19T10-00-07Z",
+  "timestamp": "2026-04-19T12:07:19Z",
+  "run_id": "2026-04-19T12-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T10-00-07Z",
+    "run_id": "2026-04-19T12-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.76,
-    "summary": "There is still no clean new daily edge to add right now.",
-    "rationale": "The latest Beecthor thesis still leans toward one more upside push before the clearer bearish continuation, which keeps a fresh bearish daily dip trade misaligned for now. At the same time, BTC spot is around 74,992 with 24h momentum still down and price sitting very near the session low, so forcing the bullish daily 76k reach market would also be premature without stronger confirmation from Binance. The weekly 80k reach position remains open, there is no take-profit condition to manage yet, and the only active floor market is not clearly superior to simply staying patient. The correct move is to hold the weekly and avoid forcing a daily trade.",
+    "confidence": 0.0,
+    "summary": "Automatic Codex cycle fallback: NO_ACTION.",
+    "rationale": "Codex auto-cycle fallback: no valid decision file was produced in time.",
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -43,7 +43,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 74977.77,
+  "binance_spot_price": 75574.91,
   "positions_before": 1,
   "positions_after": 1
 }
