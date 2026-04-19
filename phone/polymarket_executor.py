@@ -504,49 +504,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         try:
             base_price = get_market_price(token_id, side, amount)
             price_candidates = build_price_candidates(base_price, side, order_type)
-            max_entry_probability = float(pending.get('max_entry_probability') or 0.0)
-            if side == 'BUY' and max_entry_probability > 0 and base_price > max_entry_probability:
-                print('[executor] Skipping repriced BUY: live market price now exceeds max_entry_probability.')
-                send_server_log(
-                    'phone.executor',
-                    'order_skipped',
-                    'Pending BUY skipped because the live market repriced above max_entry_probability',
-                    payload={
-                        'order_id': order_id,
-                        'market_slug': pending.get('market_slug'),
-                        'reason': 'repriced_above_max_entry_probability',
-                        'live_price': base_price,
-                        'max_entry_probability': max_entry_probability,
-                    },
-                )
-                save_executed_order_id(order_id)
-                if not dry_run:
-                    send_telegram(
-                        f'\u26a0\ufe0f Orden de entrada invalidada por repricing:\n'
-                        f'{market}\n'
-                        f'{outcome}\n'
-                        f'Precio live: {base_price:.3f} > max permitido: {max_entry_probability:.3f}'
-                    )
-                return True
-            if side == 'BUY' and max_entry_probability > 0:
-                price_candidates = [price for price in price_candidates if price <= max_entry_probability]
             print(f'[executor] Market price: {base_price} | candidates={price_candidates}')
-            if not price_candidates:
-                print('[executor] No valid BUY price candidates remain inside max_entry_probability.')
-                send_server_log(
-                    'phone.executor',
-                    'order_skipped',
-                    'Pending BUY skipped because no repriced candidate stayed inside max_entry_probability',
-                    payload={
-                        'order_id': order_id,
-                        'market_slug': pending.get('market_slug'),
-                        'reason': 'no_valid_price_candidates',
-                        'live_price': base_price,
-                        'max_entry_probability': max_entry_probability,
-                    },
-                )
-                save_executed_order_id(order_id)
-                return True
         except MarketResolvedException as exc:
             print(f'[executor] Skipping stale order because market is already resolved: {exc}')
             send_server_log(

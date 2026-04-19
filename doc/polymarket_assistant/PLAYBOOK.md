@@ -96,8 +96,6 @@ Three allowed market types, each tracked separately:
 ## Execution freshness
 
 - A pending entry order older than `120` minutes is stale and must be skipped instead of executed blindly.
-- A pending BUY order is invalid if the live market price has repriced above its stored `max_entry_probability`.
-- Repricing is allowed only while it stays inside the originally accepted entry ceiling.
 
 ## Reconciliation rules
 
