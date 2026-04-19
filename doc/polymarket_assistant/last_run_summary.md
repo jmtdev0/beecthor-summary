@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-19T22:06:12Z
+- Timestamp: 2026-04-19T22:19:14Z
 - Dry run: False
-- BTC price: 74015.2
+- BTC price: 74020.25
 - Decision action: NO_ACTION
-- Decision summary: No new action: reconciliation is broken and the active 74k daily dip still has time to play out.
+- Decision summary: No new action: the 74k daily dip already closed in profit, and the remaining late-session setup is blocked by reconciliation and timing.
 - Validation: True (ok)
-- Open positions before: 2
-- Open positions after: 2
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
