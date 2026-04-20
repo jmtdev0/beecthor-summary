@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-20T16:01:07Z
+- Timestamp: 2026-04-20T18:02:57Z
 - Dry run: False
-- BTC price: 75577.39
+- BTC price: 76064.38
 - Decision action: NO_ACTION
-- Decision summary: No new action: both bearish price-hit positions remain active, and there is still no cleaner third trade to add.
+- Decision summary: No new action: the weekly 72k dip remains the active bearish expression, the discarded daily 74k dip does not justify averaging down, and no replacement daily or floor setup is cleaner.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
