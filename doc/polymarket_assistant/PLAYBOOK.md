@@ -6,7 +6,7 @@
 2. A Beecthor video from today or yesterday (D-1) is considered current — betting is allowed. A video from two or more days ago (D-2+) is stale — only open a position if the thesis is exceptionally clear and Binance confirms the direction; otherwise skip.
 3. The latest transcript is mandatory context.
 4. Recent transcripts and recent entries in `analyses_log.json` must be reviewed before any bet.
-5. Prefer conservative BTC price-hit markets first; use floor markets only when the thesis is specifically about support holding.
+5. Prefer conservative BTC price-hit markets first. Floor markets are out of scope and must not be used.
 
 ## Cycle steps (in order)
 
@@ -16,32 +16,34 @@ Each automated cycle must follow these steps strictly in order:
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 4. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
-5. **Scout opportunities** — For each slot (daily / weekly / floor), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC markets of that type on Polymarket. Look for markets that are:
+5. **Scout opportunities** — For each slot (daily thesis / daily momentum / weekly), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
    - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
    - For weekly markets: prioritize entering early in the period with the most obvious strike.
-  - For floor markets: only bet `Yes`, and only when Beecthor identifies a strong support zone that Binance still respects.
+   - For the **daily momentum** slot: it may go against the main Beecthor thesis, but only when Binance shows a very clear intraday continuation that is cleaner than forcing the thesis-aligned daily.
 6. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions when they are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
 
 ## Market scope
 
-Three allowed market types, each tracked separately:
+Three allowed BTC price-hit slots, tracked separately:
 
 | Slot | Type | Example URL pattern |
 |------|------|---------------------|
-| 1 daily | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
+| 1 daily thesis | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
+| 1 daily momentum | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
 | 1 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
-| 1 floor | `bitcoin-above-{X}k-on-{month}-{day}` | same-day support-hold |
 
 - Daily markets are for same-day timing expressions.
+- The **daily thesis** slot is the default same-day expression of Beecthor's current directional view.
+- The **daily momentum** slot exists to exploit a very clear intraday continuation even when it runs against the original thesis. This is not revenge trading and must not be used to average down a failed idea.
 - The goal for weekly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
-- Floor markets are secondary to price-hit markets and are only valid when the thesis is about defending support rather than tagging a fresh target.
 - Not allowed:
   - non-BTC markets
   - vague narrative markets
   - bets that require ignoring current price structure
+  - floor markets (`bitcoin-above-{X}k-on-{month}-{day}`)
   - monthly or long-term markets (e.g. `what-price-will-bitcoin-hit-in-{month}-{year}`, `before-{year}`)
 
 ## Entry rules
@@ -50,12 +52,13 @@ Three allowed market types, each tracked separately:
 - Check whether the same directional idea appears in recent transcripts and recent summaries.
 - Compare the thesis with the current BTC price and recent BTC structure on Binance.
 - Choose the vehicle first:
-  - use a **daily** only when direction and timing both look aligned for the current UTC session
+  - use a **daily thesis** slot when direction and timing both look aligned for the current UTC session
+  - use the **daily momentum** slot only when Binance shows a clear same-day continuation that is cleaner than forcing the thesis-aligned daily
   - use a **weekly** when direction is clear but same-day timing is less precise
-  - use a **floor** only when the thesis is about holding support, not reaching a new strike
 - When the directional bias is valid, treat the nearest reasonable strike as the first candidate, not as a veto on all other strikes.
 - If BTC looks bullish, first evaluate the closest upside target above price before considering farther upside targets.
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
+- For the **daily momentum** slot, closest-strike-first still applies. If momentum clearly points up, prefer `75k reach` before `76k reach`; if momentum clearly points down, prefer the nearest downside strike first.
 - It is acceptable to skip the nearest strike when it is already effectively resolved, already `>= 85%`, or offers clearly worse risk/reward than the next clean expression.
 - Do not chase the next weekly strike just because the previous target already hit. If the setup requires one more extension after a strong move has already happened, demand clear Binance continuation evidence and a modest remaining distance.
 - Reject daily setups that need a fresh second leg after much of the move has already happened, or that are more likely to resolve one day late than before the current expiry.
@@ -75,10 +78,9 @@ Three allowed market types, each tracked separately:
 - Maximum new openings per cycle: **2**.
 - Maximum managed positions per cycle: **2**.
 - Position cap by type:
-  - **1 active daily** position maximum
+  - **2 active daily** positions maximum
   - **1 active weekly** position maximum
-  - **1 floor** position maximum
-- Monthly or longer-dated positions are not allowed, so they do not count toward the cap.
+- Monthly, longer-dated, and floor positions are not allowed, so they do not count toward the cap.
 - Base stake per entry: `15%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 15% rule.
 

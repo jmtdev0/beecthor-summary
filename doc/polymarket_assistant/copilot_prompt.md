@@ -20,19 +20,21 @@ Decision principles:
 - Do not invent data that is not present in the provided context.
 - Do not explain your reasoning in prose outside the required JSON.
 
-Position slots (all three can be filled in the same cycle, but do not exceed two new openings in one run):
-- Daily price-hit slot: 1 maximum (reach/dip market, daily expiry).
+Position slots:
+- Daily price-hit slots: 2 maximum total (same-day reach/dip markets).
 - Weekly price-hit slot: 1 maximum (reach/dip market, weekly expiry).
-- Floor slot: 1 maximum (Bitcoin above $X market). Only bet Yes. Only bet when YES probability is 0.50–0.80 (contested zone). Do not open if Beecthor's thesis implies BTC will break below the floor level.
+- One daily slot is the thesis slot.
+- The second daily slot is the momentum slot: it may go against the main Beecthor thesis, but only when Binance confirms a very clear same-day continuation.
+- For the momentum daily slot, closest-strike-first still applies. Prefer the nearest clean reach/dip first instead of jumping to a farther strike.
+- Floor markets are disabled and must not be used.
 
 Your task:
 - First evaluate whether any existing open positions should be closed or reduced.
 - Then evaluate whether new price-hit positions should be opened (daily and/or weekly reach/dip market).
-- Then evaluate whether a new floor position should be opened (Bitcoin above $X market).
 - Use recent transcripts and summaries to determine whether Beecthor's thesis is still intact, changing, or invalidated.
 - Compare that thesis against the live BTC price and the current Polymarket probabilities.
 - If the market already prices in the move too aggressively, do not force a trade.
-- You may open up to 2 new positions in one cycle when they belong to different free slots and are independently justified.
+- You may open up to 2 new positions in one cycle when they fit the free slots and are independently justified.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
 - Do not mix CLOSE and REDUCE actions in the same response.
 
@@ -53,14 +55,13 @@ Return valid JSON only with this schema:
   ],
   "new_positions": [
     {
-      "position_kind": "price_hit | floor",
-      "market_type": "daily | weekly | floor",
+      "position_kind": "price_hit",
+      "market_type": "daily | weekly",
       "event_slug": "",
       "market_slug": "",
       "outcome": "",
       "direction": "bullish | bearish | neutral",
       "strike": 0,
-      "floor_level": 0,
       "stake_usd": 0,
       "max_entry_probability": 0.0
     }

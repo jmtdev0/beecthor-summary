@@ -815,8 +815,8 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
                 if infer_position_market_type(p) in {'daily', 'weekly'} and is_slot_discarded(p, account_state)
             ],
             'active_btc_markets': fetch_active_btc_markets(),
-            'active_floor_markets': fetch_active_floor_markets(),
-            'open_floor_positions': [p for p in positions if infer_position_market_type(p) == 'floor'],
+            'active_floor_markets': [],
+            'open_floor_positions': [],
         },
     }
 
@@ -916,6 +916,14 @@ def is_slot_discarded(position: dict[str, Any], account_state: dict[str, Any]) -
     return prob <= discarded_probability_threshold(account_state)
 
 
+def active_slot_limit_for_market_type(account_state: dict[str, Any], market_type: str) -> int:
+    if market_type == 'daily':
+        return int(account_state.get('max_daily_positions', 2))
+    if market_type == 'weekly':
+        return int(account_state.get('max_weekly_positions', 1))
+    return 0
+
+
 def build_reconciliation_status(
     account_state: dict[str, Any],
     live_positions: list[dict[str, Any]],
@@ -992,7 +1000,6 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         max_open = int(account_state.get('max_open_positions', 3))
         max_new_positions = int(account_state.get('max_new_positions_per_cycle', 2))
         active_positions = [pos for pos in positions if not is_slot_discarded(pos, account_state)]
-        floor_markets = polymarket.get('active_floor_markets', [])
 
         if len(open_targets) > max_new_positions:
             return False, f'Opening {len(open_targets)} position(s) exceeds max_new_positions_per_cycle ({max_new_positions})'
@@ -1002,7 +1009,7 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
 
         total_requested_stake = 0.0
         requested_keys: set[tuple[str, str]] = set()
-        requested_type_counts = {'daily': 0, 'weekly': 0, 'floor': 0}
+        requested_type_counts = {'daily': 0, 'weekly': 0}
 
         for target in open_targets:
             target_key = (target.get('market_slug', ''), target.get('outcome', ''))
@@ -1011,40 +1018,13 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             requested_keys.add(target_key)
 
             if target.get('position_kind') == 'floor':
-                floor_market = find_market_by_slug(floor_markets, target.get('market_slug', ''))
-                if not floor_market:
-                    return False, 'Floor market slug not found among active floor markets'
-                if target.get('outcome', 'Yes') != 'Yes':
-                    return False, 'Floor positions must always bet Yes'
-                floor_max_entry_probability = safe_float(target.get('max_entry_probability'))
-                floor_live_probability = outcome_probability(floor_market, 'Yes')
-                if floor_max_entry_probability <= 0 or floor_max_entry_probability > 1:
-                    return False, 'Floor max_entry_probability must be between 0 and 1'
-                if floor_max_entry_probability < floor_live_probability:
-                    return False, 'Floor max_entry_probability is below the current live market probability'
-                floor_stake = safe_float(target.get('stake_usd'))
-                if floor_stake <= 0 or floor_stake > cash_available:
-                    return False, 'Floor stake is invalid or exceeds available cash'
-                if portfolio_value < early_stage_threshold and floor_stake > early_stage_cap:
-                    return False, f'Early-stage cap applies to floor stake too'
-                if portfolio_value >= early_stage_threshold:
-                    max_stake = round(cash_available * base_stake_pct, 2)
-                    if floor_stake > max_stake:
-                        return False, f'Floor stake ${floor_stake} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
-                requested_type_counts['floor'] += 1
-                floor_open_count = len(polymarket.get('open_floor_positions', []))
-                max_floor = int(account_state.get('max_floor_positions', 1))
-                if floor_open_count + requested_type_counts['floor'] > max_floor:
-                    return False, f'Floor position slot already occupied ({floor_open_count}/{max_floor})'
-                duplicate_floor = any(pos['market_slug'] == floor_market['market_slug'] for pos in positions)
-                if duplicate_floor:
-                    return False, 'Duplicate floor position already open'
-                total_requested_stake += floor_stake
-                continue
+                return False, 'Floor markets are disabled'
 
             market = find_market_by_slug(markets, target.get('market_slug', ''))
             if not market:
                 return False, 'Selected market slug not found among active BTC markets'
+            if market.get('market_type') == 'floor' or market.get('family') == 'floor':
+                return False, 'Floor markets are disabled'
             outcome = target.get('outcome')
             if outcome not in market['outcomes']:
                 return False, 'Selected outcome not valid for chosen market'
@@ -1065,14 +1045,17 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                     return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
             mtype = market.get('market_type', 'daily')
             requested_type_counts[mtype] = requested_type_counts.get(mtype, 0) + 1
-            if requested_type_counts[mtype] > 1:
-                return False, f'Max 1 requested {mtype} position per cycle'
+            max_type_positions = active_slot_limit_for_market_type(account_state, mtype)
+            if max_type_positions <= 0:
+                return False, f'{mtype.capitalize()} markets are disabled'
+            if requested_type_counts[mtype] > max_type_positions:
+                return False, f'Max {max_type_positions} requested {mtype} position(s) per cycle'
             type_open = sum(
                 1 for p in positions
                 if infer_position_market_type(p) == mtype and not is_slot_discarded(p, account_state)
             )
-            if type_open + requested_type_counts[mtype] > 1:
-                return False, f'{mtype.capitalize()} price-hit active slot already occupied'
+            if type_open + requested_type_counts[mtype] > max_type_positions:
+                return False, f'{mtype.capitalize()} price-hit active slot limit reached ({type_open}/{max_type_positions})'
             duplicate = any(
                 pos['market_slug'] == market['market_slug'] and pos['outcome'] == outcome
                 for pos in positions
@@ -1519,14 +1502,9 @@ def main() -> None:
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = []
             for open_target in iter_requested_open_targets(decision):
-                target_markets = (
-                    context['polymarket']['active_floor_markets']
-                    if open_target.get('position_kind') == 'floor'
-                    else context['polymarket']['active_btc_markets']
-                )
                 order = prepare_open_order_via_phone(
                     open_target,
-                    target_markets,
+                    context['polymarket']['active_btc_markets'],
                     telegram_token,
                     telegram_chat_id,
                     context['binance']['spot_price'],

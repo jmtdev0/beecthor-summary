@@ -113,14 +113,9 @@ def main() -> None:
             telegram_chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
             execution['details'] = []
             for open_target in base.iter_requested_open_targets(decision):
-                target_markets = (
-                    context['polymarket']['active_floor_markets']
-                    if open_target.get('position_kind') == 'floor'
-                    else context['polymarket']['active_btc_markets']
-                )
                 order = base.prepare_open_order_via_phone(
                     open_target,
-                    target_markets,
+                    context['polymarket']['active_btc_markets'],
                     telegram_token,
                     telegram_chat_id,
                     context['binance']['spot_price'],

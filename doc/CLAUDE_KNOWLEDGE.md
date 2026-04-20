@@ -114,9 +114,9 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 ### Position slots
 | Slot | Market type | Max open |
 |------|-------------|----------|
-| daily | `will-bitcoin-reach/dip-to-Xk-on-{date}` | 1 |
+| daily thesis | `will-bitcoin-reach/dip-to-Xk-on-{date}` | 1 |
+| daily momentum | `will-bitcoin-reach/dip-to-Xk-on-{date}` | 1 |
 | weekly | `will-bitcoin-reach/dip-to-Xk-{date-range}` | 1 |
-| floor | `bitcoin-above-Xk-on-{date}` | 1 |
 | **total** | all | **3** |
 
 ### Entry rules (summary)
@@ -140,7 +140,6 @@ run_cycle.py
        - fetch BTC price, funding rate, L/S ratio from Binance
        - fetch_positions() → active open positions (filtered)
        - fetch_active_btc_markets() → daily + weekly markets from GAMMA API
-       - fetch_active_floor_markets() → "bitcoin-above-X" markets from GAMMA API
        - load account_state.json, trade_log.json, transcripts, analyses_log.json
   4. render_prompt() → doc/polymarket_assistant/copilot_prompt.md + full context JSON
   5. run_copilot() → GPT returns JSON decision
@@ -148,13 +147,11 @@ run_cycle.py
   6. validate_decision() → enforces all playbook rules
   7. if OPEN_POSITION:
        prepare_and_send_order_via_phone() → writes to pending_orders.json + Telegram
-  8. if new_floor_position:
-       prepare_and_send_order_via_phone() → same flow
-  9. sync_account_state() → refresh cash + positions from API
-  10. append_trade_log() → writes cycle entry to trade_log.json
-  11. save last_run_summary.json + .md
-  12. git commit + push
-  13. send Telegram notification
+  8. sync_account_state() → refresh cash + positions from API
+  9. append_trade_log() → writes cycle entry to trade_log.json
+  10. save last_run_summary.json + .md
+  11. git commit + push
+  12. send Telegram notification
 ```
 
 ### Phone executor flow
@@ -196,18 +193,11 @@ polymarket_executor.py (Termux cron)
     "strike": 0,
     "stake_usd": 0,
     "max_entry_probability": 0.0
-  },
-  "new_floor_position": {
-    "should_open": false,
-    "event_slug": "",
-    "market_slug": "",
-    "outcome": "Yes",
-    "floor_level": 0,
-    "stake_usd": 0,
-    "max_entry_probability": 0.0
   }
 }
 ```
+
+`new_floor_position` still exists in legacy normalization for backward compatibility, but floor markets are disabled and should not be proposed.
 
 ---
 
@@ -253,7 +243,8 @@ Orphaned `xfce4-session` (PID 22258, running since 2026-03-26) held `org.xfce.Se
   "realized_pnl": 0.34,
   "open_positions": [],
   "max_open_positions": 3,
-  "max_floor_positions": 1,
+  "max_daily_positions": 2,
+  "max_weekly_positions": 1,
   "base_stake_pct": 0.15,
   "early_stage_max_stake": 1.0,
   "early_stage_threshold": 15.0,

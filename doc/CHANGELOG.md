@@ -1,5 +1,10 @@
 # Changelog
 
+### 20/04/2026
+* Playbook and operator updated to drop `floor` markets completely. The live context no longer fetches floor candidates for decision-making, and the validator rejects any attempted floor opening.
+* Slot model changed from `1 daily + 1 weekly + 1 floor` to `2 daily + 1 weekly`, still capped at `3` active positions total. `account_state.json` now carries `max_daily_positions: 2` and `max_weekly_positions: 1`.
+* The second daily slot is now documented as a momentum slot: it may express a clear Binance-confirmed intraday continuation even when it opposes the main Beecthor thesis, while still following closest-strike-first.
+
 ### 19/04/2026
 * `doc/polymarket_assistant/PLAYBOOK.md` actualizado con las lecciones recientes de `doc/JUGADA.md`: selección explícita entre daily/weekly/floor, `nearest strike first` rebajado a heurística y no veto, y nueva regla anti-chase para strikes que requieren una extensión extra tras un movimiento ya avanzado.
 * El playbook ahora exige reconciliar `account_state.json` con `trade_log.json` y registrar también los cierres por expiry/resolution, no solo los take profits.
