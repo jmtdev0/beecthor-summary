@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 13.60833,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.0392,
+  "open_exposure": 0,
   "max_open_positions": 3,
   "max_floor_positions": 1,
   "max_new_positions_per_cycle": 2,
@@ -15,23 +15,7 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "what-price-will-bitcoin-hit-april-13-19",
-      "market_slug": "will-bitcoin-reach-80k-april-13-19",
-      "market_title": "Will Bitcoin reach $80,000 April 13-19?",
-      "position_side": "Yes",
-      "token_id": "86548219855394698995422111382366111422829393840626370054096386572640574841065",
-      "shares": 15.7002,
-      "avg_price": 0.1379,
-      "entry_cost_usd": 2.1666,
-      "current_price": 0.0025,
-      "current_value_usd": 0.0392,
-      "cash_pnl_usd": -2.1274,
-      "status": "open",
-      "slot_status": "discarded_for_slot"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-19T22:19:14Z"
+  "last_synced_at": "2026-04-20T00:00:59Z"
 }

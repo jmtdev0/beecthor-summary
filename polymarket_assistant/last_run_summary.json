@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-19T22:19:14Z",
-  "run_id": "2026-04-19T22-18-20Z",
+  "timestamp": "2026-04-20T00:00:59Z",
+  "run_id": "2026-04-20T00-00-05Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-19T22-18-20Z",
+    "run_id": "2026-04-20T00-00-05Z",
     "action": "NO_ACTION",
-    "confidence": 0.93,
-    "summary": "No new action: the 74k daily dip already closed in profit, and the remaining late-session setup is blocked by reconciliation and timing.",
-    "rationale": "Since the previous cycle, the active daily BTC $74k dip was closed by the monitor at take-profit, so there is no open daily slot to manage anymore. Beecthor's latest thesis still leans bearish, and a fresh 73k daily dip exists around 27%-29%, but the playbook reconciliation gate is still broken because account_state open_exposure does not match live positions after that closure. With only about 1.7 hours left before daily and weekly expiry, opening a new late-session daily would also be forcing timing rather than taking a clean setup. The discarded weekly 80k reach remains open but does not justify any close or reduction under the current rules.",
+    "confidence": 0.94,
+    "summary": "No new action: reconciliation is still broken at the daily reset, so new entries remain blocked.",
+    "rationale": "BTC remains weak near 73.8k and the prior daily 74k dip already resolved in profit, leaving no active daily position. Fresh daily and floor markets are now available, including a potentially interesting 74k floor market, but the reconciliation gate is still broken because trade_log is missing a closure record for the expired weekly 80k reach position. Under the playbook, that blocks all new entries until state is repaired, so the correct action at this reset is to stand down rather than force a new daily or floor trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 74020.25,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 73830.8,
+  "positions_before": 0,
+  "positions_after": 0
 }
