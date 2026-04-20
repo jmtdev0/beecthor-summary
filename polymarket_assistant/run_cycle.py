@@ -772,24 +772,23 @@ def compute_performance_snapshot(trade_log: list[dict[str, Any]]) -> dict[str, A
 
 def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     client = build_private_client(config)
-    account_state = load_json(ACCOUNT_STATE_PATH, {})
+    raw_account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
     positions = fetch_positions(config)  # already filtered by endDate
     balance = fetch_balance_allowance(client, config)
     orders = client.get_orders()
+    balance_usdc = safe_float(balance.get('balance')) / 1_000_000
+    # Autocure normal state lag from phone execution by building the context
+    # account state from live positions, but keep closure bookkeeping checks
+    # based on the raw persisted state.
+    account_state = sync_account_state(raw_account_state, balance_usdc, positions)
     perf = compute_performance_snapshot(trade_log)
-    reconciliation = build_reconciliation_status(account_state, positions, trade_log)
-
-    # Reconcile account_state.open_positions against live positions before
-    # passing to GPT. Any position whose market has expired (excluded from
-    # fetch_positions by endDate) is removed here so GPT always sees an
-    # accurate slot count, even if the previous sync wrote a stale entry.
-    live_slugs = {p['market_slug'] for p in positions}
-    account_state = dict(account_state)
-    account_state['open_positions'] = [
-        p for p in account_state.get('open_positions', [])
-        if p.get('market_slug') in live_slugs
-    ]
+    reconciliation = build_reconciliation_status(
+        raw_account_state,
+        positions,
+        trade_log,
+        ignore_sync_lag_issues=True,
+    )
 
     return {
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
@@ -921,6 +920,8 @@ def build_reconciliation_status(
     account_state: dict[str, Any],
     live_positions: list[dict[str, Any]],
     trade_log: list[dict[str, Any]],
+    *,
+    ignore_sync_lag_issues: bool = False,
 ) -> dict[str, Any]:
     tracked_positions = account_state.get('open_positions', [])
 
@@ -942,16 +943,17 @@ def build_reconciliation_status(
         if position_key not in closed_keys:
             issues.append(f'missing closure record for {position_key[0]}:{position_key[1]}')
 
-    for position_key in sorted(live_keys - tracked_keys):
-        issues.append(f'live position missing from account_state for {position_key[0]}:{position_key[1]}')
+    if not ignore_sync_lag_issues:
+        for position_key in sorted(live_keys - tracked_keys):
+            issues.append(f'live position missing from account_state for {position_key[0]}:{position_key[1]}')
 
-    expected_open_exposure = round(sum(safe_float(pos.get('current_value')) for pos in live_positions), 8)
-    recorded_open_exposure = round(safe_float(account_state.get('open_exposure')), 8)
-    if abs(expected_open_exposure - recorded_open_exposure) > 0.05:
-        issues.append(
-            'open_exposure mismatch between account_state and live positions '
-            f'({recorded_open_exposure} vs {expected_open_exposure})'
-        )
+        expected_open_exposure = round(sum(safe_float(pos.get('current_value')) for pos in live_positions), 8)
+        recorded_open_exposure = round(safe_float(account_state.get('open_exposure')), 8)
+        if abs(expected_open_exposure - recorded_open_exposure) > 0.05:
+            issues.append(
+                'open_exposure mismatch between account_state and live positions '
+                f'({recorded_open_exposure} vs {expected_open_exposure})'
+            )
 
     return {
         'ok': not issues,
