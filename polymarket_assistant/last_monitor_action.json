@@ -1,12 +1,27 @@
 {
-  "timestamp": "2026-04-17T17:00:10Z",
+  "timestamp": "2026-04-21T11:00:09Z",
+  "action_count": 1,
+  "actions": [
+    {
+      "timestamp": "2026-04-21T11:00:09Z",
+      "action": "TAKE_PROFIT",
+      "status": "pending_phone_execution",
+      "market_slug": "will-bitcoin-reach-77k-on-april-21",
+      "market_title": "Will Bitcoin reach $77,000 on April 21?",
+      "outcome": "Yes",
+      "prob": 0.905,
+      "token_id": "89764430112030251781085225175770088425204520345440040223952220339804281597249",
+      "side": "SELL",
+      "amount": 1.6448
+    }
+  ],
   "action": "TAKE_PROFIT",
   "status": "pending_phone_execution",
-  "market_slug": "will-bitcoin-reach-78k-on-april-17",
-  "market_title": "Will Bitcoin reach $78,000 on April 17?",
+  "market_slug": "will-bitcoin-reach-77k-on-april-21",
+  "market_title": "Will Bitcoin reach $77,000 on April 21?",
   "outcome": "Yes",
-  "prob": 0.9995,
-  "token_id": "77045789536995643804266154099960257416649540774401360688817097867250715383547",
+  "prob": 0.905,
+  "token_id": "89764430112030251781085225175770088425204520345440040223952220339804281597249",
   "side": "SELL",
-  "amount": 2.392
+  "amount": 1.6448
 }
