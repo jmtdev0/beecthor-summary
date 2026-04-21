@@ -6627,5 +6627,87 @@
     "binance_spot_price": 75728.71,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-21T06:01:10Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-21T06-00-16Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-21T06-00-16Z",
+      "action": "OPEN_POSITION",
+      "confidence": 0.83,
+      "summary": "Open the daily BTC 75k dip for April 21 as the cleanest new thesis-aligned daily while the weekly 72k dip remains active.",
+      "rationale": "Reconciliation is clean and the new April 21 daily board is finally live. The latest Beecthor thesis remains bearish/corrective, still favoring resistance around 76k and lower targets below current price rather than a clean upside breakout. Binance spot is 75802.01, still below 76k after the failed squeeze, with shorts dominant and no convincing bullish continuation. The weekly 72k dip stays open as the structural bearish expression, and the nearest reasonable daily downside strike is now `will-bitcoin-dip-to-75k-on-april-21` at about 61%, which sits in the preferred tradable band and is cleaner than reopening discarded old dailies or chasing the 77k reach against the thesis. Portfolio value is still below $15, so the early-stage cap keeps stake at $1.",
+      "position_managements": [],
+      "new_positions": [
+        {
+          "should_open": true,
+          "position_kind": "price_hit",
+          "market_type": "daily",
+          "event_slug": "what-price-will-bitcoin-hit-on-april-21",
+          "market_slug": "will-bitcoin-dip-to-75k-on-april-21",
+          "outcome": "Yes",
+          "direction": "bearish",
+          "strike": 75000,
+          "floor_level": 0,
+          "stake_usd": 1.0,
+          "max_entry_probability": 0.62
+        }
+      ],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": true,
+        "event_slug": "what-price-will-bitcoin-hit-on-april-21",
+        "market_slug": "will-bitcoin-dip-to-75k-on-april-21",
+        "outcome": "Yes",
+        "direction": "bearish",
+        "strike": 75000,
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.62,
+        "position_kind": "price_hit",
+        "market_type": "daily",
+        "floor_level": 0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": true,
+      "details": [
+        {
+          "order_id": "2026-04-21T06:01:10.273473Z",
+          "status": "pending_phone_execution",
+          "type": "OPEN_POSITION",
+          "token_id": "25450447229230018859209028663882030617618956985572214985639392679728100366775",
+          "side": "BUY",
+          "stake_usd": 1.0,
+          "max_entry_probability": 0.62,
+          "market": "Will Bitcoin dip to $75,000 on April 21?",
+          "market_slug": "will-bitcoin-dip-to-75k-on-april-21",
+          "outcome": "Yes"
+        }
+      ]
+    },
+    "binance_spot_price": 75807.9,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
