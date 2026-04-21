@@ -1,29 +1,15 @@
 {
-  "timestamp": "2026-04-21T08:01:01Z",
-  "run_id": "2026-04-21T08-00-02Z",
+  "timestamp": "2026-04-21T10:01:00Z",
+  "run_id": "2026-04-21T10-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T08-00-02Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.79,
-    "summary": "Open the daily BTC 77k reach for April 21 as the free momentum daily while the weekly 72k dip and daily 75k dip remain in place.",
-    "rationale": "Reconciliation is clean. The structural thesis is still bearish/corrective, which keeps the weekly 72k dip and the daily 75k dip valid as downside expressions. But Binance spot is 76085.98, already trading above the 76k line and only about $914 below 77k, with the price holding near the top of the recent range while shorts still dominate positioning. Under the updated playbook, that leaves a free daily momentum slot that may go against the main thesis when Binance shows a cleaner intraday continuation. The nearest upside strike is `will-bitcoin-reach-77k-on-april-21` at about 56%, which is within the preferred tradable band and cleaner than skipping straight to 78k. Portfolio value remains below $15, so the early-stage cap keeps the stake at $1.",
+    "run_id": "2026-04-21T10-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.93,
+    "summary": "No new action: all three active slots are already occupied by the weekly 72k dip, the daily 75k dip, and the daily 77k reach.",
+    "rationale": "Reconciliation is clean, but there is no free slot to use: the weekly 72k dip remains open as the thesis-aligned structural bearish position, while both daily slots are already occupied by the 75k dip and 77k reach for April 21. Binance spot is 76363.45 with expanding open interest and shorts still dominant, which keeps the momentum daily alive, but none of the open positions are near the 90-95% take-profit zone and stop-loss remains disabled. Opening anything else would exceed the active-position cap of 3 and the per-type limits. The correct action is to hold the current mix and avoid forcing a fourth trade.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "event_slug": "what-price-will-bitcoin-hit-on-april-21",
-        "market_slug": "will-bitcoin-reach-77k-on-april-21",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 77000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.57
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -32,17 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-21",
-      "market_slug": "will-bitcoin-reach-77k-on-april-21",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 77000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.57,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -59,23 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-21T08:01:01.186771Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "89764430112030251781085225175770088425204520345440040223952220339804281597249",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.57,
-        "market": "Will Bitcoin reach $77,000 on April 21?",
-        "market_slug": "will-bitcoin-reach-77k-on-april-21",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 76101.42,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 76356.66,
+  "positions_before": 3,
+  "positions_after": 3
 }

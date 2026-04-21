@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 9.608334,
+  "cash_available": 8.608335,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.2686,
+  "open_exposure": 2.1514,
   "max_open_positions": 3,
   "max_daily_positions": 2,
   "max_weekly_positions": 1,
@@ -26,9 +26,24 @@
       "shares": 2.0053,
       "avg_price": 0.4799,
       "entry_cost_usd": 0.9625,
-      "current_price": 0.2849,
-      "current_value_usd": 0.5713,
-      "cash_pnl_usd": -0.3912,
+      "current_price": 0.275,
+      "current_value_usd": 0.5514,
+      "cash_pnl_usd": -0.4111,
+      "status": "open",
+      "slot_status": "active"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-21",
+      "market_slug": "will-bitcoin-reach-77k-on-april-21",
+      "market_title": "Will Bitcoin reach $77,000 on April 21?",
+      "position_side": "Yes",
+      "token_id": "89764430112030251781085225175770088425204520345440040223952220339804281597249",
+      "shares": 1.6448,
+      "avg_price": 0.5899,
+      "entry_cost_usd": 0.9704,
+      "current_price": 0.64,
+      "current_value_usd": 1.0527,
+      "cash_pnl_usd": 0.0822,
       "status": "open",
       "slot_status": "active"
     },
@@ -41,13 +56,13 @@
       "shares": 1.4997,
       "avg_price": 0.65,
       "entry_cost_usd": 0.9748,
-      "current_price": 0.465,
-      "current_value_usd": 0.6973,
-      "cash_pnl_usd": -0.2775,
+      "current_price": 0.365,
+      "current_value_usd": 0.5473,
+      "cash_pnl_usd": -0.4275,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-21T08:01:01Z"
+  "last_synced_at": "2026-04-21T10:01:00Z"
 }
