@@ -6523,5 +6523,57 @@
     "binance_spot_price": 76088.22,
     "positions_before": 3,
     "positions_after": 3
+  },
+  {
+    "timestamp": "2026-04-21T00:00:57Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-21T00-00-07Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-21T00-00-07Z",
+      "action": "NO_ACTION",
+      "confidence": 0.95,
+      "summary": "No new action: reconciliation is broken after the two April 20 daily positions disappeared without closure records, and the only remaining live position is the weekly 72k dip.",
+      "rationale": "Reconciliation is not clean because `will-bitcoin-dip-to-74k-on-april-20` Yes and `will-bitcoin-reach-77k-on-april-20` Yes are no longer present in live positions but still lack matching closure records in the trade log. Under the playbook, that is a hard gate for any new entries. Binance spot is 75838.9, still below 76k after the failed squeeze, while the only live position left is the weekly 72k dip at 34%, far from take-profit and not eligible for forced management because stop-loss remains disabled. The correct action is to do nothing until the missing daily closures are reconciled.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 75829.45,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
