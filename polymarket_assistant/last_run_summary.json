@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-21T12:03:11Z",
-  "run_id": "2026-04-21T12-00-07Z",
+  "timestamp": "2026-04-21T14:01:12Z",
+  "run_id": "2026-04-21T14-00-12Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T12-00-07Z",
+    "run_id": "2026-04-21T14-00-12Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "No new action: the weekly 72k dip plus both daily slots are already active, so there is no free slot to use.",
-    "rationale": "Reconciliation is clean and Binance spot is 76464.0 with expanding open interest, but the portfolio already holds the full intended mix for this session: the weekly 72k dip remains the structural bearish thesis, while the April 21 daily slots are occupied by the 75k dip and the 77k reach. None of the open positions are in the 90-95% take-profit zone, stop-loss remains disabled, and opening anything else would exceed the active cap of 3 positions and the per-type limits of 2 daily plus 1 weekly. The correct action is to hold the current book and avoid forcing a fourth trade.",
+    "confidence": 0.93,
+    "summary": "No new action: the weekly 72k dip and both April 21 daily slots are still active, with no position in take-profit territory.",
+    "rationale": "Reconciliation is clean and Binance spot has eased to 75864.94, which weakens the 77k reach momentum leg but does not invalidate it under the playbook because stop-loss is disabled and its current probability remains above the 20% discarded threshold. The weekly 72k dip stays active as the structural bearish thesis, and the daily 75k dip remains the thesis-aligned same-day expression. None of the three open positions are near the 90-95% take-profit zone, and opening anything else would exceed the active cap of 3 positions and the per-type limits of 2 daily plus 1 weekly. The correct action is to hold the current mix and avoid forcing a fourth trade or unnecessary rotation mid-session.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76460.33,
+  "binance_spot_price": 75864.01,
   "positions_before": 3,
   "positions_after": 3
 }
