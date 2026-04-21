@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-21T00:00:57Z",
-  "run_id": "2026-04-21T00-00-07Z",
+  "timestamp": "2026-04-21T04:00:56Z",
+  "run_id": "2026-04-21T04-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T00-00-07Z",
+    "run_id": "2026-04-21T04-00-06Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "No new action: reconciliation is broken after the two April 20 daily positions disappeared without closure records, and the only remaining live position is the weekly 72k dip.",
-    "rationale": "Reconciliation is not clean because `will-bitcoin-dip-to-74k-on-april-20` Yes and `will-bitcoin-reach-77k-on-april-20` Yes are no longer present in live positions but still lack matching closure records in the trade log. Under the playbook, that is a hard gate for any new entries. Binance spot is 75838.9, still below 76k after the failed squeeze, while the only live position left is the weekly 72k dip at 34%, far from take-profit and not eligible for forced management because stop-loss remains disabled. The correct action is to do nothing until the missing daily closures are reconciled.",
+    "confidence": 0.94,
+    "summary": "No new action: the daily board has not rolled cleanly to the new session yet, and the weekly 72k dip remains the only live thesis-aligned position.",
+    "rationale": "Reconciliation is clean and only the weekly `will-bitcoin-dip-to-72k-april-20-26` Yes position remains open. Binance spot is 75735.28, still below the 76k resistance area from the latest Beecthor thesis, so the broader directional read remains bearish/corrective rather than a fresh confirmed upside breakout. However, this 04:00 UTC snapshot still shows the expiring April 20 daily markets with probabilities effectively near zero or already fully priced, which means the new daily slate is not yet available in a usable way. Opening from this stale board would be forcing execution on markets that are already resolved or rolling off. The correct action is to hold the weekly bearish position and wait for the new daily session to appear cleanly before considering any daily thesis or momentum trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75829.45,
+  "binance_spot_price": 75728.71,
   "positions_before": 1,
   "positions_after": 1
 }

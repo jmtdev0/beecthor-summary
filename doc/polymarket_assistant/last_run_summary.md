@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-21T00:00:57Z
+- Timestamp: 2026-04-21T04:00:56Z
 - Dry run: False
-- BTC price: 75829.45
+- BTC price: 75728.71
 - Decision action: NO_ACTION
-- Decision summary: No new action: reconciliation is broken after the two April 20 daily positions disappeared without closure records, and the only remaining live position is the weekly 72k dip.
+- Decision summary: No new action: the daily board has not rolled cleanly to the new session yet, and the weekly 72k dip remains the only live thesis-aligned position.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
