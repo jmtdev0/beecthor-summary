@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-21T06:01:10Z
+- Timestamp: 2026-04-21T08:01:01Z
 - Dry run: False
-- BTC price: 75807.9
+- BTC price: 76101.42
 - Decision action: OPEN_POSITION
-- Decision summary: Open the daily BTC 75k dip for April 21 as the cleanest new thesis-aligned daily while the weekly 72k dip remains active.
+- Decision summary: Open the daily BTC 77k reach for April 21 as the free momentum daily while the weekly 72k dip and daily 75k dip remain in place.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 
@@ -16,15 +16,15 @@
   "performed": true,
   "details": [
     {
-      "order_id": "2026-04-21T06:01:10.273473Z",
+      "order_id": "2026-04-21T08:01:01.186771Z",
       "status": "pending_phone_execution",
       "type": "OPEN_POSITION",
-      "token_id": "25450447229230018859209028663882030617618956985572214985639392679728100366775",
+      "token_id": "89764430112030251781085225175770088425204520345440040223952220339804281597249",
       "side": "BUY",
       "stake_usd": 1.0,
-      "max_entry_probability": 0.62,
-      "market": "Will Bitcoin dip to $75,000 on April 21?",
-      "market_slug": "will-bitcoin-dip-to-75k-on-april-21",
+      "max_entry_probability": 0.57,
+      "market": "Will Bitcoin reach $77,000 on April 21?",
+      "market_slug": "will-bitcoin-reach-77k-on-april-21",
       "outcome": "Yes"
     }
   ]
