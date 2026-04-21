@@ -6947,5 +6947,57 @@
     "binance_spot_price": 75864.01,
     "positions_before": 3,
     "positions_after": 3
+  },
+  {
+    "timestamp": "2026-04-21T18:01:22Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-21T18-00-02Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-21T18-00-02Z",
+      "action": "NO_ACTION",
+      "confidence": 0.94,
+      "summary": "No new action: the 77k reach has been discarded for slot purposes, but there is still no cleaner replacement daily to justify a fresh entry.",
+      "rationale": "Reconciliation is clean and Binance spot is 75520.0, which keeps the structural bearish thesis intact and leaves the weekly 72k dip plus the daily 75k dip as the active thesis-aligned exposures. The failed 77k reach momentum trade is now correctly marked discarded_for_slot at 14.5%, so a daily slot is technically free, but the board does not offer a good replacement: the nearest extra downside expression is the 74k dip at only about 10.5%, far below the preferred tradable zone, while the upside momentum leg has clearly weakened and no longer justifies reopening a bullish daily. None of the open positions are near the 90-95% take-profit zone, and forcing a replacement here would mean chasing a low-quality late-session setup rather than a clean edge. The correct action is to hold the current weekly plus daily bearish mix and skip a fresh entry.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 75591.6,
+    "positions_before": 3,
+    "positions_after": 3
   }
 ]

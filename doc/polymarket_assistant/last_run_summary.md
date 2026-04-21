@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-21T14:01:12Z
+- Timestamp: 2026-04-21T18:01:22Z
 - Dry run: False
-- BTC price: 75864.01
+- BTC price: 75591.6
 - Decision action: NO_ACTION
-- Decision summary: No new action: the weekly 72k dip and both April 21 daily slots are still active, with no position in take-profit territory.
+- Decision summary: No new action: the 77k reach has been discarded for slot purposes, but there is still no cleaner replacement daily to justify a fresh entry.
 - Validation: True (ok)
 - Open positions before: 3
 - Open positions after: 3
