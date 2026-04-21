@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-21T20:01:14Z",
-  "run_id": "2026-04-21T20-00-16Z",
+  "timestamp": "2026-04-21T22:01:04Z",
+  "run_id": "2026-04-21T22-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T20-00-16Z",
+    "run_id": "2026-04-21T22-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "No new action: the bearish thesis remains intact, but the only fresh daily candidate left is the late 74k dip, which is too stretched to force.",
-    "rationale": "Reconciliation is clean and Binance spot is 75044.17. The weekly 72k dip remains active as the structural bearish expression, while the old 77k reach momentum leg is still open but correctly discarded for slot purposes at just 4.5%. The earlier daily 75k dip has already played out and is no longer part of the open book, so the nearest new downside candidate would be the 74k dip at about 29%. That is below the preferred tradable band and, more importantly, it now requires a fresh second leg lower late in the UTC session after much of the downside move has already happened. The playbook explicitly warns against forcing that kind of late daily extension. No open position is in the 90-95% take-profit zone, and there is no cleaner bullish continuation setup either. The correct action is to hold the weekly bearish thesis and avoid chasing a low-quality late daily.",
+    "confidence": 0.96,
+    "summary": "No new action: the weekly 72k dip remains the only active thesis trade, and the remaining Apr 21 daily board is too exhausted to justify a new entry.",
+    "rationale": "Reconciliation is clean and Binance spot is 75541.27. The weekly 72k dip remains active as the structural bearish position. The old 77k reach is still open but deeply discarded for slot purposes at about 7.25%, so it no longer blocks anything. However, there is no valid late-session replacement: the 75k dip is already fully priced at 99.95%, while the next downside strike, the 74k dip, is only about 7.5%, far below the preferred tradable band and requiring an overextended final leg lower very late in the UTC session. The playbook specifically warns against forcing a daily that is more likely to resolve one day late or after most of the move already happened. No open position is in the 90-95% take-profit zone, so the correct action is simply to hold the weekly thesis and skip new daily risk.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75109.01,
+  "binance_spot_price": 75540.19,
   "positions_before": 2,
   "positions_after": 2
 }
