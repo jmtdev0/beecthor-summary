@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-21T10:01:00Z",
-  "run_id": "2026-04-21T10-00-16Z",
+  "timestamp": "2026-04-21T12:03:11Z",
+  "run_id": "2026-04-21T12-00-07Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T10-00-16Z",
+    "run_id": "2026-04-21T12-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.93,
-    "summary": "No new action: all three active slots are already occupied by the weekly 72k dip, the daily 75k dip, and the daily 77k reach.",
-    "rationale": "Reconciliation is clean, but there is no free slot to use: the weekly 72k dip remains open as the thesis-aligned structural bearish position, while both daily slots are already occupied by the 75k dip and 77k reach for April 21. Binance spot is 76363.45 with expanding open interest and shorts still dominant, which keeps the momentum daily alive, but none of the open positions are near the 90-95% take-profit zone and stop-loss remains disabled. Opening anything else would exceed the active-position cap of 3 and the per-type limits. The correct action is to hold the current mix and avoid forcing a fourth trade.",
+    "confidence": 0.94,
+    "summary": "No new action: the weekly 72k dip plus both daily slots are already active, so there is no free slot to use.",
+    "rationale": "Reconciliation is clean and Binance spot is 76464.0 with expanding open interest, but the portfolio already holds the full intended mix for this session: the weekly 72k dip remains the structural bearish thesis, while the April 21 daily slots are occupied by the 75k dip and the 77k reach. None of the open positions are in the 90-95% take-profit zone, stop-loss remains disabled, and opening anything else would exceed the active cap of 3 positions and the per-type limits of 2 daily plus 1 weekly. The correct action is to hold the current book and avoid forcing a fourth trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76356.66,
+  "binance_spot_price": 76460.33,
   "positions_before": 3,
   "positions_after": 3
 }
