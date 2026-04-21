@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-21T18:01:22Z
+- Timestamp: 2026-04-21T20:01:14Z
 - Dry run: False
-- BTC price: 75591.6
+- BTC price: 75109.01
 - Decision action: NO_ACTION
-- Decision summary: No new action: the 77k reach has been discarded for slot purposes, but there is still no cleaner replacement daily to justify a fresh entry.
+- Decision summary: No new action: the bearish thesis remains intact, but the only fresh daily candidate left is the late 74k dip, which is too stretched to force.
 - Validation: True (ok)
-- Open positions before: 3
-- Open positions after: 3
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 
