@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-21T22:01:04Z",
-  "run_id": "2026-04-21T22-00-16Z",
+  "timestamp": "2026-04-22T00:01:02Z",
+  "run_id": "2026-04-22T00-00-04Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-21T22-00-16Z",
+    "run_id": "2026-04-22T00-00-04Z",
     "action": "NO_ACTION",
-    "confidence": 0.96,
-    "summary": "No new action: the weekly 72k dip remains the only active thesis trade, and the remaining Apr 21 daily board is too exhausted to justify a new entry.",
-    "rationale": "Reconciliation is clean and Binance spot is 75541.27. The weekly 72k dip remains active as the structural bearish position. The old 77k reach is still open but deeply discarded for slot purposes at about 7.25%, so it no longer blocks anything. However, there is no valid late-session replacement: the 75k dip is already fully priced at 99.95%, while the next downside strike, the 74k dip, is only about 7.5%, far below the preferred tradable band and requiring an overextended final leg lower very late in the UTC session. The playbook specifically warns against forcing a daily that is more likely to resolve one day late or after most of the move already happened. No open position is in the 90-95% take-profit zone, so the correct action is simply to hold the weekly thesis and skip new daily risk.",
+    "confidence": 0.98,
+    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 21 77k reach is missing its closure record.",
+    "rationale": "At 2026-04-22 00:00 UTC the only live active thesis position is the weekly 72k dip, but reconciliation is explicitly broken with the issue 'missing closure record for will-bitcoin-reach-77k-on-april-21:Yes'. Under the playbook, reconciliation is a hard gate for any new entry, so even if a fresh daily slate is about to open, the correct action is NO_ACTION until the state is coherent again. Binance spot is 76365.99, the weekly bearish thesis is still alive, no open position is near the 90-95% take-profit zone, and there is no valid management action to take on the remaining weekly. The correct action is to hold the weekly position and avoid any new opening while accounting is inconsistent.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75540.19,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 76338.36,
+  "positions_before": 1,
+  "positions_after": 1
 }

@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-21T22:01:04Z
+- Timestamp: 2026-04-22T00:01:02Z
 - Dry run: False
-- BTC price: 75540.19
+- BTC price: 76338.36
 - Decision action: NO_ACTION
-- Decision summary: No new action: the weekly 72k dip remains the only active thesis trade, and the remaining Apr 21 daily board is too exhausted to justify a new entry.
+- Decision summary: No new action: reconciliation is broken at the day rollover because the Apr 21 77k reach is missing its closure record.
 - Validation: True (ok)
-- Open positions before: 2
-- Open positions after: 2
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
