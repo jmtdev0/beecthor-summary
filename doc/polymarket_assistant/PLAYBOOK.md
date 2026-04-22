@@ -16,7 +16,7 @@ Each automated cycle must follow these steps strictly in order:
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 4. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis.
-5. **Scout opportunities** — For each slot (daily thesis / daily momentum / weekly), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
+5. **Scout opportunities** — Default to the two primary slots first: `daily thesis` and `weekly thesis`. Only if Binance is showing a very clear continuation that does not fit the main Beecthor thesis should the system consider the secondary slots (`daily momentum` and `weekly momentum`). For each slot (`daily thesis / daily momentum / weekly thesis / weekly momentum`), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
@@ -27,18 +27,23 @@ Each automated cycle must follow these steps strictly in order:
 
 ## Market scope
 
-Three allowed BTC price-hit slots, tracked separately:
+Four allowed BTC price-hit slots, tracked separately:
 
 | Slot | Type | Example URL pattern |
 |------|------|---------------------|
 | 1 daily thesis | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
 | 1 daily momentum | `what-price-will-bitcoin-hit-on-{month}-{day}` | daily expiry |
-| 1 weekly | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
+| 1 weekly thesis | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
+| 1 weekly momentum | `what-price-will-bitcoin-hit-{month}-{day1}-{day2}` | weekly expiry |
 
 - Daily markets are for same-day timing expressions.
 - The **daily thesis** slot is the default same-day expression of Beecthor's current directional view.
 - The **daily momentum** slot exists to exploit a very clear intraday continuation even when it runs against the original thesis. This is not revenge trading and must not be used to average down a failed idea.
-- The goal for weekly markets is to **enter early** and pick the **most obvious strike** given Beecthor's current directional thesis. The longer the time horizon, the more margin for the thesis to play out.
+- The **weekly thesis** slot is the default structural expression of Beecthor's main directional view. The goal is to **enter early** and pick the **most obvious strike** given the current thesis.
+- The **weekly momentum** slot exists only for cases where price action is showing a very clear weekly continuation that does not fit the main Beecthor thesis cleanly enough to ignore.
+- The default portfolio intention is therefore **1 daily thesis + 1 weekly thesis**. The two momentum slots are secondary and should stay empty unless the market is showing a very clear non-thesis trend worth exploiting.
+- The two weekly slots are not meant for random extra exposure. They exist so the system can hold up to **two frontier weekly expressions** around the current price structure when closest-strike-first logic still shows edge.
+- In practice, the weekly momentum slot should only be used for the next clean weekly strike once the weekly thesis slot is already occupied or discarded. Do not skip nearer weekly strikes just to force a farther story.
 - Not allowed:
   - non-BTC markets
   - vague narrative markets
@@ -54,11 +59,13 @@ Three allowed BTC price-hit slots, tracked separately:
 - Choose the vehicle first:
   - use a **daily thesis** slot when direction and timing both look aligned for the current UTC session
   - use the **daily momentum** slot only when Binance shows a clear same-day continuation that is cleaner than forcing the thesis-aligned daily
-  - use a **weekly** when direction is clear but same-day timing is less precise
+  - use the **weekly thesis** slot when direction is clear but same-day timing is less precise
+  - use the **weekly momentum** slot only when Binance shows a clear higher-timeframe continuation that is cleaner than forcing the thesis-aligned weekly
 - When the directional bias is valid, treat the nearest reasonable strike as the first candidate, not as a veto on all other strikes.
 - If BTC looks bullish, first evaluate the closest upside target above price before considering farther upside targets.
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
 - For the **daily momentum** slot, closest-strike-first still applies. If momentum clearly points up, prefer `75k reach` before `76k reach`; if momentum clearly points down, prefer the nearest downside strike first.
+- For the **weekly momentum** slot, closest-strike-first also applies. It should mirror frontier price action, not become a license to jump straight to a far weekly narrative.
 - It is acceptable to skip the nearest strike when it is already effectively resolved, already `>= 85%`, or offers clearly worse risk/reward than the next clean expression.
 - Do not chase the next weekly strike just because the previous target already hit. If the setup requires one more extension after a strong move has already happened, demand clear Binance continuation evidence and a modest remaining distance.
 - Reject daily setups that need a fresh second leg after much of the move has already happened, or that are more likely to resolve one day late than before the current expiry.
@@ -74,12 +81,13 @@ Three allowed BTC price-hit slots, tracked separately:
 - Be cautious below `45%` (limited market consensus). Apply this as a soft filter, not an absolute cutoff — a slightly out-of-range market with a very clear thesis is still worth considering.
 - **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
 - Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
-- Maximum simultaneous exposure: **3 active open positions total**. Daily / weekly positions marked as discarded for slot purposes do not count toward the active-position cap.
+- As a portfolio construction rule, try to fill only the thesis-aligned daily and weekly slots whenever possible. Secondary momentum slots should only be filled when price action is clearly trending in a way that the main Beecthor thesis is not capturing well enough.
+- Maximum simultaneous exposure: **4 active open positions total**. Daily / weekly positions marked as discarded for slot purposes do not count toward the active-position cap.
 - Maximum new openings per cycle: **2**.
 - Maximum managed positions per cycle: **2**.
 - Position cap by type:
   - **2 active daily** positions maximum
-  - **1 active weekly** position maximum
+  - **2 active weekly** positions maximum
 - Monthly, longer-dated, and floor positions are not allowed, so they do not count toward the cap.
 - Base stake per entry: `15%` of currently available cash.
 - **Early-stage cap:** while the total portfolio value (cash + open exposure) is below `$15`, the maximum stake per entry is `$1` regardless of the 15% rule.

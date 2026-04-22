@@ -22,10 +22,15 @@ Decision principles:
 
 Position slots:
 - Daily price-hit slots: 2 maximum total (same-day reach/dip markets).
-- Weekly price-hit slot: 1 maximum (reach/dip market, weekly expiry).
+- Weekly price-hit slots: 2 maximum total (reach/dip markets, weekly expiry).
 - One daily slot is the thesis slot.
 - The second daily slot is the momentum slot: it may go against the main Beecthor thesis, but only when Binance confirms a very clear same-day continuation.
+- One weekly slot is the thesis slot.
+- The second weekly slot is the momentum slot: it may go against the main Beecthor thesis, but only when Binance confirms a very clear higher-timeframe continuation.
+- Default portfolio construction should try to use only the thesis-aligned daily and weekly slots. The two momentum slots are secondary and should be used only when price action is clearly trending in a way that the main Beecthor thesis is not capturing well enough.
+- Weekly slots are frontier slots: use them for the one or two closest reasonable weekly strikes that still carry edge around the current price structure; do not jump over nearer weekly strikes just to force a farther narrative.
 - For the momentum daily slot, closest-strike-first still applies. Prefer the nearest clean reach/dip first instead of jumping to a farther strike.
+- For the momentum weekly slot, closest-strike-first also applies. Prefer the nearest clean weekly reach/dip first instead of jumping to a farther weekly strike.
 - Floor markets are disabled and must not be used.
 
 Your task:

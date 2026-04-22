@@ -1,5 +1,9 @@
 # Changelog
 
+### 22/04/2026
+* Slot model clarified and aligned to `2 daily + 2 weekly`, capped at `4` active positions total. `account_state.json` now carries `max_open_positions: 4` and `max_weekly_positions: 2`.
+* The playbook and operator prompt now explicitly distinguish **thesis slots** from **momentum slots** on both horizons: by default the system should prefer only `1 daily thesis + 1 weekly thesis`, while secondary daily/weekly slots are reserved for very clear Binance-confirmed trends that the main Beecthor thesis is not expressing well enough.
+
 ### 20/04/2026
 * Playbook and operator updated to drop `floor` markets completely. The live context no longer fetches floor candidates for decision-making, and the validator rejects any attempted floor opening.
 * Slot model changed from `1 daily + 1 weekly + 1 floor` to `2 daily + 1 weekly`, still capped at `3` active positions total. `account_state.json` now carries `max_daily_positions: 2` and `max_weekly_positions: 1`.
