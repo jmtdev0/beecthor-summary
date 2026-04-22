@@ -7539,5 +7539,22 @@
     "binance_spot_price": 78853.75,
     "positions_before": 3,
     "positions_after": 3
+  },
+  {
+    "timestamp": "2026-04-22T14:06:03Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-reach-79k-on-april-22",
+    "market_title": "Will Bitcoin reach $79,000 on April 22?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 2.0893,
+    "avg_entry_price": 0.4599,
+    "exit_price": 0.81,
+    "entry_cost_usd": 0.9609,
+    "exit_proceeds_usd": 1.6923,
+    "pnl_usd": 0.7314,
+    "pnl_pct": 76.12,
+    "source": "monitor_executor"
   }
 ]
