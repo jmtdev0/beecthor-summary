@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-22T06:02:49Z",
-  "run_id": "2026-04-22T06-00-16Z",
+  "timestamp": "2026-04-22T08:01:15Z",
+  "run_id": "2026-04-22T08-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-22T06-00-16Z",
+    "run_id": "2026-04-22T08-00-06Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "No new action: the April 22 daily board is live, but the nearest tradable-looking strikes have unusably bad asks, so there is no clean execution edge.",
-    "rationale": "Reconciliation is clean and Binance spot is 78000.0, only 0.58% below the 24h high, with expanding open interest and shorts still dominant. That keeps alive the Beecthor scenario of a final squeeze toward 79k-80k before exhaustion, while also leaving room for an intraday retrace. In theory the nearest daily candidates would be the bearish 77k dip and the bullish 79k reach, both with model probabilities in the preferred band. But execution reality is poor: both markets show unusably aggressive asks around 0.99, which makes them bad entries despite the derived probabilities. The cleaner farther upside strike, 80k reach, only prices around 28.5% and is too stretched for a conservative same-day entry. The old weekly 72k dip remains open but discarded_for_slot and does not require management. The correct action is to wait for a cleaner order book rather than force a trade into distorted liquidity.",
+    "confidence": 0.94,
+    "summary": "No new action: the April 22 daily board is live, but the nearest meaningful strikes still have poor execution quality, so there is no clean entry yet.",
+    "rationale": "Reconciliation is clean and Binance spot is 78035.46, with price sitting only 0.53% below the 24h high while open interest keeps expanding and shorts remain dominant. That leaves open two plausible same-day narratives: a final squeeze toward 79k-80k or an intraday retrace back through 77k-76k. In theory the nearest daily candidates would be 79k reach at about 56.5% and 77k dip at about 62.5%, both inside the preferred probability band. But execution reality is still poor: the order books remain distorted, with asks around 0.78 for 79k reach and 0.89 for 77k dip, which makes both entries unattractive despite the model probabilities. The farther 80k reach is cleaner on the ask side at about 0.28, but it is below the preferred band and too stretched to prefer over the compromised nearer strike. The old weekly 72k dip remains open but already discarded for slot purposes and does not require management. The correct action is to wait for cleaner liquidity instead of forcing a daily into a bad book.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77977.98,
+  "binance_spot_price": 78036.6,
   "positions_before": 1,
   "positions_after": 1
 }
