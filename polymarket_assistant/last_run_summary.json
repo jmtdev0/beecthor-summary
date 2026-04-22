@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-22T00:01:02Z",
-  "run_id": "2026-04-22T00-00-04Z",
+  "timestamp": "2026-04-22T04:01:29Z",
+  "run_id": "2026-04-22T04-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-22T00-00-04Z",
+    "run_id": "2026-04-22T04-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.98,
-    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 21 77k reach is missing its closure record.",
-    "rationale": "At 2026-04-22 00:00 UTC the only live active thesis position is the weekly 72k dip, but reconciliation is explicitly broken with the issue 'missing closure record for will-bitcoin-reach-77k-on-april-21:Yes'. Under the playbook, reconciliation is a hard gate for any new entry, so even if a fresh daily slate is about to open, the correct action is NO_ACTION until the state is coherent again. Binance spot is 76365.99, the weekly bearish thesis is still alive, no open position is near the 90-95% take-profit zone, and there is no valid management action to take on the remaining weekly. The correct action is to hold the weekly position and avoid any new opening while accounting is inconsistent.",
+    "confidence": 0.97,
+    "summary": "No new action: reconciliation is healthy, but the snapshot still shows the exhausted April 21 board rather than a fresh tradable April 22 daily slate.",
+    "rationale": "Reconciliation is clean and Binance spot is 77579.86. The remaining weekly 72k dip is still open but already discarded for slot purposes at 14.5%, so it no longer blocks new entries. However, the active daily market board in this snapshot is still the stale April 21 slate: 77k reach is effectively resolved at 99.95%, the downside dailies are near zero, and there are no fresh April 22 daily markets available to express a new thesis. On the weekly side, the available downside strikes are still too far and weakly priced to justify forcing a fresh bearish entry after the rebound. No open position is near the 90-95% take-profit zone. The correct action is to wait for a clean April 22 board instead of trading off stale resolved dailies.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76338.36,
+  "binance_spot_price": 77563.57,
   "positions_before": 1,
   "positions_after": 1
 }
