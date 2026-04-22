@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 9.741632,
+  "cash_available": 10.403394,
   "realized_pnl": 0.3412,
-  "open_exposure": 3.2747,
+  "open_exposure": 1.8688,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -18,21 +18,6 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [
     {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-22",
-      "market_slug": "will-bitcoin-reach-79k-on-april-22",
-      "market_title": "Will Bitcoin reach $79,000 on April 22?",
-      "position_side": "Yes",
-      "token_id": "24174355595917977964618591389854497726965658038911683903175137489567354492135",
-      "shares": 2.0893,
-      "avg_price": 0.4599,
-      "entry_cost_usd": 0.9611,
-      "current_price": 0.87,
-      "current_value_usd": 1.8177,
-      "cash_pnl_usd": 0.8565,
-      "status": "open",
-      "slot_status": "active"
-    },
-    {
       "event_slug": "what-price-will-bitcoin-hit-april-20-26",
       "market_slug": "will-bitcoin-dip-to-72k-april-20-26",
       "market_title": "Will Bitcoin dip to $72,000 April 20-26?",
@@ -41,9 +26,9 @@
       "shares": 2.0053,
       "avg_price": 0.4799,
       "entry_cost_usd": 0.9625,
-      "current_price": 0.095,
-      "current_value_usd": 0.1905,
-      "cash_pnl_usd": -0.772,
+      "current_price": 0.05,
+      "current_value_usd": 0.1002,
+      "cash_pnl_usd": -0.8623,
       "status": "open",
       "slot_status": "discarded_for_slot"
     },
@@ -56,13 +41,28 @@
       "shares": 1.7,
       "avg_price": 0.5699,
       "entry_cost_usd": 0.969,
-      "current_price": 0.745,
-      "current_value_usd": 1.2665,
-      "cash_pnl_usd": 0.2974,
+      "current_price": 0.765,
+      "current_value_usd": 1.3005,
+      "cash_pnl_usd": 0.3314,
+      "status": "open",
+      "slot_status": "active"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-22",
+      "market_slug": "will-bitcoin-reach-80k-on-april-22",
+      "market_title": "Will Bitcoin reach $80,000 on April 22?",
+      "position_side": "Yes",
+      "token_id": "55963446983867428859832842709136238544166711216066762896461544160678843579393",
+      "shares": 1.672,
+      "avg_price": 0.5799,
+      "entry_cost_usd": 0.9697,
+      "current_price": 0.28,
+      "current_value_usd": 0.4681,
+      "cash_pnl_usd": -0.5016,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-22T14:01:25Z"
+  "last_synced_at": "2026-04-22T18:01:56Z"
 }
