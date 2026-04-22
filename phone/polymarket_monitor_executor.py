@@ -38,7 +38,11 @@ ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
-TAKE_PROFIT_THRESHOLD = 0.88
+TAKE_PROFIT_THRESHOLD = 0.90
+# Do not execute a take-profit sale below the configured threshold, even if the
+# server saw >= 90% a few seconds earlier. The live executable book price is the
+# final source of truth for the order.
+MIN_EXECUTABLE_TAKE_PROFIT_PRICE = TAKE_PROFIT_THRESHOLD
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
@@ -448,6 +452,32 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
         print('[monitor-executor] Querying order book...')
         price = get_market_price(token_id, 'SELL', amount)
         print(f'[monitor-executor] Market price: {price}')
+        if action == 'TAKE_PROFIT' and price < MIN_EXECUTABLE_TAKE_PROFIT_PRICE:
+            detail = (
+                f'Live executable SELL price {price:.4f} is below the minimum '
+                f'take-profit threshold {MIN_EXECUTABLE_TAKE_PROFIT_PRICE:.4f}'
+            )
+            print(f'[monitor-executor] Skipping SELL: {detail}')
+            send_server_log(
+                'phone.monitor',
+                'trigger_skipped',
+                detail,
+                payload={
+                    'market_slug': market_slug,
+                    'action': action,
+                    'live_probability': prob,
+                    'book_sell_price': price,
+                    'minimum_take_profit_price': MIN_EXECUTABLE_TAKE_PROFIT_PRICE,
+                },
+            )
+            maybe_send_telegram(
+                f'\u2139\ufe0f {action} skipped from phone:\n'
+                f'{title}\n'
+                f'{outcome} @ {prob:.0%}\n'
+                f'El libro solo permit\u00eda vender a {price:.0%}. '
+                f'No vendo por debajo de {MIN_EXECUTABLE_TAKE_PROFIT_PRICE:.0%}.'
+            )
+            return False
         order_dict = build_order_dict(token_id, 'SELL', amount, price)
     except MarketResolvedException as exc:
         print(f'[monitor-executor] Market already resolved: {exc}')
