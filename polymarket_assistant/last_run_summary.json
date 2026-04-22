@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-22T04:01:29Z",
-  "run_id": "2026-04-22T04-00-16Z",
+  "timestamp": "2026-04-22T06:02:49Z",
+  "run_id": "2026-04-22T06-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-22T04-00-16Z",
+    "run_id": "2026-04-22T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "No new action: reconciliation is healthy, but the snapshot still shows the exhausted April 21 board rather than a fresh tradable April 22 daily slate.",
-    "rationale": "Reconciliation is clean and Binance spot is 77579.86. The remaining weekly 72k dip is still open but already discarded for slot purposes at 14.5%, so it no longer blocks new entries. However, the active daily market board in this snapshot is still the stale April 21 slate: 77k reach is effectively resolved at 99.95%, the downside dailies are near zero, and there are no fresh April 22 daily markets available to express a new thesis. On the weekly side, the available downside strikes are still too far and weakly priced to justify forcing a fresh bearish entry after the rebound. No open position is near the 90-95% take-profit zone. The correct action is to wait for a clean April 22 board instead of trading off stale resolved dailies.",
+    "confidence": 0.95,
+    "summary": "No new action: the April 22 daily board is live, but the nearest tradable-looking strikes have unusably bad asks, so there is no clean execution edge.",
+    "rationale": "Reconciliation is clean and Binance spot is 78000.0, only 0.58% below the 24h high, with expanding open interest and shorts still dominant. That keeps alive the Beecthor scenario of a final squeeze toward 79k-80k before exhaustion, while also leaving room for an intraday retrace. In theory the nearest daily candidates would be the bearish 77k dip and the bullish 79k reach, both with model probabilities in the preferred band. But execution reality is poor: both markets show unusably aggressive asks around 0.99, which makes them bad entries despite the derived probabilities. The cleaner farther upside strike, 80k reach, only prices around 28.5% and is too stretched for a conservative same-day entry. The old weekly 72k dip remains open but discarded_for_slot and does not require management. The correct action is to wait for a cleaner order book rather than force a trade into distorted liquidity.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77563.57,
+  "binance_spot_price": 77977.98,
   "positions_before": 1,
   "positions_after": 1
 }
