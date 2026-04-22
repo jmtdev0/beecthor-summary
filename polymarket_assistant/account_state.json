@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 11.741629,
+  "cash_available": 9.741632,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.2105,
+  "open_exposure": 2.4722,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -17,6 +17,21 @@
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
   "open_positions": [
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-22",
+      "market_slug": "will-bitcoin-reach-79k-on-april-22",
+      "market_title": "Will Bitcoin reach $79,000 on April 22?",
+      "position_side": "Yes",
+      "token_id": "24174355595917977964618591389854497726965658038911683903175137489567354492135",
+      "shares": 2.0893,
+      "avg_price": 0.4599,
+      "entry_cost_usd": 0.9611,
+      "current_price": 0.5699,
+      "current_value_usd": 1.1907,
+      "cash_pnl_usd": 0.2295,
+      "status": "open",
+      "slot_status": "active"
+    },
     {
       "event_slug": "what-price-will-bitcoin-hit-april-20-26",
       "market_slug": "will-bitcoin-dip-to-72k-april-20-26",
@@ -31,8 +46,23 @@
       "cash_pnl_usd": -0.752,
       "status": "open",
       "slot_status": "discarded_for_slot"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-april-20-26",
+      "market_slug": "will-bitcoin-reach-80k-april-20-26",
+      "market_title": "Will Bitcoin reach $80,000 April 20-26?",
+      "position_side": "Yes",
+      "token_id": "91360396820458038177032043714602707124456748730890790728963892892027446623298",
+      "shares": 1.7,
+      "avg_price": 0.5699,
+      "entry_cost_usd": 0.969,
+      "current_price": 0.63,
+      "current_value_usd": 1.071,
+      "cash_pnl_usd": 0.1019,
+      "status": "open",
+      "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-22T10:02:30Z"
+  "last_synced_at": "2026-04-22T12:01:04Z"
 }
