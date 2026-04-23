@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-23T14:01:19Z
+- Timestamp: 2026-04-23T18:01:04Z
 - Dry run: False
-- BTC price: 77462.49
+- BTC price: 77830.81
 - Decision action: NO_ACTION
-- Decision summary: No new action: the daily 77k dip is now the clean same-day thesis trade, while the weekly 80k reach remains open as the structural upside alternative.
+- Decision summary: No new action: the daily bearish idea has already effectively played out, and the only clean remaining live position is the weekly 80k reach.
 - Validation: True (ok)
-- Open positions before: 3
-- Open positions after: 3
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 

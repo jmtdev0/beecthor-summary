@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 9.403395,
+  "cash_available": 11.291375,
   "realized_pnl": 0.3412,
-  "open_exposure": 2.0863,
+  "open_exposure": 0.8058,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -26,26 +26,11 @@
       "shares": 2.0053,
       "avg_price": 0.4799,
       "entry_cost_usd": 0.9625,
-      "current_price": 0.065,
-      "current_value_usd": 0.1303,
-      "cash_pnl_usd": -0.8322,
+      "current_price": 0.0585,
+      "current_value_usd": 0.1173,
+      "cash_pnl_usd": -0.8452,
       "status": "open",
       "slot_status": "discarded_for_slot"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-23",
-      "market_slug": "will-bitcoin-dip-to-77k-on-april-23",
-      "market_title": "Will Bitcoin dip to $77,000 on April 23?",
-      "position_side": "Yes",
-      "token_id": "43823717012023069380395311677940864250245757624818156508201582319241410273521",
-      "shares": 1.8916,
-      "avg_price": 0.5099,
-      "entry_cost_usd": 0.9647,
-      "current_price": 0.715,
-      "current_value_usd": 1.3525,
-      "cash_pnl_usd": 0.3877,
-      "status": "open",
-      "slot_status": "active"
     },
     {
       "event_slug": "what-price-will-bitcoin-hit-april-20-26",
@@ -56,13 +41,13 @@
       "shares": 1.7,
       "avg_price": 0.5699,
       "entry_cost_usd": 0.969,
-      "current_price": 0.355,
-      "current_value_usd": 0.6035,
-      "cash_pnl_usd": -0.3655,
+      "current_price": 0.405,
+      "current_value_usd": 0.6885,
+      "cash_pnl_usd": -0.2805,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-23T14:01:19Z"
+  "last_synced_at": "2026-04-23T18:01:04Z"
 }
