@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-23T04:01:05Z
+- Timestamp: 2026-04-23T06:01:13Z
 - Dry run: False
-- BTC price: 77731.02
+- BTC price: 78048.97
 - Decision action: NO_ACTION
-- Decision summary: No new action: reconciliation is fixed, but the snapshot still shows the exhausted April 22 daily board rather than a fresh tradable April 23 slate.
+- Decision summary: No new action: the April 23 daily board is finally live, but the nearest meaningful strikes have distorted asks, so there is still no clean execution edge.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
