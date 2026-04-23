@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-23T06:01:13Z
+- Timestamp: 2026-04-23T08:01:40Z
 - Dry run: False
-- BTC price: 78048.97
-- Decision action: NO_ACTION
-- Decision summary: No new action: the April 23 daily board is finally live, but the nearest meaningful strikes have distorted asks, so there is still no clean execution edge.
+- BTC price: 78018.28
+- Decision action: OPEN_POSITION
+- Decision summary: Open the daily 77k dip: the latest Beecthor thesis is bearish from this zone, and 77k is now the closest clean same-day downside strike with a workable book.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
@@ -13,7 +13,20 @@
 
 ```json
 {
-  "performed": false,
-  "details": null
+  "performed": true,
+  "details": [
+    {
+      "order_id": "2026-04-23T08:01:40.452276Z",
+      "status": "pending_phone_execution",
+      "type": "OPEN_POSITION",
+      "token_id": "43823717012023069380395311677940864250245757624818156508201582319241410273521",
+      "side": "BUY",
+      "stake_usd": 1.0,
+      "max_entry_probability": 0.49,
+      "market": "Will Bitcoin dip to $77,000 on April 23?",
+      "market_slug": "will-bitcoin-dip-to-77k-on-april-23",
+      "outcome": "Yes"
+    }
+  ]
 }
 ```
