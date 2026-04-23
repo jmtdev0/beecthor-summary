@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-23T00:00:58Z",
-  "run_id": "2026-04-23T00-00-03Z",
+  "timestamp": "2026-04-23T04:01:05Z",
+  "run_id": "2026-04-23T04-00-11Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-23T00-00-03Z",
+    "run_id": "2026-04-23T04-00-11Z",
     "action": "NO_ACTION",
-    "confidence": 0.99,
-    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 22 daily 80k reach is missing its closure record.",
-    "rationale": "Reconciliation is explicitly broken with the issue \"missing closure record for will-bitcoin-reach-80k-on-april-22:Yes\". Under the playbook, reconciliation is a hard gate for any new entry, so the only valid action is NO_ACTION until the state is repaired. Binance spot is 78211.6, the active weekly 80k reach remains alive around 58.5%, and the old weekly 72k dip is still only a discarded legacy position. Even apart from the reconciliation problem, the market board in this rollover snapshot is still showing the exhausted April 22 dailies rather than a clean April 23 daily slate, so there is no reason to force a new position at midnight. No open position is in the 90-95% take-profit zone. The correct action is to hold the live weekly position, log the missing daily closure properly, and skip any fresh opening until accounting is coherent again.",
+    "confidence": 0.97,
+    "summary": "No new action: reconciliation is fixed, but the snapshot still shows the exhausted April 22 daily board rather than a fresh tradable April 23 slate.",
+    "rationale": "Reconciliation is clean again and the only active thesis position is the weekly 80k reach, while the old weekly 72k dip remains discarded_for_slot. Binance spot is 77721.71, sitting close to the session low with contracting open interest, which is more consistent with unwind / pause than with a clean new continuation worth chasing immediately. However, the available daily markets in this snapshot are still the stale April 22 board: all relevant dailies are effectively resolved or near-zero, so they are not valid vehicles for a new Apr 23 decision. On the weekly side, the live upside thesis is already expressed by the active 80k reach at about 45.5%, and the next upside strike, 82k reach, is only around 16.5%, too weak and too far to justify forcing a secondary weekly entry. The downside weekly 72k dip is still open only as a discarded legacy position and does not require management. No open position is in the 90-95% take-profit zone. The correct action is to wait for a clean April 23 daily slate instead of trading off stale resolved dailies or forcing a low-quality extra weekly.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78308.65,
+  "binance_spot_price": 77731.02,
   "positions_before": 2,
   "positions_after": 2
 }
