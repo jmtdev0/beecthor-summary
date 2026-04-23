@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-22T22:00:55Z",
-  "run_id": "2026-04-22T22-00-00Z",
+  "timestamp": "2026-04-23T00:00:58Z",
+  "run_id": "2026-04-23T00-00-03Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-22T22-00-00Z",
+    "run_id": "2026-04-23T00-00-03Z",
     "action": "NO_ACTION",
-    "confidence": 0.98,
-    "summary": "No new action: with only 2 hours left in the daily session, the only clean remaining expression is the already-open weekly 80k reach.",
-    "rationale": "Reconciliation is clean. Binance spot is 78736.01, still close to the highs but now with open interest contracting, which is consistent with late-session exhaustion rather than a fresh expansion phase worth chasing. The account already has the active weekly 80k reach, which remains the clean structural expression of the upside continuation thesis, while the old weekly 72k dip and the daily 80k reach are both discarded_for_slot and no longer block anything. For the daily board, only 2 hours remain until expiry, and the nearest upside continuation, 80k reach, has collapsed to about 8%, which is far below the preferred band and far too late to treat as a serious same-day setup. The nearest downside dailies also remain too weakly priced to justify a new bearish entry without a clear reversal already underway. On the weekly board, the next upside strike, 82k reach, trades around 30%, below the preferred range and would still amount to chasing farther extension in the zone Beecthor treats as probable exhaustion and shorting territory. No open position is in the 90-95% take-profit zone. The correct action is to hold the live weekly 80k thesis and avoid opening any fresh late-session position.",
+    "confidence": 0.99,
+    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 22 daily 80k reach is missing its closure record.",
+    "rationale": "Reconciliation is explicitly broken with the issue \"missing closure record for will-bitcoin-reach-80k-on-april-22:Yes\". Under the playbook, reconciliation is a hard gate for any new entry, so the only valid action is NO_ACTION until the state is repaired. Binance spot is 78211.6, the active weekly 80k reach remains alive around 58.5%, and the old weekly 72k dip is still only a discarded legacy position. Even apart from the reconciliation problem, the market board in this rollover snapshot is still showing the exhausted April 22 dailies rather than a clean April 23 daily slate, so there is no reason to force a new position at midnight. No open position is in the 90-95% take-profit zone. The correct action is to hold the live weekly position, log the missing daily closure properly, and skip any fresh opening until accounting is coherent again.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78804.99,
-  "positions_before": 3,
-  "positions_after": 3
+  "binance_spot_price": 78308.65,
+  "positions_before": 2,
+  "positions_after": 2
 }

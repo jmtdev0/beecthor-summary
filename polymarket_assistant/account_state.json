@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 10.403394,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.4,
+  "open_exposure": 1.079,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -41,28 +41,13 @@
       "shares": 1.7,
       "avg_price": 0.5699,
       "entry_cost_usd": 0.969,
-      "current_price": 0.6899,
-      "current_value_usd": 1.1728,
-      "cash_pnl_usd": 0.2037,
+      "current_price": 0.5699,
+      "current_value_usd": 0.9688,
+      "cash_pnl_usd": -0.0002,
       "status": "open",
       "slot_status": "active"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-22",
-      "market_slug": "will-bitcoin-reach-80k-on-april-22",
-      "market_title": "Will Bitcoin reach $80,000 on April 22?",
-      "position_side": "Yes",
-      "token_id": "55963446983867428859832842709136238544166711216066762896461544160678843579393",
-      "shares": 1.672,
-      "avg_price": 0.5799,
-      "entry_cost_usd": 0.9697,
-      "current_price": 0.07,
-      "current_value_usd": 0.117,
-      "cash_pnl_usd": -0.8527,
-      "status": "open",
-      "slot_status": "discarded_for_slot"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-22T22:00:55Z"
+  "last_synced_at": "2026-04-23T00:00:58Z"
 }
