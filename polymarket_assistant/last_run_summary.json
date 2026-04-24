@@ -1,29 +1,15 @@
 {
-  "timestamp": "2026-04-24T14:02:10Z",
-  "run_id": "2026-04-24T14-00-16Z",
+  "timestamp": "2026-04-24T18:01:10Z",
+  "run_id": "2026-04-24T18-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-24T14-00-16Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.74,
-    "summary": "Open the daily 79k reach as the secondary momentum slot: price action has shifted enough that the clean same-day frontier is now the upside continuation, while the bearish daily remains open but no longer captures the current tape well.",
-    "rationale": "Reconciliation is clean. Binance spot is 78024.01, back near the top of the short-term range, with shorts still dominant but price clearly rebounding off the lows. The active daily 77k dip has weakened to roughly 37.5%, which means the original bearish same-day thesis is still alive but no longer represents the cleanest frontier. Under the updated playbook, the secondary daily momentum slot may be used when Binance is showing a clear continuation that the main daily thesis is no longer capturing well enough. That condition is now met: the nearest upside daily, 79k reach on April 24, has improved into the preferred band at about 46.5% with a tight 0.48 ask, making it the cleanest same-day continuation expression. The next upside strike, 80k reach, is only about 12%, while the next downside strike, 76k dip, is only about 8%, so 79k reach is clearly the frontier candidate. The weekly 80k reach remains open around 35.5% as the structural upside expression, and the old weekly 72k dip remains discarded_for_slot. Portfolio value is still below the $15 early-stage threshold, so the stake remains capped at $1. The correct action is to use the free second daily slot for the daily momentum trade at 79k reach.",
+    "run_id": "2026-04-24T18-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.97,
+    "summary": "No new action: the bullish daily momentum leg is now discarded, while the bearish daily 77k dip and the weekly 80k reach remain the only live active expressions worth holding.",
+    "rationale": "Reconciliation is clean. Binance spot is 77650.0, still close to the session low, with shorts dominant and no fresh expansion in open interest. The account now shows the daily 79k reach already downgraded to discarded_for_slot at about 13.5%, which is exactly how the new slot logic is supposed to behave when a momentum trade stops being the clean frontier. The live active book is therefore the daily 77k dip around 30% and the weekly 80k reach around 26.5%, while the old weekly 72k dip remains a discarded legacy position. No open position is in the 90-95% take-profit zone. For new entries, the remaining daily strikes are too weak and too late in the session to justify fresh exposure with only 6 hours left: 76k dip is around 8.5%, 79k reach around 12%, and the rest are even weaker. On the weekly board, 82k reach is only around 2.8%, so there is no clean secondary weekly candidate either. The correct action is to hold the active daily 77k dip and weekly 80k reach, while letting the discarded daily 79k reach stop consuming slot capacity without forcing any new trade.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "event_slug": "what-price-will-bitcoin-hit-on-april-24",
-        "market_slug": "will-bitcoin-reach-79k-on-april-24",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 79000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.48
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -32,17 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-24",
-      "market_slug": "will-bitcoin-reach-79k-on-april-24",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 79000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.48,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -59,23 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-24T14:02:10.382811Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "41456764636569466528939019727247354568481650829704275849345794345114585489886",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.48,
-        "market": "Will Bitcoin reach $79,000 on April 24?",
-        "market_slug": "will-bitcoin-reach-79k-on-april-24",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77952.01,
-  "positions_before": 3,
-  "positions_after": 3
+  "binance_spot_price": 77651.4,
+  "positions_before": 4,
+  "positions_after": 4
 }
