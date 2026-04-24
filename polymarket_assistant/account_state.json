@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 11.291375,
+  "cash_available": 10.291376,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.4902,
+  "open_exposure": 1.2368,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -26,9 +26,9 @@
       "shares": 2.0053,
       "avg_price": 0.4799,
       "entry_cost_usd": 0.9625,
-      "current_price": 0.041,
-      "current_value_usd": 0.0822,
-      "cash_pnl_usd": -0.8803,
+      "current_price": 0.024,
+      "current_value_usd": 0.0481,
+      "cash_pnl_usd": -0.9144,
       "status": "open",
       "slot_status": "discarded_for_slot"
     },
@@ -41,13 +41,28 @@
       "shares": 1.7,
       "avg_price": 0.5699,
       "entry_cost_usd": 0.969,
-      "current_price": 0.24,
-      "current_value_usd": 0.408,
-      "cash_pnl_usd": -0.561,
+      "current_price": 0.425,
+      "current_value_usd": 0.7225,
+      "cash_pnl_usd": -0.2465,
+      "status": "open",
+      "slot_status": "active"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-24",
+      "market_slug": "will-bitcoin-dip-to-77k-on-april-24",
+      "market_title": "Will Bitcoin dip to $77,000 on April 24?",
+      "position_side": "Yes",
+      "token_id": "56835947158436154800112209711348031804810541834648553512853792582033180361819",
+      "shares": 1.457,
+      "avg_price": 0.6699,
+      "entry_cost_usd": 0.9762,
+      "current_price": 0.32,
+      "current_value_usd": 0.4662,
+      "cash_pnl_usd": -0.51,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-24T10:01:05Z"
+  "last_synced_at": "2026-04-24T12:01:01Z"
 }
