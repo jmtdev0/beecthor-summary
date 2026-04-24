@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-24T18:01:10Z",
-  "run_id": "2026-04-24T18-00-16Z",
+  "timestamp": "2026-04-24T20:01:09Z",
+  "run_id": "2026-04-24T20-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-24T18-00-16Z",
+    "run_id": "2026-04-24T20-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "No new action: the bullish daily momentum leg is now discarded, while the bearish daily 77k dip and the weekly 80k reach remain the only live active expressions worth holding.",
-    "rationale": "Reconciliation is clean. Binance spot is 77650.0, still close to the session low, with shorts dominant and no fresh expansion in open interest. The account now shows the daily 79k reach already downgraded to discarded_for_slot at about 13.5%, which is exactly how the new slot logic is supposed to behave when a momentum trade stops being the clean frontier. The live active book is therefore the daily 77k dip around 30% and the weekly 80k reach around 26.5%, while the old weekly 72k dip remains a discarded legacy position. No open position is in the 90-95% take-profit zone. For new entries, the remaining daily strikes are too weak and too late in the session to justify fresh exposure with only 6 hours left: 76k dip is around 8.5%, 79k reach around 12%, and the rest are even weaker. On the weekly board, 82k reach is only around 2.8%, so there is no clean secondary weekly candidate either. The correct action is to hold the active daily 77k dip and weekly 80k reach, while letting the discarded daily 79k reach stop consuming slot capacity without forcing any new trade.",
+    "confidence": 0.98,
+    "summary": "No new action: with only 4 hours left in the daily session, the active daily 77k dip and the weekly 80k reach are the only live expressions left, and there is no clean new edge to add.",
+    "rationale": "Reconciliation is clean. Binance spot is 77624.29, still close to the session low with shorts dominant and no fresh open-interest expansion. The account already holds the active daily 77k dip around 27% and the active weekly 80k reach around 21%, while the old daily 79k reach and the old weekly 72k dip are both correctly marked as discarded_for_slot. No open position is in the 90-95% take-profit zone. At this point only 4 hours remain until daily expiry, so new same-day entries must be especially clean. They are not: 77k dip is already the nearest bearish daily and is already live, while the remaining daily strikes are either too weak or too late to matter materially. The nearest upside daily, 79k reach, has fallen to about 6%, so it is not a credible same-day momentum trade anymore. On the weekly board, the next upside strike, 82k reach, is only about 3.15%, too weak to justify a second weekly slot. The correct action is to hold the existing active daily and weekly positions and avoid opening anything new into a nearly finished daily session.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77651.4,
+  "binance_spot_price": 77564.69,
   "positions_before": 4,
   "positions_after": 4
 }
