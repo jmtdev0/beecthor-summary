@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-24T06:01:24Z",
-  "run_id": "2026-04-24T06-00-05Z",
+  "timestamp": "2026-04-24T08:01:05Z",
+  "run_id": "2026-04-24T08-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-24T06-00-05Z",
+    "run_id": "2026-04-24T08-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.96,
-    "summary": "No new action: the April 24 daily board is finally live, but the nearest meaningful strikes still have unusably distorted asks, so there is no clean execution edge.",
-    "rationale": "Reconciliation is clean. Binance spot is 77979.54, still near the upper part of the short-term range with shorts dominant and open interest flat to slightly softer, which leaves both a same-day dip and a same-day squeeze marginally plausible. But execution reality is still poor. The nearest daily downside candidates, 76k dip and 77k dip, both sit around 51-52% probability while asking roughly 0.98-0.99, which makes them unusable despite their model probabilities. The nearest upside candidates are no better: 78k reach trades around 67% with a 0.99 ask, and 79k reach around 50.5% with a 0.98 ask. Those books are too distorted to justify a conservative entry. The only live active thesis position remains the weekly 80k reach around 35.5%, while the old weekly 72k dip stays discarded_for_slot and does not require management. No open position is in the 90-95% take-profit zone. The correct action is to wait for cleaner liquidity instead of forcing a daily entry into broken order books.",
+    "confidence": 0.95,
+    "summary": "No new action: the April 24 daily board is tradable now, but the closest useful strikes still offer weak or expensive entries, so there is no clean edge yet.",
+    "rationale": "Reconciliation is clean. Binance spot is 77644.6, with price still near the lower part of the short-term range, shorts dominant, and open interest contracting, which keeps the bearish intraday thesis alive in principle. However, the daily board still does not offer a clean thesis-aligned entry. The nearest downside candidates, 76k dip and 77k dip, price only around 26.5% and 37.5% respectively, both below the preferred 45-84% band, and their asks are still unattractive relative to their implied probabilities. On the upside, 79k reach is only about 36.5% with a 0.45 ask, so it is also below the preferred range and would be a counter-thesis continuation trade rather than a clean setup. The weekly 80k reach remains the only live active thesis position around 32%, while the old weekly 72k dip stays discarded_for_slot and requires no management. No open position is in the 90-95% take-profit zone. The correct action is to wait for either a cleaner downside daily near the preferred range or a clearer momentum continuation, instead of forcing an entry from still-marginal prices.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77931.98,
+  "binance_spot_price": 77624.24,
   "positions_before": 2,
   "positions_after": 2
 }
