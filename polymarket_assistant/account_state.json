@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 9.291377,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.6455,
+  "open_exposure": 0.286,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -18,21 +18,6 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [
     {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-24",
-      "market_slug": "will-bitcoin-reach-79k-on-april-24",
-      "market_title": "Will Bitcoin reach $79,000 on April 24?",
-      "position_side": "Yes",
-      "token_id": "41456764636569466528939019727247354568481650829704275849345794345114585489886",
-      "shares": 2.8841,
-      "avg_price": 0.3299,
-      "entry_cost_usd": 0.9517,
-      "current_price": 0.0285,
-      "current_value_usd": 0.0821,
-      "cash_pnl_usd": -0.8696,
-      "status": "open",
-      "slot_status": "discarded_for_slot"
-    },
-    {
       "event_slug": "what-price-will-bitcoin-hit-april-20-26",
       "market_slug": "will-bitcoin-dip-to-72k-april-20-26",
       "market_title": "Will Bitcoin dip to $72,000 April 20-26?",
@@ -41,9 +26,9 @@
       "shares": 2.0053,
       "avg_price": 0.4799,
       "entry_cost_usd": 0.9625,
-      "current_price": 0.014,
-      "current_value_usd": 0.028,
-      "cash_pnl_usd": -0.9345,
+      "current_price": 0.0155,
+      "current_value_usd": 0.031,
+      "cash_pnl_usd": -0.9315,
       "status": "open",
       "slot_status": "discarded_for_slot"
     },
@@ -56,28 +41,13 @@
       "shares": 1.7,
       "avg_price": 0.5699,
       "entry_cost_usd": 0.969,
-      "current_price": 0.165,
-      "current_value_usd": 0.2805,
-      "cash_pnl_usd": -0.6885,
-      "status": "open",
-      "slot_status": "discarded_for_slot"
-    },
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-24",
-      "market_slug": "will-bitcoin-dip-to-77k-on-april-24",
-      "market_title": "Will Bitcoin dip to $77,000 on April 24?",
-      "position_side": "Yes",
-      "token_id": "56835947158436154800112209711348031804810541834648553512853792582033180361819",
-      "shares": 1.457,
-      "avg_price": 0.6699,
-      "entry_cost_usd": 0.9762,
-      "current_price": 0.175,
-      "current_value_usd": 0.2549,
-      "cash_pnl_usd": -0.7213,
+      "current_price": 0.15,
+      "current_value_usd": 0.255,
+      "cash_pnl_usd": -0.714,
       "status": "open",
       "slot_status": "discarded_for_slot"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-24T22:00:59Z"
+  "last_synced_at": "2026-04-25T00:01:00Z"
 }

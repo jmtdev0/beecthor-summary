@@ -8859,5 +8859,57 @@
     "binance_spot_price": 77551.9,
     "positions_before": 4,
     "positions_after": 4
+  },
+  {
+    "timestamp": "2026-04-25T00:01:00Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-25T00-00-06Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-25T00-00-06Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "No new action: reconciliation is broken at the day rollover because the Apr 24 daily 77k dip and 79k reach are both missing closure records.",
+      "rationale": "Reconciliation is explicitly broken with two issues: missing closure record for will-bitcoin-dip-to-77k-on-april-24:Yes and missing closure record for will-bitcoin-reach-79k-on-april-24:Yes. Under the playbook, reconciliation is a hard gate for any new entry, so the only valid action is NO_ACTION until the state is repaired. Binance spot is 77432.69, the old weekly 72k dip and weekly 80k reach are both already downgraded to discarded_for_slot, and there are no active price-hit positions left. Even aside from the reconciliation gate, this midnight snapshot is still showing the exhausted April 24 daily board rather than a fresh April 25 slate, so there is no clean new market to act on yet. No open position is in the 90-95% take-profit zone. The correct action is to stay flat operationally, record the missing daily closures, and wait for a coherent state plus a clean April 25 board before opening anything new.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77432.69,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]

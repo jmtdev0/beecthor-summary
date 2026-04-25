@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-24T22:00:59Z",
-  "run_id": "2026-04-24T22-00-06Z",
+  "timestamp": "2026-04-25T00:01:00Z",
+  "run_id": "2026-04-25T00-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-24T22-00-06Z",
+    "run_id": "2026-04-25T00-00-06Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "No new action: all open positions are now discarded_for_slot, but with only 2 hours left in the daily session and no clean weekly edge, there is still nothing worth reopening.",
-    "rationale": "Reconciliation is clean. Binance spot is 77536.49, sitting near the session low with shorts still dominant, but the account no longer has any active price-hit positions: the daily 77k dip, the daily 79k reach, the weekly 80k reach, and the old weekly 72k dip are all now discarded_for_slot. That means slot capacity is technically free, but the board still does not offer a valid fresh edge. On the daily side, only 2 hours remain until expiry and the nearest strikes are all weak: 77k dip is only around 18%, 79k reach around 2.85%, and everything else is even lower, so there is no credible same-day setup left. On the weekly side, the nearest upside strike, 80k reach, has fallen to about 16.5%, while the nearest downside strike, 72k dip, is only about 1.4%; neither is close to the preferred range, and reopening a discarded thesis just because the slot is free would violate the spirit of the playbook. No open position is in the 90-95% take-profit zone because there are no active positions left. The correct action is to stay flat operationally and wait for the next clean slate instead of forcing a late-session or weak weekly re-entry.",
+    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 24 daily 77k dip and 79k reach are both missing closure records.",
+    "rationale": "Reconciliation is explicitly broken with two issues: missing closure record for will-bitcoin-dip-to-77k-on-april-24:Yes and missing closure record for will-bitcoin-reach-79k-on-april-24:Yes. Under the playbook, reconciliation is a hard gate for any new entry, so the only valid action is NO_ACTION until the state is repaired. Binance spot is 77432.69, the old weekly 72k dip and weekly 80k reach are both already downgraded to discarded_for_slot, and there are no active price-hit positions left. Even aside from the reconciliation gate, this midnight snapshot is still showing the exhausted April 24 daily board rather than a fresh April 25 slate, so there is no clean new market to act on yet. No open position is in the 90-95% take-profit zone. The correct action is to stay flat operationally, record the missing daily closures, and wait for a coherent state plus a clean April 25 board before opening anything new.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77551.9,
-  "positions_before": 4,
-  "positions_after": 4
+  "binance_spot_price": 77432.69,
+  "positions_before": 2,
+  "positions_after": 2
 }

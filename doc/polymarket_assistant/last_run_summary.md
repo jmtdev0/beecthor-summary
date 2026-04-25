@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-24T22:00:59Z
+- Timestamp: 2026-04-25T00:01:00Z
 - Dry run: False
-- BTC price: 77551.9
+- BTC price: 77432.69
 - Decision action: NO_ACTION
-- Decision summary: No new action: all open positions are now discarded_for_slot, but with only 2 hours left in the daily session and no clean weekly edge, there is still nothing worth reopening.
+- Decision summary: No new action: reconciliation is broken at the day rollover because the Apr 24 daily 77k dip and 79k reach are both missing closure records.
 - Validation: True (ok)
-- Open positions before: 4
-- Open positions after: 4
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 
