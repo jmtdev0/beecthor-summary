@@ -9213,5 +9213,23 @@
     "binance_spot_price": 77730.68,
     "positions_before": 3,
     "positions_after": 3
+  },
+  {
+    "timestamp": "2026-04-25T10:46:16Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-reach-80k-april-20-26",
+    "market_title": "Will Bitcoin reach $80,000 April 20-26?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "exceptional_stop_loss",
+    "shares": 1.7,
+    "fraction": 1.0,
+    "avg_entry_price": 0.5699,
+    "exit_price": 0.15,
+    "entry_cost_usd": 0.9688,
+    "exit_proceeds_usd": 0.255,
+    "pnl_usd": -0.7138,
+    "pnl_pct": -73.68,
+    "source": "monitor_executor"
   }
 ]
