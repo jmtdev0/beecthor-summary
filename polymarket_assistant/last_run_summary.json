@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-25T20:01:04Z",
-  "run_id": "2026-04-25T20-00-16Z",
+  "timestamp": "2026-04-25T22:00:56Z",
+  "run_id": "2026-04-25T22-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-25T20-00-16Z",
+    "run_id": "2026-04-25T22-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.9,
-    "summary": "No new action: the active daily 77k dip remains the cleanest expression of the current bearish intraday tape, and there is no worthwhile second daily or weekly setup with only four hours left.",
-    "rationale": "Reconciliation is clean. Binance spot is 77352.67, the short-term bias is explicitly bearish, shorts remain dominant, and price is still sitting close to the session low rather than showing any convincing bullish reversal. The active daily 77k dip is trading around 53%, so it remains the right same-day thesis position and is neither discarded_for_slot nor anywhere near take-profit. The next downside daily, 76k dip, is only about 4.6% and too weak to justify a second bearish daily, while the upside alternative, 78k reach, has collapsed to roughly 13.5% and does not represent a credible momentum continuation. On the weekly board, 80k reach is only around 5.5% and the downside weeklys are deeply discounted, so there is still no clean weekly frontier entry. With only four hours left until daily close, the disciplined move is to hold the active 77k dip and avoid opening any additional late-session trade.",
+    "confidence": 0.92,
+    "summary": "No new action: only two hours remain in the daily market, the active 77k dip is still alive, and there is no late-session daily or weekly setup with enough edge to justify a new trade.",
+    "rationale": "Reconciliation is clean. BTC spot is 77525.84 and the short-term Binance bias is neutral, with shorts still dominant but no strong directional expansion. The active daily 77k dip has fallen back to roughly 25%, which is weak but still above the 20% discarded-for-slot threshold, so it remains technically active. At the same time, only two hours remain until daily close, which makes any new same-day entry low quality by the playbook. The only nearby alternatives are 78k reach around 24.5% and the existing 77k dip itself; neither offers a clean enough late-session edge, and the weekly frontier remains poor, with 80k reach only about 6.5% and downside weeklys deeply discounted. There is no take-profit condition, no justified management action, and no fresh opening worth forcing this close to expiry. The disciplined decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77335.33,
+  "binance_spot_price": 77525.84,
   "positions_before": 1,
   "positions_after": 1
 }
