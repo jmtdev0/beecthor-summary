@@ -1,5 +1,10 @@
 # Changelog
 
+### 25/04/2026
+* Dashboard privado de Polymarket ampliado con un enlace a `BTC timeline`: nueva vista SVG en `server/copilot_chat.py` que dibuja la cronología horizontal de `binance_spot_price` desde `polymarket_assistant/trade_log.json` y superpone compras de Polymarket en verde/rojo según su PnL, dejando las abiertas en gris.
+* `phone/polymarket_executor.py` now backfills `trade_opened` records into `polymarket_assistant/trade_log.json` when a phone-side BUY is executed or when the executor detects that the position was already opened outside the queue.
+* `polymarket_assistant/trade_log.json` was reconciled so all currently open positions now have explicit `trade_opened` entries instead of living only inside `cycle_run.execution.details`.
+
 ### 22/04/2026
 * Slot model clarified and aligned to `2 daily + 2 weekly`, capped at `4` active positions total. `account_state.json` now carries `max_open_positions: 4` and `max_weekly_positions: 2`.
 * The playbook and operator prompt now explicitly distinguish **thesis slots** from **momentum slots** on both horizons: by default the system should prefer only `1 daily thesis + 1 weekly thesis`, while secondary daily/weekly slots are reserved for very clear Binance-confirmed trends that the main Beecthor thesis is not expressing well enough.
@@ -8,6 +13,14 @@
 * Playbook and operator updated to drop `floor` markets completely. The live context no longer fetches floor candidates for decision-making, and the validator rejects any attempted floor opening.
 * Slot model changed from `1 daily + 1 weekly + 1 floor` to `2 daily + 1 weekly`, still capped at `3` active positions total. `account_state.json` now carries `max_daily_positions: 2` and `max_weekly_positions: 1`.
 * The second daily slot is now documented as a momentum slot: it may express a clear Binance-confirmed intraday continuation even when it opposes the main Beecthor thesis, while still following closest-strike-first.
+
+### 21/04/2026
+* Exit-monitor architecture changed for a live test: `run_monitor.py` now runs on the server every minute, detects TP/SL candidates there, and triggers `phone/polymarket_monitor_executor.py` immediately through the reverse SSH tunnel instead of relying on a periodic take-profit cron on the phone.
+* `server/polymarket-monitor.timer` updated from odd UTC hours to a minute-level schedule, and the documented mobile crons for `polymarket_monitor_executor.py` were removed from the setup guides.
+* Dashboard Polymarket updated to reflect the server-side exit monitor: the `TP / SL` lane combines recent server monitor iterations with phone-side execution traces, including the live value of open positions captured on each run.
+* Dashboard phone triggers switched to `python3`, which preserves on-demand summaries and the other phone-side actions through the SSH tunnel.
+
+* Timer live del VPS ajustado: `polymarket-operator.timer` ya no dispara a las `02:00 UTC` ni a las `16:00 UTC`; mantiene el operador en `00, 04, 06, 08, 10, 12, 14, 18, 20, 22` y se recargó `systemd` en el servidor para aplicar el cambio.
 
 ### 19/04/2026
 * `doc/polymarket_assistant/PLAYBOOK.md` actualizado con las lecciones recientes de `doc/JUGADA.md`: selección explícita entre daily/weekly/floor, `nearest strike first` rebajado a heurística y no veto, y nueva regla anti-chase para strikes que requieren una extensión extra tras un movimiento ya avanzado.

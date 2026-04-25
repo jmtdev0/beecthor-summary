@@ -179,19 +179,9 @@ CRON_TZ=UTC
 5 12 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
 5 18 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
 
-# Monitor executor — 5 min after each monitor check (odd UTC hours)
-5 1 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 3 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 5 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 7 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 9 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 11 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 13 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 15 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 17 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 19 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 21 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
-5 23 * * * python ~/polymarket_monitor_executor.py >> ~/polymarket_monitor_executor.log 2>&1
+# Monitor executor — disabled as a periodic mobile cron.
+# Exit detection now runs every minute on the server and triggers the
+# phone on demand through the reverse SSH tunnel when a live TP/SL is detected.
 
 # Beecthor summarizer — daily at 19:45 UTC
 45 19 * * * source $HOME/.bashrc && python $HOME/beecthor_summarizer.py >> $HOME/beecthor_summarizer.log 2>&1

@@ -69,7 +69,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 |------|---------|
 | `polymarket_assistant/run_cycle.py` | Main base cycle: builds context, calls GPT, validates, executes |
 | `polymarket_assistant/run_cycle_codex.py` | Codex-specific variant: accepts normalized JSON decisions with `run_id` |
-| `polymarket_assistant/run_monitor.py` | Runs every 2h (odd UTC hours), checks take-profit, writes SELL orders |
+| `polymarket_assistant/run_monitor.py` | Runs every minute on the server, checks TP/SL exit triggers, and launches the phone executor through the reverse SSH tunnel |
 | `doc/polymarket_assistant/PLAYBOOK.md` | Binding trading rules for GPT |
 | `doc/polymarket_assistant/copilot_prompt.md` | GPT prompt template + JSON schema |
 
@@ -88,7 +88,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 | File | Purpose |
 |------|---------|
 | `phone/polymarket_executor.py` | Reads `pending_orders.json`, signs & submits BUY/SELL to CLOB |
-| `phone/polymarket_monitor_executor.py` | Reads `last_monitor_action.json`, executes monitor-triggered SELL |
+| `phone/polymarket_monitor_executor.py` | Executes monitor-triggered TP/SL SELLs on demand from the phone when the server launches it |
 | `phone/beecthor_summarizer.py` | Fetches latest Beecthor video, summarizes via Copilot CLI, commits |
 
 ### Server
@@ -105,7 +105,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 | Timer | Schedule | What it runs |
 |-------|----------|-------------|
 | `polymarket-operator.timer` | even UTC hours every 2h | `/root/run_polymarket_cycle.sh` -> `run_cycle_codex.py --decision-file` |
-| `polymarket-monitor.timer` | odd UTC hours | `run_monitor.py` (take-profit / stop-loss check, no GPT) |
+| `polymarket-monitor.timer` | every minute | `run_monitor.py` (minute-level TP/SL exit detector, no GPT) |
 
 ---
 
