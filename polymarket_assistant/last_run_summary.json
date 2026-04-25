@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-25T00:01:00Z",
-  "run_id": "2026-04-25T00-00-06Z",
+  "timestamp": "2026-04-25T04:07:31Z",
+  "run_id": "2026-04-25T04-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-25T00-00-06Z",
+    "run_id": "2026-04-25T04-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.99,
-    "summary": "No new action: reconciliation is broken at the day rollover because the Apr 24 daily 77k dip and 79k reach are both missing closure records.",
-    "rationale": "Reconciliation is explicitly broken with two issues: missing closure record for will-bitcoin-dip-to-77k-on-april-24:Yes and missing closure record for will-bitcoin-reach-79k-on-april-24:Yes. Under the playbook, reconciliation is a hard gate for any new entry, so the only valid action is NO_ACTION until the state is repaired. Binance spot is 77432.69, the old weekly 72k dip and weekly 80k reach are both already downgraded to discarded_for_slot, and there are no active price-hit positions left. Even aside from the reconciliation gate, this midnight snapshot is still showing the exhausted April 24 daily board rather than a fresh April 25 slate, so there is no clean new market to act on yet. No open position is in the 90-95% take-profit zone. The correct action is to stay flat operationally, record the missing daily closures, and wait for a coherent state plus a clean April 25 board before opening anything new.",
+    "confidence": 0.0,
+    "summary": "Automatic Codex cycle fallback: NO_ACTION.",
+    "rationale": "Codex auto-cycle fallback: no valid decision file was produced in time.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77432.69,
+  "binance_spot_price": 77637.64,
   "positions_before": 2,
   "positions_after": 2
 }
