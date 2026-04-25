@@ -769,12 +769,38 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'triggers': [{'process': 'executor', 'label': '▶ Run Executor', 'primary': True}],
         },
         {
-            'title': 'Server monitor',
-            'subtitle': 'Servidor · iteraciones de take-profit con snapshot de abiertas',
-            'triggers': [{'process': 'monitor', 'label': '⚡ Run Monitor', 'primary': True}],
-            'entries': build_server_monitor_entries(limit=TRACE_LANE_LIMIT),
+            'title': 'TP / SL',
+            'subtitle': 'Servidor detecta · móvil ejecuta salidas',
+            'triggers': [
+                {'process': 'monitor', 'label': '⚡ Run Monitor', 'primary': False},
+                {'process': 'monitor_executor', 'label': '▶ Run Executor', 'primary': True},
+            ],
+            'entries': build_tp_sl_trace_entries(limit=TRACE_LANE_LIMIT),
         },
     ]
+
+
+def build_tp_sl_trace_entries(limit: int = TRACE_LANE_LIMIT) -> list[dict[str, Any]]:
+    phone_entries = build_mobile_trace_entries(
+        'phone.monitor',
+        limit=limit,
+        payload_keys=['market_slug', 'outcome', 'reason', 'status', 'action'],
+        allowed_events={
+            'run_started',
+            'run_active',
+            'run_skipped',
+            'trigger_detected',
+            'trigger_skipped',
+            'order_dry_run',
+            'order_executed',
+            'order_failed',
+            'market_resolved',
+        },
+    )
+    if len(phone_entries) >= limit:
+        return phone_entries[:limit]
+    server_entries = build_server_monitor_entries(limit=limit)
+    return (phone_entries + server_entries)[:limit]
 
 
 def format_monitor_positions_meta(positions: list[dict[str, Any]]) -> str:
