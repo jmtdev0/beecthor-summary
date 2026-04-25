@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-25T14:00:55Z
+- Timestamp: 2026-04-25T18:01:15Z
 - Dry run: False
-- BTC price: 77698.33
+- BTC price: 77265.29
 - Decision action: NO_ACTION
-- Decision summary: No new action: the active daily 77k dip is close to being discarded but is still technically alive, and the 78k reach rebound is not yet strong enough to justify forcing the counter-thesis momentum slot.
+- Decision summary: No new action: the active daily 77k dip has recovered and remains the cleanest thesis-aligned position, while no second daily or weekly setup offers enough edge.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
