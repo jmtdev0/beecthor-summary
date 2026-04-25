@@ -25,3 +25,8 @@ Important schema reminders:
 - `OPEN_POSITION` may include up to 2 items in `new_positions` when different free slots are independently valid.
 - `CLOSE_POSITION` and `REDUCE_POSITION` may include up to 2 items in `position_managements`, but do not mix CLOSE and REDUCE in the same response.
 - Use empty arrays for the side that is not being used in the current decision.
+- For every `OPEN_POSITION`, include `market_type`, `slot_name`, `beecthor_aligned`, `momentum_confirmed`, and `expiry_validity`.
+- Never use `expiry_validity: "weak"` for an opening. A correct level with poor expiry timing is still `NO_ACTION`.
+- Correct for Beecthor's persistent bearish bias: if recent summaries are bearish but BTC is flat or net higher, require Binance rejection evidence before opening a bearish DIP.
+- Treat discarded live positions as real account pain even when they no longer block slot availability.
+- Do not chase after a large 24h BTC move unless the live probability and expiry validity are both strong.

@@ -42,6 +42,10 @@ PENDING_ORDERS_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
     '/polymarket_assistant/pending_orders.json'
 )
+TRADE_LOG_API_URL = (
+    'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
+    '/polymarket_assistant/trade_log.json'
+)
 
 # Polymarket CTF Exchange on Polygon
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
@@ -60,6 +64,7 @@ POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
 POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
 POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
 
+GH_TOKEN = os.environ.get('GH_TOKEN', '')
 
 def refresh_runtime_config() -> None:
     global TELEGRAM_BOT_TOKEN
@@ -67,6 +72,7 @@ def refresh_runtime_config() -> None:
     global POLY_API_KEY
     global POLY_API_SECRET
     global POLY_API_PASSPHRASE
+    global GH_TOKEN
     global POLY_FUNDER
     global POLY_SIGNER_ADDRESS
     global POLY_PRIVATE_KEY
@@ -74,6 +80,7 @@ def refresh_runtime_config() -> None:
     TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
     POLY_API_KEY = os.environ.get('POLY_API_KEY', '')
+    GH_TOKEN = os.environ.get('GH_TOKEN', '')
     POLY_API_SECRET = os.environ.get('POLY_API_SECRET', '')
     POLY_API_PASSPHRASE = os.environ.get('POLY_API_PASSPHRASE', '')
     POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
@@ -277,6 +284,201 @@ def send_telegram(text: str) -> None:
         pass
 
 
+def as_float(value: object, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def append_trade_opened_to_log(entry: dict) -> None:
+    if not GH_TOKEN:
+        print('[executor] GH_TOKEN not set - skipping trade_log update')
+        return
+
+    headers = {
+        'Authorization': f'token {GH_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+    }
+    resp = requests.get(TRADE_LOG_API_URL, headers=headers, timeout=20)
+    if not resp.ok:
+        print(f'[executor] Failed to fetch trade_log.json: {resp.status_code}')
+        return
+
+    data = resp.json()
+    sha = data['sha']
+    log = json.loads(base64.b64decode(data['content']).decode('utf-8'))
+    market_slug = str(entry.get('market_slug') or '')
+    position_side = str(entry.get('position_side') or '')
+    for existing in log:
+        if existing.get('type') != 'trade_opened':
+            continue
+        existing_side = str(existing.get('position_side') or existing.get('outcome') or '')
+        if existing.get('market_slug') == market_slug and existing_side == position_side:
+            print(f'[executor] trade_opened already present for {market_slug}:{position_side}')
+            return
+
+    log.append(entry)
+    new_content = base64.b64encode(
+        json.dumps(log, ensure_ascii=False, indent=2).encode('utf-8')
+    ).decode('utf-8')
+    put_resp = requests.put(
+        TRADE_LOG_API_URL,
+        headers=headers,
+        json={
+            'message': f'chore: auto trade_opened {market_slug}',
+            'content': new_content,
+            'sha': sha,
+            'committer': {
+                'name': 'beecthor-summarizer[bot]',
+                'email': 'beecthor-summarizer[bot]@users.noreply.github.com',
+            },
+        },
+        timeout=30,
+    )
+    if put_resp.ok:
+        print(f'[executor] trade_opened appended to trade_log.json for {market_slug}:{position_side}')
+    else:
+        print(f'[executor] Failed to update trade_log.json: {put_resp.status_code} {put_resp.text[:200]}')
+
+
+def update_pending_order_status(order_id: str, status: str, detail: str, payload: dict | None = None) -> None:
+    if not GH_TOKEN or not order_id:
+        return
+
+    headers = {
+        'Authorization': f'token {GH_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+    }
+    resp = requests.get(PENDING_ORDERS_API_URL, headers=headers, timeout=20)
+    if not resp.ok:
+        print(f'[executor] Failed to fetch pending_orders.json for receipt: {resp.status_code}')
+        return
+
+    data = resp.json()
+    sha = data['sha']
+    queue = json.loads(base64.b64decode(data['content']).decode('utf-8'))
+    changed = False
+    now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    for item in queue:
+        if item.get('order_id') != order_id:
+            continue
+        item['status'] = status
+        item['execution_status_detail'] = detail[:500]
+        item['execution_updated_at'] = now
+        if payload:
+            item['execution_payload'] = payload
+        changed = True
+        break
+    if not changed:
+        return
+
+    new_content = base64.b64encode(
+        json.dumps(queue, ensure_ascii=False, indent=2).encode('utf-8')
+    ).decode('utf-8')
+    put_resp = requests.put(
+        PENDING_ORDERS_API_URL,
+        headers=headers,
+        json={
+            'message': f'chore: mark pending order {status} {order_id}',
+            'content': new_content,
+            'sha': sha,
+            'committer': {
+                'name': 'beecthor-summarizer[bot]',
+                'email': 'beecthor-summarizer[bot]@users.noreply.github.com',
+            },
+        },
+        timeout=30,
+    )
+    if put_resp.ok:
+        print(f'[executor] pending order receipt updated: {order_id} -> {status}')
+    else:
+        print(f'[executor] Failed to update pending order receipt: {put_resp.status_code} {put_resp.text[:200]}')
+
+
+def build_trade_opened_entry(
+    pending: dict,
+    live_position: dict | None,
+    recent_trade: dict | None,
+    *,
+    source: str,
+    notes: str,
+) -> dict | None:
+    market_slug = str(pending.get('market_slug') or pending.get('market') or (live_position or {}).get('slug') or '')
+    position_side = str(pending.get('outcome') or (live_position or {}).get('outcome') or (recent_trade or {}).get('outcome') or '')
+    if not market_slug or not position_side:
+        return None
+
+    order_ts = parse_order_timestamp(str(pending.get('order_id') or ''))
+    trade_ts = recent_trade.get('timestamp') if recent_trade else None
+    entry_dt = order_ts or datetime.now(UTC)
+    try:
+        if trade_ts is not None:
+            entry_dt = datetime.fromtimestamp(int(trade_ts), UTC)
+    except (TypeError, ValueError, OSError):
+        pass
+
+    avg_price = as_float((live_position or {}).get('avgPrice'))
+    if avg_price <= 0.0:
+        avg_price = as_float((recent_trade or {}).get('price'))
+
+    shares = as_float((live_position or {}).get('size'))
+    if shares <= 0.0:
+        shares = as_float((recent_trade or {}).get('size'))
+    if shares <= 0.0 and avg_price > 0.0:
+        shares = round(as_float(pending.get('stake_usd')) / avg_price, 4)
+
+    entry_cost = as_float((live_position or {}).get('initialValue'))
+    if entry_cost <= 0.0 and shares > 0.0 and avg_price > 0.0:
+        entry_cost = round(shares * avg_price, 4)
+    if entry_cost <= 0.0:
+        entry_cost = as_float(pending.get('stake_usd'))
+
+    entry = {
+        'timestamp': entry_dt.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'type': 'trade_opened',
+        'review_window': 'phone_executor',
+        'event_slug': (live_position or {}).get('eventSlug', ''),
+        'market_slug': market_slug,
+        'market_title': str(pending.get('market') or (live_position or {}).get('title') or market_slug),
+        'position_side': position_side,
+        'token_id': str(pending.get('token_id') or (live_position or {}).get('asset') or (recent_trade or {}).get('asset') or ''),
+        'entry_probability': round(avg_price, 6) if avg_price > 0.0 else None,
+        'entry_cost_usd': round(entry_cost, 4) if entry_cost > 0.0 else None,
+        'shares': round(shares, 4) if shares > 0.0 else None,
+        'market_type': pending.get('market_type'),
+        'slot_name': pending.get('slot_name'),
+        'beecthor_aligned': pending.get('beecthor_aligned'),
+        'momentum_confirmed': pending.get('momentum_confirmed'),
+        'expiry_validity': pending.get('expiry_validity'),
+        'status': 'open',
+        'source': source,
+        'notes': notes,
+    }
+    return {key: value for key, value in entry.items() if value not in (None, '')}
+
+
+def reconcile_trade_opened(
+    pending: dict,
+    *,
+    source: str,
+    notes: str,
+    live_position: dict | None = None,
+    recent_trade: dict | None = None,
+) -> None:
+    live_position = live_position or resolve_live_position(pending)
+    recent_trade = recent_trade or find_recent_matching_trade(pending)
+    entry = build_trade_opened_entry(
+        pending,
+        live_position,
+        recent_trade,
+        source=source,
+        notes=notes,
+    )
+    if entry:
+        append_trade_opened_to_log(entry)
+
+
 def fetch_live_positions() -> list[dict]:
     user = POLY_FUNDER or POLY_SIGNER_ADDRESS
     if not user:
@@ -443,6 +645,8 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 'age_minutes': age_minutes,
             },
         )
+
+        update_pending_order_status(order_id, 'stale', 'Pending order skipped because it is stale', {'age_minutes': age_minutes})
         save_executed_order_id(order_id)
         if not dry_run:
             send_telegram(
@@ -451,6 +655,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 f'{outcome}\n'
                 f'Edad: {age_minutes} min. Mejor esperar una nueva validación del siguiente ciclo.'
             )
+
         return True
 
     if side == 'BUY':
@@ -463,6 +668,13 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 'Recent matching BUY found in activity; treating order as already executed',
                 payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'reason': 'recent_activity'},
             )
+            reconcile_trade_opened(
+                pending,
+                source='phone_executor_reconciled',
+                notes='Backfilled from recent account activity after the executor detected the BUY was already executed.',
+                recent_trade=recent_trade,
+            )
+            update_pending_order_status(order_id, 'skipped_already_done', 'Recent matching BUY found in account activity')
             save_executed_order_id(order_id)
             if not dry_run:
                 send_telegram(
@@ -472,6 +684,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                     'He visto una compra reciente en la actividad de la cuenta. '
                     'Probablemente te adelantaste, impaciente.'
                 )
+
             return True
 
         live_position = resolve_live_position(pending)
@@ -483,6 +696,13 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 'Matching live position already open; treating order as already executed',
                 payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'reason': 'live_position'},
             )
+            reconcile_trade_opened(
+                pending,
+                source='phone_executor_reconciled',
+                notes='Backfilled from a live position after the executor detected the BUY was already open.',
+                live_position=live_position,
+            )
+            update_pending_order_status(order_id, 'skipped_already_done', 'Matching live position already open')
             save_executed_order_id(order_id)
             if not dry_run:
                 send_telegram(
@@ -517,7 +737,9 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                     'reason': 'market_resolved',
                     'token_id': token_id,
                 },
+
             )
+            update_pending_order_status(order_id, 'stale', 'Market already resolved before execution', {'token_id': token_id})
             save_executed_order_id(order_id)
             return True
         except Exception as exc:
@@ -536,6 +758,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 'orderType': 'FOK',
                 'postOnly': False,
             }
+
             if dry_run:
                 print('[executor] DRY RUN payload:')
                 print(json.dumps(body, indent=2))
@@ -566,7 +789,19 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                         'response': resp.text[:500],
                     },
                 )
+                update_pending_order_status(
+                    order_id,
+                    'executed',
+                    'Order executed successfully on phone',
+                    {'market_slug': pending.get('market_slug'), 'price': price, 'response': resp.text[:500]},
+                )
                 save_executed_order_id(order_id)
+                if side == 'BUY':
+                    reconcile_trade_opened(
+                        pending,
+                        source='phone_executor',
+                        notes='Recorded after a successful phone-side BUY execution.',
+                    )
                 send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
                 return True
 
@@ -600,6 +835,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         level='error',
         payload={'order_id': order_id, 'market_slug': pending.get('market_slug'), 'error': last_error},
     )
+    update_pending_order_status(order_id, 'failed', 'Order failed after retries', {'error': last_error})
     return False
 
 

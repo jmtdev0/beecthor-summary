@@ -38,6 +38,9 @@ Your task:
 - Then evaluate whether new price-hit positions should be opened (daily and/or weekly reach/dip market).
 - Use recent transcripts and summaries to determine whether Beecthor's thesis is still intact, changing, or invalidated.
 - Compare that thesis against the live BTC price and the current Polymarket probabilities.
+- Separate level validity from expiry validity. A level can be correct eventually and still be a bad trade for the current market expiry.
+- Correct for Beecthor's structural bearish bias: when recent Beecthor summaries are bearish but BTC is flat or net higher, require Binance rejection evidence before proposing a bearish DIP.
+- Treat discarded open positions as real account pain even when they no longer block slot availability.
 - If the market already prices in the move too aggressively, do not force a trade.
 - You may open up to 2 new positions in one cycle when they fit the free slots and are independently justified.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
@@ -62,6 +65,10 @@ Return valid JSON only with this schema:
     {
       "position_kind": "price_hit",
       "market_type": "daily | weekly",
+      "slot_name": "daily_thesis | daily_momentum | weekly_thesis | weekly_momentum",
+      "beecthor_aligned": true,
+      "momentum_confirmed": true,
+      "expiry_validity": "strong | acceptable | weak",
       "event_slug": "",
       "market_slug": "",
       "outcome": "",
@@ -82,5 +89,8 @@ Rules for output:
 - For `OPEN_POSITION`, return at most 2 items in `new_positions`.
 - For `CLOSE_POSITION` or `REDUCE_POSITION`, return at most 2 items in `position_managements` and keep the same action for all of them.
 - If uncertain, prefer NO_ACTION.
+- For each proposed new position, only use `expiry_validity: "strong"` or `"acceptable"`. If expiry validity is weak, return NO_ACTION.
+- Do not use the weekly slots as generic extra exposure. Weekly entries require stronger evidence than daily entries.
+- Consider partial take-profit / invalidation exits before proposing fresh entries when open positions are carrying meaningful account risk.
 
 Context snapshot follows.

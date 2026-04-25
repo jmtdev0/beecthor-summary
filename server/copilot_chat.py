@@ -38,6 +38,8 @@ ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
 PENDING_ORDERS_PATH = REPO_ROOT / 'polymarket_assistant' / 'pending_orders.json'
+MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
+MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
 
 load_dotenv(ENV_FILE)
 
@@ -356,12 +358,36 @@ img{display:block;max-width:100%}
     font-weight:800;
 }
 .sell-modal-note{margin-top:14px;font-size:.84rem;color:#93a0b4}
+.timeline-card{
+    background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+    padding:22px;
+}
+.timeline-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.timeline-meta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.timeline-stat{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:18px;
+    padding:16px;
+}
+.timeline-stat-label{font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:#95a3b8}
+.timeline-stat-value{font-size:1.35rem;font-weight:800;margin-top:6px}
+.timeline-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;color:#b8c2d1;font-size:.92rem}
+.timeline-legend-item{display:flex;align-items:center;gap:8px}
+.timeline-dot{width:10px;height:10px;border-radius:999px;display:inline-block}
+.timeline-empty{padding:24px;border:1px dashed rgba(255,255,255,.12);border-radius:18px;color:#9fb0c7}
+.timeline-svg-wrap{margin-top:18px;border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px;background:linear-gradient(180deg, rgba(9,15,23,.95), rgba(7,11,17,.92));overflow:auto}
+.timeline-svg{width:100%;height:auto;display:block;min-width:880px}
 @media (max-width: 1180px){
   .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
 }
 @media (max-width: 960px){
   .private-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .timeline-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width: 680px){
   .shell{padding:0 16px 28px}
@@ -372,6 +398,7 @@ img{display:block;max-width:100%}
   .video-grid{grid-template-columns:1fr}
   .private-grid{grid-template-columns:1fr}
   .trace-grid{grid-template-columns:1fr}
+    .timeline-meta-grid{grid-template-columns:1fr}
   .metric-value{font-size:2.35rem}
   .detail-title{font-size:1.7rem}
   .detail-panel,.detail-summary-card,.detail-section-card,.stream-card,.surface-card,.chat-card,.metric-card,.metric-panel,.pnl-panel,.trace-lane{padding:18px}
@@ -742,20 +769,69 @@ def build_private_trace_lanes() -> list[dict[str, Any]]:
             'triggers': [{'process': 'executor', 'label': '▶ Run Executor', 'primary': True}],
         },
         {
-            'title': 'TP / SL',
-            'subtitle': 'Móvil · take-profit y stop-loss',
-            'triggers': [
-                {'process': 'monitor', 'label': '⚡ Monitor', 'primary': False},
-                {'process': 'monitor_executor', 'label': '▶ Executor', 'primary': True},
-            ],
-            'entries': build_mobile_trace_entries(
-                'phone.monitor',
-                limit=TRACE_LANE_LIMIT,
-                payload_keys=['market_slug', 'outcome', 'reason', 'status'],
-                allowed_events={'trigger_detected', 'trigger_skipped', 'order_executed', 'order_failed', 'run_skipped'},
-            ),
+            'title': 'Server monitor',
+            'subtitle': 'Servidor · iteraciones de take-profit con snapshot de abiertas',
+            'triggers': [{'process': 'monitor', 'label': '⚡ Run Monitor', 'primary': True}],
+            'entries': build_server_monitor_entries(limit=TRACE_LANE_LIMIT),
         },
     ]
+
+
+def format_monitor_positions_meta(positions: list[dict[str, Any]]) -> str:
+    if not positions:
+        return 'No open positions.'
+    chunks = []
+    for position in positions[:3]:
+        outcome = position.get('outcome', '')
+        market_slug = position.get('market_slug', '')
+        value_usd = safe_float(position.get('value_usd'))
+        prob = safe_float(position.get('prob'))
+        chunks.append(f'{outcome} {market_slug}: {value_usd:.2f}$ @ {prob * 100:.0f}¢')
+    extra = len(positions) - len(chunks)
+    if extra > 0:
+        chunks.append(f'+{extra} more')
+    return ' · '.join(chunks)
+
+
+def build_server_monitor_entries(limit: int = TRACE_LANE_LIMIT) -> list[dict[str, Any]]:
+    history = load_json(MONITOR_HISTORY_PATH, [])
+    if not isinstance(history, list) or not history:
+        fallback = load_json(MONITOR_ACTION_PATH, {})
+        history = [fallback] if isinstance(fallback, dict) and fallback else []
+
+    items: list[dict[str, Any]] = []
+    for entry in reversed(history[-limit:]):
+        status = str(entry.get('status') or 'unknown')
+        open_positions = entry.get('open_positions') if isinstance(entry.get('open_positions'), list) else []
+        trigger_count = int(safe_float(entry.get('action_count')))
+        eligible_count = int(safe_float(entry.get('eligible_action_count')))
+        status_titles = {
+            'no_open_positions': 'No open positions on this iteration',
+            'cooldown': f'{trigger_count} TP trigger(s) detected, all in cooldown',
+            'phone_triggered': f'{eligible_count} TP trigger(s) sent to phone executor',
+            'trigger_failed': f'{eligible_count} TP trigger(s) failed to reach phone executor',
+            'trigger_detected': f'{trigger_count} TP trigger(s) detected',
+        }
+        tone = 'info'
+        if status == 'trigger_failed':
+            tone = 'error'
+        elif status == 'cooldown':
+            tone = 'warning'
+        title = status_titles.get(status, status.replace('_', ' '))
+        meta_parts = [f'{len(open_positions)} open', format_monitor_positions_meta(open_positions)]
+        dispatch_detail = str(entry.get('dispatch_detail') or '').strip()
+        if dispatch_detail:
+            meta_parts.append(dispatch_detail[:120])
+        items.append(
+            {
+                'timestamp': fmt_cet(str(entry.get('timestamp', ''))),
+                'eyebrow': 'Server monitor',
+                'title': title,
+                'meta': ' · '.join(part for part in meta_parts if part),
+                'tone': tone,
+            }
+        )
+    return items
 
 
 def fmt_cet(timestamp: str) -> str:
@@ -772,6 +848,220 @@ def timestamp_to_local(timestamp: str) -> str:
         return dt.strftime('%Y-%m-%d %H:%M')
     except Exception:
         return timestamp
+
+
+def parse_utc_timestamp(timestamp: str) -> datetime | None:
+    if not timestamp:
+        return None
+    try:
+        return datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(UTC)
+    except Exception:
+        return None
+
+
+def build_btc_timeline_chart() -> dict[str, Any]:
+    trade_log = load_json(TRADE_LOG_PATH, [])
+    if not isinstance(trade_log, list):
+        trade_log = []
+
+    price_points: list[dict[str, Any]] = []
+    closed_markers_raw: list[dict[str, Any]] = []
+    open_markers_raw: list[dict[str, Any]] = []
+
+    for entry in trade_log:
+        timestamp = str(entry.get('timestamp') or '')
+        dt = parse_utc_timestamp(timestamp)
+        if dt is None:
+            continue
+
+        price_value = safe_float(entry.get('binance_spot_price'), None)
+        if price_value is not None:
+            price_points.append(
+                {
+                    'timestamp': timestamp,
+                    'dt': dt,
+                    'price': price_value,
+                    'label': timestamp_to_local(timestamp),
+                }
+            )
+
+    price_points.sort(key=lambda item: item['dt'])
+
+    if not price_points:
+        return {
+            'has_data': False,
+            'points': [],
+            'markers': [],
+            'open_markers': [],
+            'y_ticks': [],
+            'x_ticks': [],
+            'summary': {},
+        }
+
+    def resolve_marker_price(dt: datetime, direct_price: float | None) -> float | None:
+        if direct_price is not None:
+            return direct_price
+        closest_point = min(
+            price_points,
+            key=lambda item: abs((item['dt'] - dt).total_seconds()),
+            default=None,
+        )
+        return closest_point['price'] if closest_point else None
+
+    closed_positions = fetch_closed_positions_live()
+    for item in closed_positions:
+        timestamp_value = item.get('timestamp')
+        if timestamp_value in (None, ''):
+            continue
+        try:
+            timestamp_int = int(timestamp_value)
+            timestamp = datetime.fromtimestamp(timestamp_int, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+        except Exception:
+            continue
+        dt = parse_utc_timestamp(timestamp)
+        if dt is None:
+            continue
+        realized_pnl = safe_float(item.get('realizedPnl'), 0.0)
+        closed_markers_raw.append(
+            {
+                'timestamp': timestamp,
+                'dt': dt,
+                'price': resolve_marker_price(dt, None),
+                'market_title': str(item.get('title') or item.get('slug') or ''),
+                'market_slug': str(item.get('slug') or ''),
+                'outcome': str(item.get('outcome') or ''),
+                'shares': safe_float(item.get('totalBought'), 0.0),
+                'entry_cost_usd': safe_float(item.get('totalBought'), 0.0) - realized_pnl,
+                'close_label': timestamp_to_local(timestamp),
+                'pnl_usd': realized_pnl,
+                'pnl_pct': 0.0,
+                'status': 'profit' if realized_pnl > 0 else 'loss' if realized_pnl < 0 else 'flat',
+            }
+        )
+
+    live_positions = fetch_live_positions()
+    for item in live_positions:
+        slug = str(item.get('slug') or '')
+        if slug in IGNORED_POSITION_SLUGS:
+            continue
+        end_date = str(item.get('endDate') or '')
+        dt = parse_utc_timestamp(end_date if 'T' in end_date else f'{end_date}T00:00:00Z')
+        if dt is None:
+            continue
+        open_markers_raw.append(
+            {
+                'timestamp': dt.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'dt': dt,
+                'price': resolve_marker_price(dt, None),
+                'market_title': str(item.get('title') or slug),
+                'market_slug': slug,
+                'outcome': str(item.get('outcome') or ''),
+                'shares': safe_float(item.get('size'), 0.0),
+                'entry_cost_usd': safe_float(item.get('initialValue'), 0.0),
+                'status': 'open',
+            }
+        )
+
+    closed_markers_raw = [marker for marker in closed_markers_raw if marker.get('price') is not None]
+    open_markers_raw = [marker for marker in open_markers_raw if marker.get('price') is not None]
+    closed_markers_raw.sort(key=lambda item: item['dt'])
+    open_markers_raw.sort(key=lambda item: item['dt'])
+
+    width = 1180
+    height = 440
+    margin_left = 72
+    margin_right = 28
+    margin_top = 24
+    margin_bottom = 62
+    plot_width = width - margin_left - margin_right
+    plot_height = height - margin_top - margin_bottom
+
+    min_dt = price_points[0]['dt']
+    max_dt = price_points[-1]['dt']
+    total_seconds = max((max_dt - min_dt).total_seconds(), 1.0)
+    prices = [item['price'] for item in price_points]
+    min_price = min(prices)
+    max_price = max(prices)
+    price_span = max(max_price - min_price, max(max_price * 0.01, 1.0))
+    padded_min = min_price - price_span * 0.08
+    padded_max = max_price + price_span * 0.08
+    padded_span = max(padded_max - padded_min, 1.0)
+
+    def x_for_dt(dt: datetime) -> float:
+        return margin_left + (((dt - min_dt).total_seconds() / total_seconds) * plot_width)
+
+    def y_for_price(price: float) -> float:
+        return margin_top + ((padded_max - price) / padded_span) * plot_height
+
+    chart_points = [
+        {
+            'x': round(x_for_dt(item['dt']), 2),
+            'y': round(y_for_price(item['price']), 2),
+            'price': item['price'],
+            'timestamp': item['timestamp'],
+            'label': item['label'],
+        }
+        for item in price_points
+    ]
+    polyline_points = ' '.join(f"{item['x']},{item['y']}" for item in chart_points)
+
+    def decorate_marker(marker: dict[str, Any]) -> dict[str, Any]:
+        tooltip = [
+            f"{marker['outcome']} - {marker['market_title']}",
+            f"Opened: {timestamp_to_local(marker['timestamp'])}",
+            f"BTC: ${marker['price']:,.2f}",
+            f"Stake: ${marker['entry_cost_usd']:.2f} · Shares: {marker['shares']:.2f}",
+        ]
+        if marker['status'] == 'open':
+            tooltip.append('Status: still open')
+        else:
+            tooltip.append(f"Closed: {marker['close_label']}")
+            tooltip.append(f"PnL: {marker['pnl_usd']:+.2f}$ ({marker['pnl_pct']:+.2f}%)")
+        return {
+            **marker,
+            'x': round(x_for_dt(marker['dt']), 2),
+            'y': round(y_for_price(marker['price']), 2),
+            'tooltip': ' | '.join(tooltip),
+        }
+
+    closed_markers = [decorate_marker(marker) for marker in closed_markers_raw]
+    open_markers = [decorate_marker(marker) for marker in open_markers_raw]
+
+    y_ticks = []
+    for index in range(5):
+        price_value = padded_min + (padded_span * index / 4)
+        y_ticks.append({'label': f"${price_value:,.0f}", 'y': round(y_for_price(price_value), 2)})
+
+    x_ticks = []
+    for index in range(5):
+        tick_dt = min_dt + timedelta(seconds=total_seconds * index / 4)
+        x_ticks.append({'label': tick_dt.astimezone(_CET).strftime('%d %b'), 'x': round(x_for_dt(tick_dt), 2)})
+
+    summary = {
+        'samples': len(chart_points),
+        'closed_markers': len(closed_markers),
+        'open_markers': len(open_markers),
+        'wins': sum(1 for marker in closed_markers if marker['status'] == 'profit'),
+        'losses': sum(1 for marker in closed_markers if marker['status'] == 'loss'),
+        'first_label': timestamp_to_local(price_points[0]['timestamp']),
+        'last_label': timestamp_to_local(price_points[-1]['timestamp']),
+    }
+    return {
+        'has_data': True,
+        'width': width,
+        'height': height,
+        'plot_left': margin_left,
+        'plot_top': margin_top,
+        'plot_right': width - margin_right,
+        'plot_bottom': height - margin_bottom,
+        'polyline_points': polyline_points,
+        'points': chart_points,
+        'markers': closed_markers,
+        'open_markers': open_markers,
+        'y_ticks': y_ticks,
+        'x_ticks': x_ticks,
+        'summary': summary,
+    }
 
 
 def extract_message_section(message: str, start_label: str, end_label: str | None = None) -> str:
@@ -996,6 +1286,7 @@ def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
     pending_orders = load_json(PENDING_ORDERS_PATH, [])
+    active_pending_orders = [item for item in pending_orders if item.get('status') == 'pending_phone_execution']
     live_positions_raw = fetch_live_positions()
     open_positions = [normalize_live_position(item) for item in live_positions_raw]
     closed_positions = fetch_closed_positions_live()
@@ -1034,6 +1325,7 @@ def build_polymarket_snapshot() -> dict[str, Any]:
                 'market_slug': p.get('market_slug', ''),
                 'outcome': p.get('position_side', ''),
                 'prob': f"{safe_float(p.get('current_price')) * 100:.0f}¢",
+                'value': safe_float(p.get('current_value_usd')),
                 'pnl': safe_float(p.get('cash_pnl_usd')),
                 'shares': safe_float(p.get('shares')),
                 'can_sell': safe_float(p.get('shares')) > 0 and bool(p.get('token_id')),
@@ -1058,7 +1350,16 @@ def build_polymarket_snapshot() -> dict[str, Any]:
             for details in details_list:
                 market_slug = details.get('market_slug', '')
                 recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_slug), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
-    return {'metrics': metrics, 'positions': positions, 'recent_operations': recent_operations[:12], 'pipeline': {'pending_count': len(pending_orders), 'pending_orders': pending_orders[:12]}}
+    return {
+        'metrics': metrics,
+        'positions': positions,
+        'recent_operations': recent_operations[:12],
+        'pipeline': {
+            'pending_count': len(active_pending_orders),
+            'pending_orders': active_pending_orders[:12],
+            'archived_orders': [item for item in pending_orders if item.get('status') != 'pending_phone_execution'][:12],
+        },
+    }
 
 
 def load_recent_operator_tail() -> str:
@@ -1209,7 +1510,7 @@ TRIGGER_LABELS = {
 }
 
 PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@localhost']
-PHONE_REPO_CMD = "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true && python {script}'"
+PHONE_REPO_CMD = "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true && python3 {script}'"
 
 
 @app.route('/private/trigger/<process>', methods=['POST'])
@@ -1308,8 +1609,11 @@ def private_polymarket():
           <h1 class="private-title">Zona privada</h1>
           <div class="section-subtitle">Panel de control inspirado en Polymarket para cartera, operativa y observabilidad.</div>
         </div>
-        <div class="nav"><a href="/">Pública</a><a href="/private/polymarket" style="font-weight:700;color:#fff">Polymarket</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a><a class="button-link secondary" href="/refresh?next=polymarket" style="font-size:.85rem;padding:8px 14px">↻ Actualizar</a></div>
+                <div class="nav"><a href="/">Pública</a><a href="/private/polymarket" style="font-weight:700;color:#fff">Polymarket</a><a href="/private/polymarket/timeline">BTC timeline</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a><a class="button-link secondary" href="/refresh?next=polymarket" style="font-size:.85rem;padding:8px 14px">↻ Actualizar</a></div>
       </div>
+            <div style="display:flex;justify-content:flex-end;margin:0 0 18px">
+                <a class="button-link secondary" href="/private/polymarket/timeline">Ver cronología BTC + trades</a>
+            </div>
       <div class="private-strip">
         <section class="metric-panel">
           <div class="metric-label">{{ metrics[0].label }}</div>
@@ -1339,6 +1643,7 @@ def private_polymarket():
                                         <span class="position-open-title" title="{{ pos.title }}">{{ pos.outcome }} · {{ pos.title }}</span>
                                         <div class="position-open-meta">
                                             <span>{{ pos.prob }}</span>
+                                            <span>{{ '%.2f$' % pos.value }}</span>
                                             <span class="{{ 'good' if pos.pnl >= 0 else 'bad' }}">{{ '%+.2f$' % pos.pnl }}</span>
                                             <span class="position-open-shares">{{ '%.2f' % pos.shares }} sh</span>
                                         </div>
@@ -1579,6 +1884,87 @@ def private_polymarket():
         manual_sell_feedback=manual_sell_feedback,
         **snapshot,
     )
+
+
+@app.route('/private/polymarket/timeline')
+@require_private
+def private_polymarket_timeline():
+        chart = build_btc_timeline_chart()
+        html = page_start('BTC timeline | Beecthor') + """
+        <div class="shell private-shell">
+            <div class="private-header">
+                <div>
+                    <h1 class="private-title">BTC timeline</h1>
+                    <div class="section-subtitle">Cronología horizontal del precio spot de Binance con las compras de Polymarket superpuestas.</div>
+                </div>
+                <div class="nav"><a href="/">Pública</a><a href="/private/polymarket">Polymarket</a><a href="/private/polymarket/timeline" style="font-weight:700;color:#fff">BTC timeline</a><a href="/private/logs">Logs</a><a href="/private/chat">Chat</a><a href="/logout">Logout</a></div>
+            </div>
+            <section class="timeline-card">
+                <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom:8px">Spot BTC vs trades ejecutados</h2>
+                        <div class="muted">Los puntos se colocan en el instante de compra. Verde si la posición terminó en beneficio, rojo si terminó en pérdida y gris si sigue abierta.</div>
+                    </div>
+                    <div class="timeline-actions">
+                        <a class="button-link secondary" href="/private/polymarket">← Volver al dashboard</a>
+                        <a class="button-link secondary" href="/refresh?next=polymarket">↻ Actualizar</a>
+                    </div>
+                </div>
+                {% if chart.has_data %}
+                <div class="timeline-meta-grid">
+                    <div class="timeline-stat">
+                        <div class="timeline-stat-label">Range</div>
+                        <div class="timeline-stat-value">{{ chart.summary.first_label }} → {{ chart.summary.last_label }}</div>
+                    </div>
+                    <div class="timeline-stat">
+                        <div class="timeline-stat-label">BTC samples</div>
+                        <div class="timeline-stat-value">{{ chart.summary.samples }}</div>
+                    </div>
+                    <div class="timeline-stat">
+                        <div class="timeline-stat-label">Closed trades</div>
+                        <div class="timeline-stat-value">{{ chart.summary.closed_markers }}</div>
+                    </div>
+                    <div class="timeline-stat">
+                        <div class="timeline-stat-label">Wins / losses</div>
+                        <div class="timeline-stat-value"><span class="good">{{ chart.summary.wins }}</span> / <span class="bad">{{ chart.summary.losses }}</span>{% if chart.summary.open_markers %} / <span>{{ chart.summary.open_markers }} open</span>{% endif %}</div>
+                    </div>
+                </div>
+                <div class="timeline-legend">
+                    <div class="timeline-legend-item"><span class="timeline-dot" style="background:#22c55e"></span> Trade con beneficio</div>
+                    <div class="timeline-legend-item"><span class="timeline-dot" style="background:#ef4444"></span> Trade con pérdida</div>
+                    <div class="timeline-legend-item"><span class="timeline-dot" style="background:#94a3b8"></span> Trade aún abierto</div>
+                    <div class="timeline-legend-item"><span class="timeline-dot" style="background:#3ea6ff"></span> Serie de BTC spot</div>
+                </div>
+                <div class="timeline-svg-wrap">
+                    <svg class="timeline-svg" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="BTC spot timeline with Polymarket trades">
+                        <rect x="0" y="0" width="{{ chart.width }}" height="{{ chart.height }}" rx="18" fill="rgba(255,255,255,0.01)"></rect>
+                        {% for tick in chart.y_ticks %}
+                        <line x1="{{ chart.plot_left }}" y1="{{ tick.y }}" x2="{{ chart.plot_right }}" y2="{{ tick.y }}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"></line>
+                        <text x="{{ chart.plot_left - 12 }}" y="{{ tick.y + 4 }}" text-anchor="end" fill="#8ea0ba" font-size="12">{{ tick.label }}</text>
+                        {% endfor %}
+                        {% for tick in chart.x_ticks %}
+                        <line x1="{{ tick.x }}" y1="{{ chart.plot_top }}" x2="{{ tick.x }}" y2="{{ chart.plot_bottom }}" stroke="rgba(255,255,255,0.05)"></line>
+                        <text x="{{ tick.x }}" y="{{ chart.height - 18 }}" text-anchor="middle" fill="#8ea0ba" font-size="12">{{ tick.label }}</text>
+                        {% endfor %}
+                        <polyline fill="none" stroke="#3ea6ff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="{{ chart.polyline_points }}"></polyline>
+                        {% for marker in chart.open_markers %}
+                        <circle cx="{{ marker.x }}" cy="{{ marker.y }}" r="5" fill="#0f172a" stroke="#94a3b8" stroke-width="2">
+                            <title>{{ marker.tooltip }}</title>
+                        </circle>
+                        {% endfor %}
+                        {% for marker in chart.markers %}
+                        <circle cx="{{ marker.x }}" cy="{{ marker.y }}" r="5.5" fill="{{ '#22c55e' if marker.status == 'profit' else '#ef4444' if marker.status == 'loss' else '#f59e0b' }}" stroke="#0b0f14" stroke-width="2">
+                            <title>{{ marker.tooltip }}</title>
+                        </circle>
+                        {% endfor %}
+                    </svg>
+                </div>
+                {% else %}
+                <div class="timeline-empty">No hay suficientes muestras con binance_spot_price en el trade log para dibujar la cronología.</div>
+                {% endif %}
+            </section>
+        </div>""" + PAGE_END
+        return render_template_string(html, chart=chart)
 
 
 @app.route('/private/position/sell', methods=['POST'])

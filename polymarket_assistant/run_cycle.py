@@ -31,12 +31,14 @@ LAST_RUN_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.json'
 WORKFLOW_SUMMARY_PATH = ASSISTANT_DOCS_DIR / 'last_run_summary.md'
 NOTIFIED_CLAIMS_PATH = ASSISTANT_DIR / 'notified_claims.json'
 PENDING_ORDERS_PATH = ASSISTANT_DIR / 'pending_orders.json'
+PERFORMANCE_SNAPSHOT_PATH = ASSISTANT_DIR / 'performance_snapshot.json'
 HOST = 'https://clob.polymarket.com'
 CHAIN_ID = 137
 GAMMA_HOST = 'https://gamma-api.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
 BINANCE_STATS_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'
+BINANCE_KLINES_URL = 'https://api.binance.com/api/v3/klines'
 BINANCE_FUNDING_URL = 'https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT'
 BINANCE_LS_RATIO_URL = 'https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=5m&limit=1'
 BINANCE_OI_URL = 'https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT'
@@ -75,6 +77,10 @@ DEFAULT_OPEN_TARGET = {
     'should_open': True,
     'position_kind': 'price_hit',
     'market_type': '',
+    'slot_name': '',
+    'beecthor_aligned': None,
+    'momentum_confirmed': None,
+    'expiry_validity': '',
     'event_slug': '',
     'market_slug': '',
     'outcome': '',
@@ -415,6 +421,58 @@ def build_market_time_context() -> dict[str, Any]:
     }
 
 
+def fetch_binance_kline_trends() -> dict[str, Any]:
+    """Return short-term BTC trend windows from Binance hourly candles."""
+    try:
+        response = requests.get(
+            BINANCE_KLINES_URL,
+            params={'symbol': 'BTCUSDT', 'interval': '1h', 'limit': 96},
+            timeout=20,
+        )
+        response.raise_for_status()
+        rows = response.json()
+    except Exception:
+        return {}
+    if not rows:
+        return {}
+
+    closes = [safe_float(row[4]) for row in rows]
+    highs = [safe_float(row[2]) for row in rows]
+    lows = [safe_float(row[3]) for row in rows]
+
+    def window_stats(hours: int) -> dict[str, Any]:
+        if len(closes) < hours:
+            return {}
+        sub_closes = closes[-hours:]
+        start = sub_closes[0]
+        end = sub_closes[-1]
+        change_pct = round((end / start - 1) * 100, 2) if start else 0.0
+        return {
+            'hours': hours,
+            'start': round(start, 2),
+            'end': round(end, 2),
+            'change_pct': change_pct,
+            'high': round(max(highs[-hours:]), 2),
+            'low': round(min(lows[-hours:]), 2),
+        }
+
+    windows = {
+        '12h': window_stats(12),
+        '24h': window_stats(24),
+        '48h': window_stats(48),
+        '72h': window_stats(72),
+        '96h': window_stats(96),
+    }
+    last_12 = windows.get('12h') or {}
+    last_24 = windows.get('24h') or {}
+    bias = 'neutral'
+    if safe_float(last_12.get('change_pct')) > 0.35 and safe_float(last_24.get('change_pct')) >= 0:
+        bias = 'bullish_short_term'
+    elif safe_float(last_12.get('change_pct')) < -0.35 and safe_float(last_24.get('change_pct')) <= 0:
+        bias = 'bearish_short_term'
+    return {'windows': windows, 'short_term_bias': bias}
+
+
 def fetch_binance_snapshot() -> dict[str, Any]:
     ticker = requests.get(BINANCE_TICKER_URL, timeout=20)
     ticker.raise_for_status()
@@ -449,6 +507,9 @@ def fetch_binance_snapshot() -> dict[str, Any]:
         result = fetcher()
         if result:
             snapshot[key] = result
+    trend = fetch_binance_kline_trends()
+    if trend:
+        snapshot['trend'] = trend
     return snapshot
 
 
@@ -760,12 +821,32 @@ def compute_performance_snapshot(trade_log: list[dict[str, Any]]) -> dict[str, A
     # Recent streak (last 5 closed trades)
     streak = ''.join('W' if safe_float(t.get('pnl_usd')) > 0 else 'L' for t in closed[-5:])
 
+    def add_group(stats: dict[str, dict[str, Any]], label: str, trade: dict[str, Any]) -> None:
+        bucket = stats.setdefault(label or 'unknown', {'trades': 0, 'wins': 0, 'pnl_usd': 0.0})
+        pnl = safe_float(trade.get('pnl_usd'))
+        bucket['trades'] += 1
+        bucket['wins'] += 1 if pnl > 0 else 0
+        bucket['pnl_usd'] = round(safe_float(bucket.get('pnl_usd')) + pnl, 6)
+
+    by_direction: dict[str, dict[str, Any]] = {}
+    by_market_type: dict[str, dict[str, Any]] = {}
+    by_slot_name: dict[str, dict[str, Any]] = {}
+    for trade in closed:
+        slug = str(trade.get('market_slug') or '')
+        direction = direction_from_market_outcome(slug, str(trade.get('outcome') or ''))
+        add_group(by_direction, direction, trade)
+        add_group(by_market_type, 'weekly' if re.search(r'-(?:march|april)-\d+-\d+', slug) else 'daily', trade)
+        add_group(by_slot_name, str(trade.get('slot_name') or 'unknown'), trade)
+
     return {
         'total_closed_trades': len(closed),
         'win_rate_pct': win_rate,
         'avg_gain_on_wins_pct': avg_gain,
         'avg_loss_on_losses_pct': avg_loss,
         'by_entry_probability_band': band_stats,
+        'by_direction': by_direction,
+        'by_market_type': by_market_type,
+        'by_slot_name': by_slot_name,
         'recent_streak_last5': streak,
     }
 
@@ -783,6 +864,10 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     # based on the raw persisted state.
     account_state = sync_account_state(raw_account_state, balance_usdc, positions)
     perf = compute_performance_snapshot(trade_log)
+    recent_summaries = read_recent_summaries()
+    binance = fetch_binance_snapshot()
+    strategy_pressure = summarize_strategy_pressure(account_state, positions, binance, recent_summaries)
+    save_json(PERFORMANCE_SNAPSHOT_PATH, {'timestamp': now_utc(), **strategy_pressure})
     reconciliation = build_reconciliation_status(
         raw_account_state,
         positions,
@@ -793,13 +878,14 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     return {
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
         'recent_transcripts': read_recent_transcripts(),
-        'recent_summaries': read_recent_summaries(),
+        'recent_summaries': recent_summaries,
         'account_state': account_state,
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
+        'strategy_pressure': strategy_pressure,
         'reconciliation': reconciliation,
         'market_time_context': build_market_time_context(),
-        'binance': fetch_binance_snapshot(),
+        'binance': binance,
         'polymarket': {
             'cash_balance_usdc': safe_float(balance.get('balance')) / 1_000_000,
             'allowances': balance.get('allowances', {}),
@@ -916,6 +1002,80 @@ def is_slot_discarded(position: dict[str, Any], account_state: dict[str, Any]) -
     return prob <= discarded_probability_threshold(account_state)
 
 
+def direction_from_market_outcome(market_slug: str, outcome: str) -> str:
+    """Return the BTC direction a price-hit outcome pays for."""
+    slug = (market_slug or '').lower()
+    normalized_outcome = (outcome or '').lower()
+    if '-dip-' in slug:
+        return 'bearish' if normalized_outcome == 'yes' else 'bullish'
+    if '-reach-' in slug:
+        return 'bullish' if normalized_outcome == 'yes' else 'bearish'
+    return 'neutral'
+
+
+def summarize_strategy_pressure(
+    account_state: dict[str, Any],
+    positions: list[dict[str, Any]],
+    binance: dict[str, Any],
+    recent_summaries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    starting_bankroll = safe_float(account_state.get('starting_bankroll'))
+    cash_available = safe_float(account_state.get('cash_available'))
+    open_value = round(sum(safe_float(pos.get('current_value')) for pos in positions), 6)
+    net_liquidation_value = round(cash_available + open_value, 6)
+    unrealized_pnl = round(sum(safe_float(pos.get('cash_pnl')) for pos in positions), 6)
+    discarded_positions = [
+        pos for pos in positions
+        if infer_position_market_type(pos) in {'daily', 'weekly'} and is_slot_discarded(pos, account_state)
+    ]
+    discarded_unrealized_pnl = round(sum(safe_float(pos.get('cash_pnl')) for pos in discarded_positions), 6)
+    discarded_loss_abs = abs(min(0.0, discarded_unrealized_pnl))
+    discarded_loss_pct = round(discarded_loss_abs / starting_bankroll * 100, 2) if starting_bankroll else 0.0
+
+    direction_losses: dict[str, float] = {'bullish': 0.0, 'bearish': 0.0, 'neutral': 0.0}
+    for pos in discarded_positions:
+        direction = direction_from_market_outcome(pos.get('market_slug', ''), pos.get('outcome', ''))
+        direction_losses[direction] = round(
+            direction_losses.get(direction, 0.0) + abs(min(0.0, safe_float(pos.get('cash_pnl')))),
+            6,
+        )
+    dominant_discarded_direction = max(direction_losses, key=direction_losses.get) if discarded_positions else 'none'
+
+    bearish_mentions = 0
+    for summary in recent_summaries:
+        excerpt = str(summary.get('message_excerpt') or '').lower()
+        if 'bajista' in excerpt or 'cortos' in excerpt or 'continuación a la baja' in excerpt:
+            bearish_mentions += 1
+
+    trend_windows = ((binance.get('trend') or {}).get('windows') or {})
+    change_48h = safe_float((trend_windows.get('48h') or {}).get('change_pct'))
+    change_72h = safe_float((trend_windows.get('72h') or {}).get('change_pct'))
+    bearish_bias_correction_active = bearish_mentions >= 3 and change_48h >= -0.25 and change_72h >= -1.0
+    short_term_bias = (binance.get('trend') or {}).get('short_term_bias', 'neutral')
+
+    return {
+        'net_liquidation_value': net_liquidation_value,
+        'starting_bankroll': starting_bankroll,
+        'equity_delta_usd': round(net_liquidation_value - starting_bankroll, 6) if starting_bankroll else 0.0,
+        'cash_available': cash_available,
+        'open_value': open_value,
+        'unrealized_pnl': unrealized_pnl,
+        'discarded_position_count': len(discarded_positions),
+        'discarded_unrealized_pnl': discarded_unrealized_pnl,
+        'discarded_loss_pct_of_bankroll': discarded_loss_pct,
+        'dominant_discarded_direction': dominant_discarded_direction,
+        'directional_discarded_loss_usd': direction_losses,
+        'bearish_summary_count': bearish_mentions,
+        'bearish_bias_correction_active': bearish_bias_correction_active,
+        'binance_short_term_bias': short_term_bias,
+        'risk_flags': {
+            'equity_below_starting_bankroll': bool(starting_bankroll and net_liquidation_value < starting_bankroll),
+            'discarded_pain_budget_exceeded': discarded_loss_pct >= 15.0,
+            'bearish_bias_needs_confirmation': bearish_bias_correction_active,
+        },
+    }
+
+
 def active_slot_limit_for_market_type(account_state: dict[str, Any], market_type: str) -> int:
     if market_type == 'daily':
         return int(account_state.get('max_daily_positions', 2))
@@ -969,6 +1129,18 @@ def build_reconciliation_status(
     }
 
 
+def binance_confirms_direction(binance: dict[str, Any], direction: str) -> bool:
+    if direction not in {'bullish', 'bearish'}:
+        return False
+    short_bias = (binance.get('trend') or {}).get('short_term_bias')
+    change_24h = safe_float(binance.get('price_change_percent_24h'))
+    pct_below_high = safe_float(binance.get('pct_below_24h_high'))
+    pct_above_low = safe_float(binance.get('pct_above_24h_low'))
+    if direction == 'bullish':
+        return short_bias == 'bullish_short_term' or change_24h >= 0.75 or pct_below_high <= 0.45
+    return short_bias == 'bearish_short_term' or change_24h <= -0.75 or pct_above_low <= 0.45
+
+
 def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tuple[bool, str]:
     decision = normalize_decision(decision)
     action = decision.get('action')
@@ -980,7 +1152,10 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
     account_state = context['account_state']
     markets = polymarket['active_btc_markets']
     positions = polymarket['positions']
-    spot_price = context['binance']['spot_price']
+    binance = context['binance']
+    spot_price = binance['spot_price']
+    market_time = context.get('market_time_context') or {}
+    strategy_pressure = context.get('strategy_pressure') or {}
 
     if action == 'OPEN_POSITION':
         reconciliation = context.get('reconciliation') or {}
@@ -1034,6 +1209,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 return False, 'Price-hit max_entry_probability must be between 0 and 1'
             if max_entry_probability < live_probability:
                 return False, 'Price-hit max_entry_probability is below the current live market probability'
+            if live_probability >= 0.85:
+                return False, 'Outcome probability is at or above the 85% hard cap'
+            expiry_validity = str(target.get('expiry_validity') or '').strip().lower()
+            if expiry_validity not in {'strong', 'acceptable'}:
+                return False, 'Opening requires expiry_validity strong or acceptable'
             stake_usd = safe_float(target.get('stake_usd'))
             if stake_usd <= 0 or stake_usd > cash_available:
                 return False, 'Price-hit stake is invalid or exceeds available cash'
@@ -1044,6 +1224,40 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 if stake_usd > max_stake:
                     return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
             mtype = market.get('market_type', 'daily')
+            trade_direction = direction_from_market_outcome(market['market_slug'], outcome)
+            hours_until_daily_close = safe_float(market_time.get('hours_until_daily_market_close'))
+            hours_until_weekly_close = safe_float(market_time.get('hours_until_weekly_market_close'))
+            if mtype == 'daily' and hours_until_daily_close < 4:
+                strike_distance = abs(safe_float(market.get('strike')) - spot_price)
+                daily_range = max(1.0, safe_float(binance.get('daily_range_usd')))
+                if live_probability < 0.65 or strike_distance > max(450.0, daily_range * 0.30):
+                    return False, 'Late-session daily entry rejected: weak expiry validity'
+            if mtype == 'weekly':
+                if hours_until_weekly_close < 72:
+                    return False, 'Weekly entry rejected: too late in the weekly period'
+                if live_probability < 0.25:
+                    return False, 'Weekly entry rejected: probability below 25% without exceptional edge'
+                if expiry_validity != 'strong' and live_probability < 0.55:
+                    return False, 'Weekly entry requires strong expiry validity unless live probability is already high'
+            if (
+                strategy_pressure.get('bearish_bias_correction_active')
+                and trade_direction == 'bearish'
+                and not binance_confirms_direction(binance, 'bearish')
+            ):
+                return False, 'Beecthor bearish-bias correction: Binance has not confirmed bearish rejection'
+            if (
+                strategy_pressure.get('dominant_discarded_direction') == trade_direction
+                and safe_float(strategy_pressure.get('discarded_loss_pct_of_bankroll')) >= 15.0
+                and live_probability < 0.75
+            ):
+                return False, 'Discarded-position pain budget blocks adding same-direction exposure'
+            if strategy_pressure.get('risk_flags', {}).get('equity_below_starting_bankroll') and live_probability < 0.65:
+                return False, 'Account-equity gate blocks low-conviction new exposure'
+            change_24h = safe_float(binance.get('price_change_percent_24h'))
+            chasing_up = trade_direction == 'bullish' and change_24h >= 3.0
+            chasing_down = trade_direction == 'bearish' and change_24h <= -3.0
+            if (chasing_up or chasing_down) and live_probability < 0.65:
+                return False, 'Post-big-move cooling rule rejects chasing without strong probability'
             requested_type_counts[mtype] = requested_type_counts.get(mtype, 0) + 1
             max_type_positions = active_slot_limit_for_market_type(account_state, mtype)
             if max_type_positions <= 0:
@@ -1141,6 +1355,11 @@ def prepare_open_order_via_phone(
         'side': 'BUY',
         'stake_usd': new_pos['stake_usd'],
         'max_entry_probability': safe_float(new_pos.get('max_entry_probability', 0.0)),
+        'market_type': market.get('market_type', ''),
+        'slot_name': new_pos.get('slot_name', ''),
+        'beecthor_aligned': new_pos.get('beecthor_aligned'),
+        'momentum_confirmed': new_pos.get('momentum_confirmed'),
+        'expiry_validity': new_pos.get('expiry_validity', ''),
         'market': market['question'],
         'market_slug': new_pos['market_slug'],
         'outcome': new_pos['outcome'],

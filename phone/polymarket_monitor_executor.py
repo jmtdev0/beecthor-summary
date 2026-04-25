@@ -38,12 +38,15 @@ ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
+PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
 TAKE_PROFIT_THRESHOLD = 0.90
+EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 # Do not execute a take-profit sale below the configured threshold, even if the
 # server saw >= 90% a few seconds earlier. The live executable book price is the
 # final source of truth for the order.
 MIN_EXECUTABLE_TAKE_PROFIT_PRICE = TAKE_PROFIT_THRESHOLD
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
+MONITOR_EXECUTED_ACTIONS_FILE = Path.home() / '.polymarket_monitor_executed_action_keys'
 
 EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
 CHAIN_ID = 137
@@ -290,6 +293,23 @@ def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict[str, 
     return resp.json()
 
 
+def monitor_action_key(action: str, position: dict[str, Any]) -> str:
+    return f'{action}:{position.get("slug", "")}:{position.get("outcome", "")}:{position.get("asset", "")}'
+
+
+def load_monitor_action_keys() -> set[str]:
+    try:
+        return set(MONITOR_EXECUTED_ACTIONS_FILE.read_text().splitlines())
+    except Exception:
+        return set()
+
+
+def save_monitor_action_key(key: str) -> None:
+    keys = load_monitor_action_keys()
+    keys.add(key)
+    MONITOR_EXECUTED_ACTIONS_FILE.write_text('\n'.join(sorted(keys)))
+
+
 def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None:
     now_ts = int(time.time())
     market_slug = position.get('slug', '')
@@ -318,35 +338,48 @@ def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None
     return None
 
 
-def classify_action(position: dict[str, Any]) -> str | None:
+def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None, None]:
     prob = safe_float(position.get('curPrice'))
     if prob >= TAKE_PROFIT_THRESHOLD:
-        return 'TAKE_PROFIT'
-    return None
+        return 'TAKE_PROFIT', 1.0
+    if prob >= PARTIAL_TAKE_PROFIT_THRESHOLD:
+        return 'PARTIAL_TAKE_PROFIT', 0.5
+    if 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD and safe_float(position.get('currentValue')) >= 0.05:
+        return 'EXCEPTIONAL_STOP_LOSS', 1.0
+    return None, None
 
 
-def position_priority_key(position: dict[str, Any]) -> tuple[int, float]:
+def position_priority_key(action: str, position: dict[str, Any]) -> tuple[int, float]:
     prob = safe_float(position.get('curPrice'))
-    return (0, -prob)
+    priority = {
+        'TAKE_PROFIT': 0,
+        'EXCEPTIONAL_STOP_LOSS': 1,
+        'PARTIAL_TAKE_PROFIT': 2,
+    }.get(action, 9)
+    return (priority, -prob)
 
 
 def choose_target_positions(
     positions: list[dict[str, Any]],
     limit: int = MAX_TAKE_PROFIT_ACTIONS_PER_RUN,
-) -> list[tuple[str, dict[str, Any]]]:
-    candidates: list[tuple[str, dict[str, Any]]] = []
+) -> list[tuple[str, float, dict[str, Any]]]:
+    candidates: list[tuple[str, float, dict[str, Any]]] = []
+    executed_keys = load_monitor_action_keys()
     for pos in positions:
-        action = classify_action(pos)
+        action, fraction = classify_action(pos)
         if action:
-            candidates.append((action, pos))
-    candidates.sort(key=lambda item: position_priority_key(item[1]))
+            key = monitor_action_key(action, pos)
+            if action == 'PARTIAL_TAKE_PROFIT' and key in executed_keys:
+                continue
+            candidates.append((action, fraction, pos))
+    candidates.sort(key=lambda item: position_priority_key(item[0], item[2]))
     return candidates[:max(0, limit)]
 
 
-def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, dict[str, Any]] | tuple[None, None]:
+def choose_target_position(positions: list[dict[str, Any]]) -> tuple[str, float, dict[str, Any]] | tuple[None, None, None]:
     targets = choose_target_positions(positions, limit=1)
     if not targets:
-        return None, None
+        return None, None, None
     return targets[0]
 
 
@@ -368,7 +401,7 @@ def post_order(order_dict: dict[str, Any]) -> requests.Response:
 
 
 def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
-    """Append a trade_closed entry to trade_log.json via GitHub Contents API."""
+    """Append a monitor trade entry to trade_log.json via GitHub Contents API."""
     if not GH_TOKEN:
         print('[monitor-executor] GH_TOKEN not set — skipping trade_log update')
         return
@@ -391,7 +424,7 @@ def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
         TRADE_LOG_API_URL,
         headers=headers,
         json={
-            'message': f'chore: auto trade_closed {entry.get("market_slug", "")} ({entry.get("close_reason", "")})',
+            'message': f'chore: auto {entry.get("type", "trade_exit")} {entry.get("market_slug", "")} ({entry.get("close_reason", "")})',
             'content': new_content,
             'sha': sha,
             'committer': {
@@ -402,18 +435,28 @@ def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
         timeout=30,
     )
     if put_resp.ok:
-        print('[monitor-executor] trade_closed appended to trade_log.json on GitHub')
+        print('[monitor-executor] monitor trade entry appended to trade_log.json on GitHub')
     else:
         print(f'[monitor-executor] Failed to update trade_log.json: {put_resp.status_code} {put_resp.text[:200]}')
 
 
-def execute_target_position(action: str, target: dict[str, Any], dry_run: bool = False) -> bool:
+def minimum_executable_price(action: str) -> float:
+    if action == 'TAKE_PROFIT':
+        return TAKE_PROFIT_THRESHOLD
+    if action == 'PARTIAL_TAKE_PROFIT':
+        return PARTIAL_TAKE_PROFIT_THRESHOLD
+    return 0.001
+
+
+def execute_target_position(action: str, fraction: float, target: dict[str, Any], dry_run: bool = False) -> bool:
     market_slug = target.get('slug', '')
     title = target.get('title', market_slug)
     outcome = target.get('outcome', '')
     prob = safe_float(target.get('curPrice'))
-    amount = safe_float(target.get('size'))
+    size = safe_float(target.get('size'))
+    amount = size * fraction
     token_id = str(target.get('asset', ''))
+    action_key = monitor_action_key(action, target)
 
     def maybe_send_telegram(text: str) -> None:
         if not dry_run:
@@ -424,10 +467,10 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
         'phone.monitor',
         'trigger_detected',
         f'{action} selected for {market_slug}',
-        payload={'market_slug': market_slug, 'title': title, 'outcome': outcome, 'probability': prob, 'amount': amount},
+        payload={'market_slug': market_slug, 'title': title, 'outcome': outcome, 'probability': prob, 'amount': amount, 'fraction': fraction},
     )
 
-    recent_sell = find_recent_matching_sell(target)
+    recent_sell = find_recent_matching_sell(target) if action == 'PARTIAL_TAKE_PROFIT' else None
     if recent_sell:
         print(
             '[monitor-executor] Recent matching SELL found in activity; '
@@ -452,10 +495,11 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
         print('[monitor-executor] Querying order book...')
         price = get_market_price(token_id, 'SELL', amount)
         print(f'[monitor-executor] Market price: {price}')
-        if action == 'TAKE_PROFIT' and price < MIN_EXECUTABLE_TAKE_PROFIT_PRICE:
+        minimum_price = minimum_executable_price(action)
+        if price < minimum_price:
             detail = (
                 f'Live executable SELL price {price:.4f} is below the minimum '
-                f'take-profit threshold {MIN_EXECUTABLE_TAKE_PROFIT_PRICE:.4f}'
+                f'exit threshold {minimum_price:.4f}'
             )
             print(f'[monitor-executor] Skipping SELL: {detail}')
             send_server_log(
@@ -467,7 +511,7 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
                     'action': action,
                     'live_probability': prob,
                     'book_sell_price': price,
-                    'minimum_take_profit_price': MIN_EXECUTABLE_TAKE_PROFIT_PRICE,
+                    'minimum_exit_price': minimum_price,
                 },
             )
             maybe_send_telegram(
@@ -475,7 +519,7 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
                 f'{title}\n'
                 f'{outcome} @ {prob:.0%}\n'
                 f'El libro solo permit\u00eda vender a {price:.0%}. '
-                f'No vendo por debajo de {MIN_EXECUTABLE_TAKE_PROFIT_PRICE:.0%}.'
+                f'No vendo por debajo de {minimum_price:.0%}.'
             )
             return False
         order_dict = build_order_dict(token_id, 'SELL', amount, price)
@@ -516,6 +560,7 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
     if resp.ok:
         print(f'[monitor-executor] SUCCESS: {resp.text}')
         send_server_log('phone.monitor', 'order_executed', f'{action} executed successfully', payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]})
+        save_monitor_action_key(action_key)
         maybe_send_telegram(
             f'\u2705 {action} executed from phone:\n'
             f'{title}\n'
@@ -527,15 +572,17 @@ def execute_target_position(action: str, target: dict[str, Any], dry_run: bool =
         exit_proceeds = round(amount * price, 4)
         pnl_usd = round(exit_proceeds - entry_cost, 4) if entry_cost is not None else None
         pnl_pct = round((exit_proceeds / entry_cost - 1) * 100, 2) if entry_cost else None
+        log_type = 'trade_reduced' if action == 'PARTIAL_TAKE_PROFIT' else 'trade_closed'
         append_trade_closed_to_log({
             'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-            'type': 'trade_closed',
+        'type': log_type,
             'market_slug': market_slug,
             'market_title': title,
             'outcome': outcome,
             'side': 'SELL',
             'close_reason': action.lower(),
             'shares': round(amount, 4),
+            'fraction': round(fraction, 4),
             'avg_entry_price': avg_entry,
             'exit_price': round(price, 4),
             'entry_cost_usd': entry_cost,
@@ -586,20 +633,20 @@ def main() -> None:
 
     targets = choose_target_positions(positions)
     if not targets:
-        print('[monitor-executor] No take-profit trigger in live positions.')
-        send_server_log('phone.monitor', 'run_skipped', 'No take-profit trigger in live positions', payload={'open_positions': len(positions)})
+        print('[monitor-executor] No exit trigger in live positions.')
+        send_server_log('phone.monitor', 'run_skipped', 'No exit trigger in live positions', payload={'open_positions': len(positions)})
         return
 
     send_server_log(
         'phone.monitor',
         'run_active',
-        'Take-profit targets selected for execution',
+        'Exit targets selected for execution',
         payload={'open_positions': len(positions), 'selected_targets': len(targets)},
     )
 
-    for index, (action, target) in enumerate(targets, 1):
+    for index, (action, fraction, target) in enumerate(targets, 1):
         print(f'[monitor-executor] --- Target {index}/{len(targets)} ---')
-        execute_target_position(action, target, dry_run=args.dry_run)
+        execute_target_position(action, fraction, target, dry_run=args.dry_run)
         if index < len(targets):
             time.sleep(3)
 
