@@ -9301,5 +9301,57 @@
     "binance_spot_price": 77682.3,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-25T14:00:55Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-25T14-00-00Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-25T14-00-00Z",
+      "action": "NO_ACTION",
+      "confidence": 0.84,
+      "summary": "No new action: the active daily 77k dip is close to being discarded but is still technically alive, and the 78k reach rebound is not yet strong enough to justify forcing the counter-thesis momentum slot.",
+      "rationale": "Reconciliation is clean. BTC spot is 77690, with short-term Binance bias still neutral, shorts still dominant, and open interest flat to softer. The active daily 77k dip has decayed to roughly 22%, so it is close to the discarded-for-slot threshold but not below the 20% line yet. That means the primary daily thesis slot is still occupied for now. The nearest upside alternative, 78k reach, is priced around 60% and is mechanically tradable, but it still represents a counter-thesis daily momentum trade without a convincing expansion in price or positioning to support it; price remains trapped inside a narrow intraday range rather than showing a forceful breakout. The farther 79k reach and 76k dip are both too weak, and the weekly frontier remains poor, with 80k weekly reach only around 12.5% and the weekly dip candidates deeply discounted. The disciplined move is to wait. If the active 77k dip drops below the discarded threshold in a later cycle, the daily slot can free up cleanly; until then, forcing the opposite daily is premature.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77698.33,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]

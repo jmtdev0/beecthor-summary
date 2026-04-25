@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-25T12:00:59Z",
-  "run_id": "2026-04-25T12-00-05Z",
+  "timestamp": "2026-04-25T14:00:55Z",
+  "run_id": "2026-04-25T14-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-25T12-00-05Z",
+    "run_id": "2026-04-25T14-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "No new action: the active daily 77k dip is still alive, and the rebound toward 78k is not yet strong enough to justify opening a counter-thesis momentum daily.",
-    "rationale": "Reconciliation is clean. BTC spot is 77682.29, with the short-term Binance bias marked neutral, shorts still dominant, and open interest flat to slightly softer. The active daily 77k dip has weakened but remains at roughly 27%, which is still above the 20% discarded-for-slot threshold, so the primary daily thesis slot remains occupied. The nearest bullish alternative, 78k reach, is tradable around 61%, but this is still a counter-thesis trade and the tape does not show a forceful enough continuation to justify using the secondary daily momentum slot yet. The farther 79k reach is too weak, and the weekly frontier is still unattractive: 80k weekly reach is only around 13.5% and 72k weekly dip around 2.5%, so neither weekly slot offers a clean entry. With 12 hours still left in the daily market, the disciplined move is to hold the current daily 77k dip and wait either for clearer upside momentum or for the active daily to become discarded_for_slot before adding anything else.",
+    "confidence": 0.84,
+    "summary": "No new action: the active daily 77k dip is close to being discarded but is still technically alive, and the 78k reach rebound is not yet strong enough to justify forcing the counter-thesis momentum slot.",
+    "rationale": "Reconciliation is clean. BTC spot is 77690, with short-term Binance bias still neutral, shorts still dominant, and open interest flat to softer. The active daily 77k dip has decayed to roughly 22%, so it is close to the discarded-for-slot threshold but not below the 20% line yet. That means the primary daily thesis slot is still occupied for now. The nearest upside alternative, 78k reach, is priced around 60% and is mechanically tradable, but it still represents a counter-thesis daily momentum trade without a convincing expansion in price or positioning to support it; price remains trapped inside a narrow intraday range rather than showing a forceful breakout. The farther 79k reach and 76k dip are both too weak, and the weekly frontier remains poor, with 80k weekly reach only around 12.5% and the weekly dip candidates deeply discounted. The disciplined move is to wait. If the active 77k dip drops below the discarded threshold in a later cycle, the daily slot can free up cleanly; until then, forcing the opposite daily is premature.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77682.3,
+  "binance_spot_price": 77698.33,
   "positions_before": 1,
   "positions_after": 1
 }
