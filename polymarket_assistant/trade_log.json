@@ -6183,6 +6183,22 @@
     "positions_after": 1
   },
   {
+    "timestamp": "2026-04-20T10:01:11Z",
+    "type": "trade_opened",
+    "review_window": "manual_reconciliation",
+    "event_slug": "what-price-will-bitcoin-hit-on-april-20",
+    "market_slug": "will-bitcoin-dip-to-74k-on-april-20",
+    "market_title": "Will Bitcoin dip to $74,000 on April 20?",
+    "position_side": "Yes",
+    "token_id": "85250567510438296903847213494479671110500450743335738262595730227143036258360",
+    "entry_probability": 0.7,
+    "entry_cost_usd": 0.9784,
+    "shares": 1.3977,
+    "status": "open",
+    "source": "manual_reconciliation",
+    "notes": "Backfilled from the first cycle where the live position was visible after phone execution."
+  },
+  {
     "timestamp": "2026-04-20T12:01:17Z",
     "type": "cycle_run",
     "run_id": "2026-04-20T12-00-06Z",
@@ -6263,6 +6279,22 @@
     "binance_spot_price": 75124.5,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-20T14:01:05Z",
+    "type": "trade_opened",
+    "review_window": "manual_reconciliation",
+    "event_slug": "what-price-will-bitcoin-hit-april-20-26",
+    "market_slug": "will-bitcoin-dip-to-72k-april-20-26",
+    "market_title": "Will Bitcoin dip to $72,000 April 20-26?",
+    "position_side": "Yes",
+    "token_id": "79455752183258590494755626614657249799850413299595743349847689473019552364880",
+    "entry_probability": 0.4799,
+    "entry_cost_usd": 0.9625,
+    "shares": 2.0053,
+    "status": "open",
+    "source": "manual_reconciliation",
+    "notes": "Backfilled from the first cycle where the live position was visible after phone execution."
   },
   {
     "timestamp": "2026-04-20T14:01:05Z",
@@ -7435,6 +7467,22 @@
     "binance_spot_price": 78001.96,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-04-22T12:01:04Z",
+    "type": "trade_opened",
+    "review_window": "manual_reconciliation",
+    "event_slug": "what-price-will-bitcoin-hit-april-20-26",
+    "market_slug": "will-bitcoin-reach-80k-april-20-26",
+    "market_title": "Will Bitcoin reach $80,000 April 20-26?",
+    "position_side": "Yes",
+    "token_id": "91360396820458038177032043714602707124456748730890790728963892892027446623298",
+    "entry_probability": 0.5699,
+    "entry_cost_usd": 0.969,
+    "shares": 1.7,
+    "status": "open",
+    "source": "manual_reconciliation",
+    "notes": "Backfilled from the first cycle where the live position was visible after phone execution."
   },
   {
     "timestamp": "2026-04-22T12:01:04Z",
@@ -9048,6 +9096,22 @@
   },
   {
     "timestamp": "2026-04-25T08:01:04Z",
+    "type": "trade_opened",
+    "review_window": "manual_reconciliation",
+    "event_slug": "what-price-will-bitcoin-hit-on-april-25",
+    "market_slug": "will-bitcoin-dip-to-77k-on-april-25",
+    "market_title": "Will Bitcoin dip to $77,000 on April 25?",
+    "position_side": "Yes",
+    "token_id": "32022981604946541195060653176087111869183573873540851313546734614286626047191",
+    "entry_probability": 0.6099,
+    "entry_cost_usd": 0.9719,
+    "shares": 1.5933,
+    "status": "open",
+    "source": "manual_reconciliation",
+    "notes": "Backfilled from the first cycle where the live position was visible after phone execution."
+  },
+  {
+    "timestamp": "2026-04-25T08:01:04Z",
     "type": "cycle_run",
     "run_id": "2026-04-25T08-00-16Z",
     "dry_run": false,
@@ -9095,6 +9159,58 @@
       "details": null
     },
     "binance_spot_price": 77498.25,
+    "positions_before": 3,
+    "positions_after": 3
+  },
+  {
+    "timestamp": "2026-04-25T10:01:05Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-25T10-00-16Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-25T10-00-16Z",
+      "action": "NO_ACTION",
+      "confidence": 0.85,
+      "summary": "No new action: the daily 77k dip is weakened but still active, and the rebound toward 78k is not yet strong enough to justify opening the counter-thesis momentum slot.",
+      "rationale": "Reconciliation is clean. Binance spot has rebounded to 77722.31, which weakens the active daily 77k dip, but that position still sits at roughly 25% on Polymarket and therefore remains above the discarded-for-slot threshold of 20%. That means the primary daily thesis slot is still occupied. The nearest bullish same-day candidate is now 78k reach around 69%, which is a valid market mechanically, but the broader execution context still does not show the kind of forceful upside continuation required to fade the Beecthor thesis with the secondary daily momentum slot: price remains below the 24h high, shorts are still dominant, and open interest is flat rather than expanding into a clean squeeze. The farther 79k reach is too weak at around 7.5%, and the weekly frontier is still poor, with 80k reach only around 13.5% and both downside weekly candidates deeply discounted. The disciplined move is to hold the current daily 77k dip, avoid forcing a contradictory second daily too early, and wait either for a clearer upside continuation or for the existing daily to become discarded_for_slot.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77730.68,
     "positions_before": 3,
     "positions_after": 3
   }
