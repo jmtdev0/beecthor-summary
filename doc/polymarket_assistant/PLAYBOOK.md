@@ -7,6 +7,7 @@
 3. The latest transcript is mandatory context.
 4. Recent transcripts and recent entries in `analyses_log.json` must be reviewed before any bet.
 5. Prefer conservative BTC price-hit markets first. Floor markets are out of scope and must not be used.
+6. **No-trade is the default in lateral BTC regimes.** If BTC is chopping inside a tight range, the system should protect capital, manage existing positions, and wait for a confirmed break/rejection instead of forcing fresh expiry-based bets.
 
 ## Cycle steps (in order)
 
@@ -19,14 +20,15 @@ Each automated cycle must follow these steps strictly in order:
 5. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 6. **Account-equity gate** — Before opening any new position, review cash, live open value, discarded-position loss, and net equity versus starting bankroll. If the account is carrying too much hidden pain, reduce risk or return `NO_ACTION`.
 7. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
-8. **Scout opportunities** — Default to the two primary slots first: `daily thesis` and `weekly thesis`. Only if Binance is showing a very clear continuation that does not fit the main Beecthor thesis should the system consider the secondary slots (`daily momentum` and `weekly momentum`). For each slot (`daily thesis / daily momentum / weekly thesis / weekly momentum`), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
+8. **Range / no-trade gate** — Before scouting new entries, decide whether BTC is in a lateral regime. If the last `24-72h` show compression, repeated failed extensions, and no clean break of the local range, the default decision for new entries is `NO_ACTION`. Existing positions may still be monitored, reduced, closed, or allowed to resolve.
+9. **Scout opportunities** — Default to the two primary slots first: `daily thesis` and `weekly thesis`. Only if Binance is showing a very clear continuation that does not fit the main Beecthor thesis should the system consider the secondary slots (`daily momentum` and `weekly momentum`). For each slot (`daily thesis / daily momentum / weekly thesis / weekly momentum`), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
    - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
    - For weekly markets: prioritize entering early in the period with the most obvious strike.
    - For the **daily momentum** slot: it may go against the main Beecthor thesis, but only when Binance shows a very clear intraday continuation that is cleaner than forcing the thesis-aligned daily.
-9. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions when they are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
+10. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions when they are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
 
 ## Market scope
 
@@ -76,6 +78,10 @@ Four allowed BTC price-hit slots, tracked separately:
 - Reject daily setups that need a fresh second leg after much of the move has already happened, or that are more likely to resolve one day late than before the current expiry.
 - With less than `4h` left in a daily market, only open a new daily position when the strike is close, the probability is strong but below the hard cap, and Binance momentum points directly at that strike.
 - After a large intraday move, do not chase the next strike unless the market consolidates/retests or Binance shows fresh continuation. Avoid paying for "one more push" after most of the move is already spent.
+- **Lateral regime / range lock:** when BTC has spent the last `24-72h` moving mostly sideways inside a narrow local range, do not open fresh daily or weekly positions from the middle of that range. Price-hit markets punish correct-but-early direction calls when expiry is tight.
+- In a lateral regime, opening a `DIP` requires a clean breakdown: loss of the local range low, failed reclaim, downside expansion, or clear bearish repricing on Polymarket.
+- In a lateral regime, opening a `REACH` requires a clean breakout: reclaim/break of the local range high, acceptance above it, upside expansion, or clear bullish repricing on Polymarket.
+- If BTC is still inside the range and neither side has confirmed, return `NO_ACTION` even if Beecthor's level map remains useful. Use Beecthor's map to define the battlefield, not to force a timed bet.
 - A daily or weekly position with current Polymarket probability `<= 20%` may be treated as **discarded for slot purposes**:
   - it remains open
   - it does not trigger an automatic sell
