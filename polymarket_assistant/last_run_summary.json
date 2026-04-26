@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-25T22:00:56Z",
-  "run_id": "2026-04-25T22-00-00Z",
+  "timestamp": "2026-04-26T00:01:01Z",
+  "run_id": "2026-04-26T00-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-25T22-00-00Z",
+    "run_id": "2026-04-26T00-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.92,
-    "summary": "No new action: only two hours remain in the daily market, the active 77k dip is still alive, and there is no late-session daily or weekly setup with enough edge to justify a new trade.",
-    "rationale": "Reconciliation is clean. BTC spot is 77525.84 and the short-term Binance bias is neutral, with shorts still dominant but no strong directional expansion. The active daily 77k dip has fallen back to roughly 25%, which is weak but still above the 20% discarded-for-slot threshold, so it remains technically active. At the same time, only two hours remain until daily close, which makes any new same-day entry low quality by the playbook. The only nearby alternatives are 78k reach around 24.5% and the existing 77k dip itself; neither offers a clean enough late-session edge, and the weekly frontier remains poor, with 80k reach only about 6.5% and downside weeklys deeply discounted. There is no take-profit condition, no justified management action, and no fresh opening worth forcing this close to expiry. The disciplined decision is NO_ACTION.",
+    "confidence": 0.94,
+    "summary": "No new action: the book is flat, but the remaining daily board is late and weak, and the weekly frontier still offers no clean edge.",
+    "rationale": "Reconciliation is clean and the account has no open positions. The remaining same-day markets in this snapshot are still the April 25 board, which is technically open until 04:00 UTC, but they offer poor late-session quality: 77k dip is only around 10.5% and 78k reach around 20%, both well below the preferred 45-84% entry band and too weak to justify a fresh trade with only a few hours left. On the weekly side, 80k reach is only around 7% and 72k dip around 1.75%, so the weekly frontier is also too far and too cheap to be the clearest expression of the current thesis. Binance is neutral short-term, with price sitting near the middle of the recent intraday range and no decisive continuation signal. The disciplined decision is NO_ACTION and to wait for a fresher April 26 board or a clearer weekly setup.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77525.84,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 77576.15,
+  "positions_before": 0,
+  "positions_after": 0
 }
