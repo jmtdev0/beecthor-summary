@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-04-26T08:01:50.969453Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "21085826861814719925593528929889585964749364155149549755010739021657875110604",
     "side": "BUY",
@@ -14,6 +14,13 @@
     "expiry_validity": "acceptable",
     "market": "Will Bitcoin reach $79,000 on April 26?",
     "market_slug": "will-bitcoin-reach-79k-on-april-26",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-04-26T08:05:03Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-79k-on-april-26",
+      "price": 0.46,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xb5a92ca8edbef461e84048e6c9dcf6cf5b63d978fce8c9f837dc76ce5424af89\",\"takingAmount\":\"2.173912\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x2de205b8c1264a0b6fd29849f4efed89f03651c9304c4ec388568055180e73e5\"],\"success\":true}"
+    }
   }
 ]
