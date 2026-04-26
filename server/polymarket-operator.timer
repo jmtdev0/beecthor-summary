@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Polymarket Operator via Codex (Selected UTC hours)
+
+[Timer]
+OnCalendar=*-*-* 06,08,10,12,14,18,20:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
