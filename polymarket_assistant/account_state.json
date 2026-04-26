@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 8.778638,
+  "cash_available": 7.778639,
   "realized_pnl": 0.3412,
-  "open_exposure": 0,
+  "open_exposure": 0.7835,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -16,7 +16,23 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-26",
+      "market_slug": "will-bitcoin-reach-79k-on-april-26",
+      "market_title": "Will Bitcoin reach $79,000 on April 26?",
+      "position_side": "Yes",
+      "token_id": "21085826861814719925593528929889585964749364155149549755010739021657875110604",
+      "shares": 2.0893,
+      "avg_price": 0.4599,
+      "entry_cost_usd": 0.9611,
+      "current_price": 0.375,
+      "current_value_usd": 0.7835,
+      "cash_pnl_usd": -0.1776,
+      "status": "open",
+      "slot_status": "active"
+    }
+  ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-26T08:01:51Z"
+  "last_synced_at": "2026-04-26T10:01:00Z"
 }
