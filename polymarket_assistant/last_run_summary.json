@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-26T14:01:10Z",
-  "run_id": "2026-04-26T14-00-16Z",
+  "timestamp": "2026-04-26T18:00:56Z",
+  "run_id": "2026-04-26T18-00-05Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-26T14-00-16Z",
+    "run_id": "2026-04-26T18-00-05Z",
     "action": "NO_ACTION",
-    "confidence": 0.87,
-    "summary": "No new action: the active daily 79k reach is weakened but still the closest live upside expression, and there is no second daily or weekly setup with enough edge to add.",
-    "rationale": "Reconciliation is clean. BTC spot is 77957.87, still close to the upper end of the recent range, and Binance keeps a bullish short-term bias even though the move has stalled. The active daily 79k reach has softened to roughly 28%, but it remains above the discarded-for-slot threshold and still occupies the primary daily slot. The nearest bearish alternative, 77k dip, is around 30%, but opening it now would amount to fading a market that is still trading near local highs without strong downside confirmation. The next upside daily, 80k reach, is only about 5.5% and too weak to justify the secondary slot. Weekly entries remain off the table because only 10 hours are left in the weekly period and the visible weekly upside candidates are also weak. The disciplined move is to hold the active 79k reach and avoid forcing another trade.",
+    "confidence": 0.9,
+    "summary": "No new action: the active daily 79k reach is still live, but the remaining daily and weekly board is too weak to justify adding a second trade late in the session.",
+    "rationale": "Reconciliation is clean. BTC spot is 78024.65, still sitting close to the upper part of the recent range, but the short-term Binance bias has softened to neutral and open interest remains flat. The active daily 79k reach is still open at roughly 28%, so it remains above the discarded-for-slot threshold and still occupies the primary daily slot. Beecthor's broader map remains bearish around the 78k-81k resistance band, but the nearest bearish daily alternative, 77k dip, is only around 22%, which is below the preferred entry band and too weak to justify opening a second same-day position with only six hours left. The next bullish strike, 80k reach, is only about 5%, and the weekly frontier is even weaker, with 80k weekly reach around 3.8% and only six hours left in the weekly period anyway. The disciplined move is to hold the existing 79k reach and avoid forcing any additional late-session exposure.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77933.18,
+  "binance_spot_price": 78032.43,
   "positions_before": 1,
   "positions_after": 1
 }
