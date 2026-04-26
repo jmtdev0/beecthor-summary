@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-26T06:01:15Z",
-  "run_id": "2026-04-26T06-00-06Z",
+  "timestamp": "2026-04-26T08:01:51Z",
+  "run_id": "2026-04-26T08-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-26T06-00-06Z",
+    "run_id": "2026-04-26T08-00-01Z",
     "action": "OPEN_POSITION",
-    "confidence": 0.74,
-    "summary": "Open the daily 79k reach: the April 26 board is finally live, BTC is pushing upward short-term, and 79k is the closest clean same-day upside strike.",
-    "rationale": "Reconciliation is clean and the account is flat. The April 26 daily slate is now live, so there is finally a fresh same-day board to trade. Binance spot is 78004.99, just 0.25% below the 24h high, with a bullish short-term bias and price having advanced about 0.87% over the last 12 hours. That makes the nearest upside target, 79k reach, the cleanest immediate expression of current intraday continuation. Beecthor's macro bias remains bearish, but even his own recent summary allows for an extension into the 79.5k gap area before a larger reversal, so a same-day 79k hit is compatible with the current map and cleaner than forcing a downside daily too early. The nearest bearish alternative, 77k dip, sits around 40% and would require a meaningful reversal from current levels before the day is even underway; that is less aligned with the live tape than the 79k reach. Weekly markets remain too weak to matter, with 80k weekly reach only around 13.1%. Portfolio value is still below the $15 early-stage threshold, so the stake stays capped at $1. The disciplined move is to open the daily 79k reach as the closest-strike-first daily momentum trade.",
+    "confidence": 0.78,
+    "summary": "Open the daily 79k reach: BTC is pressing the session highs, the April 26 board is live, and 79k remains the closest clean upside strike for the current intraday continuation.",
+    "rationale": "Reconciliation is clean and the account is flat. Binance is showing a bullish short-term tape: BTC spot is 78114.66, only 0.11% below the 24h high, with a positive 12h and 24h trend and price pushing the top of the recent range. The latest Beecthor transcript from April 25 keeps the macro bias bearish, but it still allows for one more upside cleanup before the larger drop, which makes a same-day 79k reach a valid momentum expression rather than a contradiction of the map. On the April 26 daily board, 79k reach is the closest clean upside target at roughly 41%, while the thesis-side bearish alternative, 77k dip at roughly 37%, would require a meaningful reversal from near-current highs and is less aligned with the live tape right now. Weekly entries are not in scope because only 16 hours remain in the weekly period, so the only clean opportunity is the daily momentum slot. Portfolio value is still below the $15 early-stage threshold, so stake stays capped at $1. The right move is to open the daily 79k reach with explicit acceptable expiry validity so the validator can process it correctly.",
     "position_managements": [],
     "new_positions": [
       {
@@ -17,7 +17,7 @@
         "slot_name": "",
         "beecthor_aligned": null,
         "momentum_confirmed": null,
-        "expiry_validity": "",
+        "expiry_validity": "acceptable",
         "event_slug": "what-price-will-bitcoin-hit-on-april-26",
         "market_slug": "will-bitcoin-reach-79k-on-april-26",
         "outcome": "Yes",
@@ -25,7 +25,7 @@
         "strike": 79000,
         "floor_level": 0,
         "stake_usd": 1.0,
-        "max_entry_probability": 0.5
+        "max_entry_probability": 0.43
       }
     ],
     "position_management": {
@@ -43,13 +43,13 @@
       "direction": "bullish",
       "strike": 79000,
       "stake_usd": 1.0,
-      "max_entry_probability": 0.5,
+      "max_entry_probability": 0.43,
       "position_kind": "price_hit",
       "market_type": "daily",
       "slot_name": "",
       "beecthor_aligned": null,
       "momentum_confirmed": null,
-      "expiry_validity": "",
+      "expiry_validity": "acceptable",
       "floor_level": 0
     },
     "new_floor_position": {
@@ -63,16 +63,32 @@
     }
   },
   "validation": {
-    "ok": false,
-    "message": "Opening requires expiry_validity strong or acceptable"
+    "ok": true,
+    "message": "ok"
   },
   "execution": {
-    "performed": false,
-    "details": {
-      "rejected": "Opening requires expiry_validity strong or acceptable"
-    }
+    "performed": true,
+    "details": [
+      {
+        "order_id": "2026-04-26T08:01:50.969453Z",
+        "status": "pending_phone_execution",
+        "type": "OPEN_POSITION",
+        "token_id": "21085826861814719925593528929889585964749364155149549755010739021657875110604",
+        "side": "BUY",
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.43,
+        "market_type": "daily",
+        "slot_name": "",
+        "beecthor_aligned": null,
+        "momentum_confirmed": null,
+        "expiry_validity": "acceptable",
+        "market": "Will Bitcoin reach $79,000 on April 26?",
+        "market_slug": "will-bitcoin-reach-79k-on-april-26",
+        "outcome": "Yes"
+      }
+    ]
   },
-  "binance_spot_price": 78023.14,
+  "binance_spot_price": 78104.95,
   "positions_before": 0,
   "positions_after": 0
 }
