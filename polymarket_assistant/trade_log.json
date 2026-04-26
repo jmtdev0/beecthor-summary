@@ -9805,5 +9805,20 @@
     "binance_spot_price": 78104.95,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-04-26T08:01:50Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-reach-79k-on-april-26",
+    "market_title": "Will Bitcoin reach $79,000 on April 26?",
+    "position_side": "Yes",
+    "token_id": "21085826861814719925593528929889585964749364155149549755010739021657875110604",
+    "entry_cost_usd": 1.0,
+    "market_type": "daily",
+    "expiry_validity": "acceptable",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
