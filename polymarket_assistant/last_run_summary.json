@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-26T10:01:00Z",
-  "run_id": "2026-04-26T10-00-00Z",
+  "timestamp": "2026-04-26T12:00:52Z",
+  "run_id": "2026-04-26T12-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-26T10-00-00Z",
+    "run_id": "2026-04-26T12-00-02Z",
     "action": "NO_ACTION",
-    "confidence": 0.88,
-    "summary": "No new action: the active daily 79k reach remains the cleanest live expression of the current intraday tape, and there is no second daily or weekly setup with enough edge to add.",
-    "rationale": "Reconciliation is clean. BTC spot is 78000, still near the top of the recent range, with a bullish short-term bias and no sign of a forceful bearish reversal. The active daily 79k reach is still alive at roughly 37.5%, so the primary daily slot remains occupied and there is no reason to abandon it. The nearest bearish alternative, 77k dip, is also around 37%, but opening it now would amount to fading the current intraday tape without strong downside confirmation; price is not rolling over decisively and Binance still leans mildly bullish in the short term. The next bullish daily, 80k reach, is only about 9%, too weak to justify a second same-day position, and the weekly board remains unusable because only 14 hours are left in the weekly period while the visible weekly reach candidates are also weak. The disciplined decision is to hold the active 79k reach and avoid forcing any additional trade.",
+    "confidence": 0.89,
+    "summary": "No new action: the active daily 79k reach remains the cleanest live trade, and there is still no second daily or weekly opportunity with enough edge to add.",
+    "rationale": "Reconciliation is clean. BTC spot is 78101.44, still pressing the upper end of the daily range, with short-term Binance bias bullish and no decisive rollover. The active daily 79k reach remains alive at roughly 39.5%, so the primary daily slot is still correctly occupied by the closest upside strike. The nearest bearish alternative, 77k dip at roughly 25.5%, is weaker and would require a meaningful downside reversal against the live intraday tape. The next bullish same-day strike, 80k reach, is only around 9.5% and too far/weak to justify occupying the second daily slot. Weekly markets remain unusable because only 12 hours are left in the weekly period and the visible weekly upside targets are also weak. The disciplined move is to keep holding the active 79k reach and avoid forcing another trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77963.84,
+  "binance_spot_price": 78101.5,
   "positions_before": 1,
   "positions_after": 1
 }
