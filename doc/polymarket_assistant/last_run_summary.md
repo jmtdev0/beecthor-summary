@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-26T00:01:01Z
+- Timestamp: 2026-04-26T04:00:52Z
 - Dry run: False
-- BTC price: 77576.15
+- BTC price: 77383.46
 - Decision action: NO_ACTION
-- Decision summary: No new action: the book is flat, but the remaining daily board is late and weak, and the weekly frontier still offers no clean edge.
+- Decision summary: No new action: the account is flat, but there is still no usable daily board and the weekly frontier remains too weak to justify a new entry.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
