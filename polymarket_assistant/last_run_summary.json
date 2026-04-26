@@ -1,15 +1,33 @@
 {
-  "timestamp": "2026-04-26T04:00:52Z",
-  "run_id": "2026-04-26T04-00-03Z",
+  "timestamp": "2026-04-26T06:01:15Z",
+  "run_id": "2026-04-26T06-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-26T04-00-03Z",
-    "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "No new action: the account is flat, but there is still no usable daily board and the weekly frontier remains too weak to justify a new entry.",
-    "rationale": "Reconciliation is clean and there are no open positions. Binance is neutral short-term, with BTC around 77383, shorts still dominant, and open interest flat, so there is no strong momentum confirmation in either direction. More importantly, the snapshot shows no active daily BTC price-hit candidates at all, so there is no same-day slot to evaluate yet. On the weekly side, the only visible frontier markets remain too weak and too far from the current price: 80k reach is only around 4.2% and 72k dip around 1.2%, both well outside the preferred range and not clean expressions of an immediate edge. The disciplined move is to wait for a fresher daily slate or a stronger weekly setup and take NO_ACTION.",
+    "run_id": "2026-04-26T06-00-06Z",
+    "action": "OPEN_POSITION",
+    "confidence": 0.74,
+    "summary": "Open the daily 79k reach: the April 26 board is finally live, BTC is pushing upward short-term, and 79k is the closest clean same-day upside strike.",
+    "rationale": "Reconciliation is clean and the account is flat. The April 26 daily slate is now live, so there is finally a fresh same-day board to trade. Binance spot is 78004.99, just 0.25% below the 24h high, with a bullish short-term bias and price having advanced about 0.87% over the last 12 hours. That makes the nearest upside target, 79k reach, the cleanest immediate expression of current intraday continuation. Beecthor's macro bias remains bearish, but even his own recent summary allows for an extension into the 79.5k gap area before a larger reversal, so a same-day 79k hit is compatible with the current map and cleaner than forcing a downside daily too early. The nearest bearish alternative, 77k dip, sits around 40% and would require a meaningful reversal from current levels before the day is even underway; that is less aligned with the live tape than the 79k reach. Weekly markets remain too weak to matter, with 80k weekly reach only around 13.1%. Portfolio value is still below the $15 early-stage threshold, so the stake stays capped at $1. The disciplined move is to open the daily 79k reach as the closest-strike-first daily momentum trade.",
     "position_managements": [],
-    "new_positions": [],
+    "new_positions": [
+      {
+        "should_open": true,
+        "position_kind": "price_hit",
+        "market_type": "daily",
+        "slot_name": "",
+        "beecthor_aligned": null,
+        "momentum_confirmed": null,
+        "expiry_validity": "",
+        "event_slug": "what-price-will-bitcoin-hit-on-april-26",
+        "market_slug": "will-bitcoin-reach-79k-on-april-26",
+        "outcome": "Yes",
+        "direction": "bullish",
+        "strike": 79000,
+        "floor_level": 0,
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.5
+      }
+    ],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -18,14 +36,21 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": false,
-      "event_slug": "",
-      "market_slug": "",
-      "outcome": "",
-      "direction": "neutral",
-      "strike": 0,
-      "stake_usd": 0,
-      "max_entry_probability": 0.0
+      "should_open": true,
+      "event_slug": "what-price-will-bitcoin-hit-on-april-26",
+      "market_slug": "will-bitcoin-reach-79k-on-april-26",
+      "outcome": "Yes",
+      "direction": "bullish",
+      "strike": 79000,
+      "stake_usd": 1.0,
+      "max_entry_probability": 0.5,
+      "position_kind": "price_hit",
+      "market_type": "daily",
+      "slot_name": "",
+      "beecthor_aligned": null,
+      "momentum_confirmed": null,
+      "expiry_validity": "",
+      "floor_level": 0
     },
     "new_floor_position": {
       "should_open": false,
@@ -38,14 +63,16 @@
     }
   },
   "validation": {
-    "ok": true,
-    "message": "ok"
+    "ok": false,
+    "message": "Opening requires expiry_validity strong or acceptable"
   },
   "execution": {
     "performed": false,
-    "details": null
+    "details": {
+      "rejected": "Opening requires expiry_validity strong or acceptable"
+    }
   },
-  "binance_spot_price": 77383.46,
+  "binance_spot_price": 78023.14,
   "positions_before": 0,
   "positions_after": 0
 }
