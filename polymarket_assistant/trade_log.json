@@ -10279,5 +10279,23 @@
     "status": "open",
     "source": "phone_executor",
     "notes": "Recorded after a successful phone-side BUY execution."
+  },
+  {
+    "timestamp": "2026-04-27T08:01:45Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-dip-to-76k-april-27-may-3",
+    "market_title": "Will Bitcoin dip to $76,000 April 27-May 3?",
+    "position_side": "Yes",
+    "token_id": "83144337247634864961262274325271176451916061495186341262746751364066663244507",
+    "entry_cost_usd": 1.0,
+    "market_type": "weekly",
+    "slot_name": "weekly_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
