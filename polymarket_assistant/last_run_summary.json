@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-27T10:01:04Z",
-  "run_id": "2026-04-27T10-00-05Z",
+  "timestamp": "2026-04-27T12:00:58Z",
+  "run_id": "2026-04-27T12-00-03Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-27T10-00-05Z",
+    "run_id": "2026-04-27T12-00-03Z",
     "action": "NO_ACTION",
     "confidence": 0.9,
-    "summary": "No new action: the active weekly 76k dip remains the clearest structural position, and the daily 77k dip is weakened but still alive, so there is no clean additional setup to add now.",
-    "rationale": "Reconciliation is clean. The updated TIP is already being respected: the earlier range idea was invalidated and the clearest weekly thesis position has already been opened. Binance still leans bearish short-term, with BTC around 77888, shorts dominant, and open interest contracting, which supports holding the bearish positions already on the book. The weekly 76k dip remains strong at roughly 60.5% and continues to be the clearest structural expression. The daily 77k dip has weakened to about 38.5%, but it is still above the discarded-for-slot threshold and therefore remains a live same-day thesis position rather than a slot to replace. There is no compelling second daily momentum trade in the opposite direction: upside reach markets are now too weak, and adding more bearish exposure would be redundant rather than cleaner. The disciplined move is to hold the existing daily and weekly bearish positions and avoid forcing any new trade.",
+    "summary": "No new action: the weekly 76k dip and daily 77k dip remain the cleanest bearish expressions, and there is no additional slot candidate with a better edge than the positions already on the book.",
+    "rationale": "Reconciliation is clean. The updated TIP still points toward prioritizing the clearest weekly setup after the 77k-78k range was invalidated, and that has already been done through the active weekly 76k dip. Binance remains mildly bearish short-term with BTC around 77837, shorts dominant, and price still trading much closer to downside continuation than to a fresh upside breakout. The weekly 76k dip stays strong at roughly 61%, and the daily 77k dip, while weaker at about 43%, is still above the discarded threshold and remains the closest same-day bearish expression. There is no compelling third trade to add: the next lower daily and weekly dip strikes are too weak, while upside reach markets are also weak and not supported by the current tape. The disciplined decision is to keep holding the two existing bearish positions and avoid forcing any extra exposure.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77899.34,
+  "binance_spot_price": 77812.4,
   "positions_before": 2,
   "positions_after": 2
 }
