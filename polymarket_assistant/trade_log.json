@@ -10471,5 +10471,23 @@
     "pnl_usd": 0.5702,
     "pnl_pct": 58.58,
     "source": "monitor_executor"
+  },
+  {
+    "timestamp": "2026-04-27T15:27:25Z",
+    "type": "trade_reduced",
+    "market_slug": "will-bitcoin-dip-to-76k-april-27-may-3",
+    "market_title": "Will Bitcoin dip to $76,000 April 27-May 3?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "partial_take_profit",
+    "shares": 0.7285,
+    "fraction": 0.5,
+    "avg_entry_price": 0.6699,
+    "exit_price": 0.84,
+    "entry_cost_usd": 0.488,
+    "exit_proceeds_usd": 0.6119,
+    "pnl_usd": 0.1239,
+    "pnl_pct": 25.39,
+    "source": "monitor_executor"
   }
 ]
