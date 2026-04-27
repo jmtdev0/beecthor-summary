@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-26T20:01:10Z",
-  "run_id": "2026-04-26T20-00-16Z",
+  "timestamp": "2026-04-27T06:01:26Z",
+  "run_id": "2026-04-27T06-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-26T20-00-16Z",
+    "run_id": "2026-04-27T06-00-06Z",
     "action": "NO_ACTION",
-    "confidence": 0.91,
-    "summary": "No new action: the active daily 79k reach remains the only credible same-day position, and the rest of the board is too weak to justify any late-session addition.",
-    "rationale": "Reconciliation is clean. BTC spot is 78240.52, still near the top of the 24h range, but the short-term Binance bias has softened back to neutral and only four hours remain before both the daily and weekly periods end. The active daily 79k reach remains alive at roughly 38%, so the primary daily slot is still occupied and there is no need to replace it. The bearish alternatives are weak: 77k dip is only around 14.5% and 76k dip around 4.5%, which makes them poor late-session expressions. The next bullish strike, 80k reach, is only about 8%, also too weak to justify the secondary daily slot. Weekly candidates are even less attractive and the weekly period is effectively over for new entries with only four hours left. The disciplined decision is to hold the active 79k reach and avoid forcing any additional trade.",
+    "confidence": 0.97,
+    "summary": "No new action: the new TIP about considering a NO position is understood, but reconciliation is broken, so new entries are blocked for this cycle.",
+    "rationale": "The situational TIP is clear and the market context does resemble the proposed 77k-78k range idea, with BTC around 77761 and the April 27 board showing 77k dip as the closest relevant frontier. However, the playbook's reconciliation gate is a hard blocker and the current snapshot explicitly reports reconciliation broken due to a missing closure record for will-bitcoin-reach-79k-on-april-26:Yes. Under the playbook, no new position may be opened until that state inconsistency is repaired. Binance is also mildly bearish short-term with contracting open interest, so there is no urgent momentum edge strong enough to justify overriding discipline even if the state were clean. The correct decision for this cycle is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78224.86,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 77745.55,
+  "positions_before": 0,
+  "positions_after": 0
 }
