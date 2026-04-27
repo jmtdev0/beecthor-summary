@@ -434,6 +434,9 @@ def build_trade_opened_entry(
     if entry_cost <= 0.0:
         entry_cost = as_float(pending.get('stake_usd'))
 
+    to_win = shares if shares > 0.0 else 0.0
+    max_profit = to_win - entry_cost if to_win > 0.0 and entry_cost > 0.0 else 0.0
+
     entry = {
         'timestamp': entry_dt.strftime('%Y-%m-%dT%H:%M:%SZ'),
         'type': 'trade_opened',
@@ -446,6 +449,8 @@ def build_trade_opened_entry(
         'entry_probability': round(avg_price, 6) if avg_price > 0.0 else None,
         'entry_cost_usd': round(entry_cost, 4) if entry_cost > 0.0 else None,
         'shares': round(shares, 4) if shares > 0.0 else None,
+        'to_win_usd': round(to_win, 4) if to_win > 0.0 else None,
+        'max_profit_usd': round(max_profit, 4) if max_profit > 0.0 else None,
         'market_type': pending.get('market_type'),
         'slot_name': pending.get('slot_name'),
         'beecthor_aligned': pending.get('beecthor_aligned'),
@@ -465,7 +470,7 @@ def reconcile_trade_opened(
     notes: str,
     live_position: dict | None = None,
     recent_trade: dict | None = None,
-) -> None:
+) -> dict | None:
     live_position = live_position or resolve_live_position(pending)
     recent_trade = recent_trade or find_recent_matching_trade(pending)
     entry = build_trade_opened_entry(
@@ -477,6 +482,66 @@ def reconcile_trade_opened(
     )
     if entry:
         append_trade_opened_to_log(entry)
+    return entry
+
+
+def format_money(value: object) -> str:
+    amount = as_float(value)
+    if amount <= 0.0:
+        return 'n/d'
+    return f'${amount:.2f}'
+
+
+def format_shares(value: object) -> str:
+    shares = as_float(value)
+    if shares <= 0.0:
+        return 'n/d'
+    return f'{shares:.4f}'.rstrip('0').rstrip('.')
+
+
+def build_buy_success_message(
+    *,
+    order_type: str,
+    outcome: str,
+    market: str,
+    amount: float,
+    execution_price: float,
+    trade_entry: dict | None,
+) -> str:
+    trade_entry = trade_entry or {}
+    shares = as_float(trade_entry.get('shares'))
+    if shares <= 0.0 and execution_price > 0.0:
+        shares = round_down(amount / execution_price, 4)
+
+    entry_cost = as_float(trade_entry.get('entry_cost_usd'))
+    if entry_cost <= 0.0:
+        entry_cost = round_down(amount, 2)
+
+    avg_price = as_float(trade_entry.get('entry_probability'))
+    if avg_price <= 0.0 and shares > 0.0:
+        avg_price = entry_cost / shares
+
+    to_win = as_float(trade_entry.get('to_win_usd'))
+    if to_win <= 0.0:
+        to_win = shares
+
+    max_profit = as_float(trade_entry.get('max_profit_usd'))
+    if max_profit <= 0.0 and to_win > 0.0 and entry_cost > 0.0:
+        max_profit = to_win - entry_cost
+
+    lines = [
+        '✅ Orden ejecutada desde el móvil:',
+        f'{order_type} {outcome}',
+        market,
+        f'Coste: {format_money(entry_cost)}',
+        f'Shares: {format_shares(shares)}',
+        f'TO WIN: {format_money(to_win)}',
+    ]
+    if avg_price > 0.0:
+        lines.append(f'Precio medio: {avg_price:.0%}')
+    if max_profit > 0.0:
+        lines.append(f'Beneficio máximo: +{format_money(max_profit)}')
+    return '\n'.join(lines)
 
 
 def fetch_live_positions() -> list[dict]:
@@ -796,13 +861,26 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                     {'market_slug': pending.get('market_slug'), 'price': price, 'response': resp.text[:500]},
                 )
                 save_executed_order_id(order_id)
+                trade_entry = None
                 if side == 'BUY':
-                    reconcile_trade_opened(
+                    trade_entry = reconcile_trade_opened(
                         pending,
                         source='phone_executor',
                         notes='Recorded after a successful phone-side BUY execution.',
                     )
-                send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
+                if side == 'BUY':
+                    send_telegram(
+                        build_buy_success_message(
+                            order_type=order_type,
+                            outcome=outcome,
+                            market=market,
+                            amount=amount,
+                            execution_price=price,
+                            trade_entry=trade_entry,
+                        )
+                    )
+                else:
+                    send_telegram(f'\u2705 Order executed from phone:\n{order_type} {outcome}\n{market} size={amount}')
                 return True
 
             last_error = f'{resp.status_code}: {resp.text}'
