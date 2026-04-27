@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 7.868033,
+  "cash_available": 10.004223,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.7127,
+  "open_exposure": 0.6117,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -18,36 +18,21 @@
   "take_profit_probability_max": 0.95,
   "open_positions": [
     {
-      "event_slug": "what-price-will-bitcoin-hit-on-april-27",
-      "market_slug": "will-bitcoin-dip-to-77k-on-april-27",
-      "market_title": "Will Bitcoin dip to $77,000 on April 27?",
-      "position_side": "Yes",
-      "token_id": "99952381712140010663190903310686635350985727261126391157754143949079739516520",
-      "shares": 1.545,
-      "avg_price": 0.63,
-      "entry_cost_usd": 0.9733,
-      "current_price": 0.505,
-      "current_value_usd": 0.7802,
-      "cash_pnl_usd": -0.1931,
-      "status": "open",
-      "slot_status": "active"
-    },
-    {
       "event_slug": "what-price-will-bitcoin-hit-april-27-may-3",
       "market_slug": "will-bitcoin-dip-to-76k-april-27-may-3",
       "market_title": "Will Bitcoin dip to $76,000 April 27-May 3?",
       "position_side": "Yes",
       "token_id": "83144337247634864961262274325271176451916061495186341262746751364066663244507",
-      "shares": 1.457,
+      "shares": 0.737,
       "avg_price": 0.6699,
-      "entry_cost_usd": 0.9762,
-      "current_price": 0.64,
-      "current_value_usd": 0.9325,
-      "cash_pnl_usd": -0.0437,
+      "entry_cost_usd": 0.4938,
+      "current_price": 0.83,
+      "current_value_usd": 0.6117,
+      "cash_pnl_usd": 0.1178,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-27T14:01:08Z"
+  "last_synced_at": "2026-04-27T18:01:31Z"
 }
