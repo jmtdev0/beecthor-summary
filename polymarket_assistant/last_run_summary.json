@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-28T10:00:56Z",
-  "run_id": "2026-04-28T10-00-07Z",
+  "timestamp": "2026-04-28T12:01:05Z",
+  "run_id": "2026-04-28T12-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-28T10-00-07Z",
+    "run_id": "2026-04-28T12-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "No new action: the weekly 76k dip has reached the top of the partial-take-profit zone, but that 50% reduction is already pending from the monitor, so this cycle should not duplicate it, and there is still no justified new entry.",
-    "rationale": "Reconciliation is clean. BTC spot is around 76593 and Binance has shifted to bearish short-term, which keeps the existing weekly bearish thesis valid. The only live tracked position is the weekly BTC 76k dip for April 27-May 3, now around 85.0% probability and up about 26.9%. Under the playbook, that is still a partial-take-profit area rather than a full-take-profit exit, but the monitor already has a 50% partial-take-profit order pending phone execution for this exact market. The cycle should not send a duplicate REDUCE_POSITION while that management is still in flight. There are no active daily BTC markets in this snapshot, so no daily thesis or momentum trade can be opened, and the next weekly downside candidate at 74k remains materially weaker than the current weekly position already expressing the bearish view. The disciplined decision is to wait for the pending partial reduction to resolve and otherwise take no new action.",
+    "confidence": 0.98,
+    "summary": "No new action: Polymarket still appears to be in an abnormal post-update state, the live board is not trustworthy, cash is reported as zero, and the existing weekly position does not meet any valid management trigger.",
+    "rationale": "Reconciliation is clean, but this snapshot is not suitable for fresh trading decisions. The TIP explicitly notes that Polymarket is updating around 12:00 UTC, and the market data confirms that the board is still abnormal: nearly every weekly BTC market is showing distorted 50/50-style probabilities with unusable books such as 0.98 asks, while no daily April 28 board is available at all. The only live tracked position is the weekly 76k dip, now around 50%, so it is far below both partial-take-profit and full-take-profit zones, and it is also nowhere near the exceptional invalidation threshold. Account state reports zero available cash, which independently blocks any new opening action even if markets were healthy. With corrupted Polymarket pricing, no daily board, no cash, and no valid management trigger on the remaining weekly, the disciplined decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76624.5,
+  "binance_spot_price": 76235.69,
   "positions_before": 1,
   "positions_after": 1
 }
