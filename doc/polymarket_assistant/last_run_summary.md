@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-28T06:02:25Z
+- Timestamp: 2026-04-28T08:01:50Z
 - Dry run: False
-- BTC price: 76952.69
+- BTC price: 76868.13
 - Decision action: NO_ACTION
-- Decision summary: No new action: the weekly 76k dip remains the cleanest live expression of the bearish thesis, there are no daily markets available in this snapshot, and no second weekly entry is better than simply holding the current position.
+- Decision summary: No new action: the weekly 76k dip has already triggered a partial-take-profit dispatch in the monitor, so this cycle should not duplicate that management, and there is still no cleaner new entry than the existing weekly thesis position.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
