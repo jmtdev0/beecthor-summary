@@ -11167,5 +11167,23 @@
     "status": "open",
     "source": "phone_executor",
     "notes": "Recorded after a successful phone-side BUY execution."
+  },
+  {
+    "timestamp": "2026-04-28T23:59:10Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-76k-on-april-28",
+    "market_title": "Will Bitcoin dip to $76,000 on April 28?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.0101,
+    "fraction": 1.0,
+    "avg_entry_price": 0.99,
+    "exit_price": 0.99,
+    "entry_cost_usd": 1.0,
+    "exit_proceeds_usd": 1.0,
+    "pnl_usd": 0.0,
+    "pnl_pct": 0.0,
+    "source": "monitor_executor"
   }
 ]
