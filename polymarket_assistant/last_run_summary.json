@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-28T08:01:50Z",
-  "run_id": "2026-04-28T08-00-16Z",
+  "timestamp": "2026-04-28T10:00:56Z",
+  "run_id": "2026-04-28T10-00-07Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-28T08-00-16Z",
+    "run_id": "2026-04-28T10-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "No new action: the weekly 76k dip has already triggered a partial-take-profit dispatch in the monitor, so this cycle should not duplicate that management, and there is still no cleaner new entry than the existing weekly thesis position.",
-    "rationale": "Reconciliation is clean and the only live tracked position remains the weekly BTC 76k dip for April 27-May 3, now around 81.0% probability. Under the playbook, that level is eligible for partial take profit, but the monitor has already dispatched a 50% partial-take-profit order for this exact market and it is still pending phone execution. The cycle should avoid issuing a duplicate REDUCE_POSITION while that management action is already in flight. Binance remains neutral short-term, there are still no active daily BTC markets in this snapshot, and the next weekly downside candidate at 74k is only about 40.5%, materially weaker than the current weekly position already expressing the bearish thesis. The disciplined decision is to wait for the pending partial take profit to resolve and otherwise take no new action.",
+    "confidence": 0.95,
+    "summary": "No new action: the weekly 76k dip has reached the top of the partial-take-profit zone, but that 50% reduction is already pending from the monitor, so this cycle should not duplicate it, and there is still no justified new entry.",
+    "rationale": "Reconciliation is clean. BTC spot is around 76593 and Binance has shifted to bearish short-term, which keeps the existing weekly bearish thesis valid. The only live tracked position is the weekly BTC 76k dip for April 27-May 3, now around 85.0% probability and up about 26.9%. Under the playbook, that is still a partial-take-profit area rather than a full-take-profit exit, but the monitor already has a 50% partial-take-profit order pending phone execution for this exact market. The cycle should not send a duplicate REDUCE_POSITION while that management is still in flight. There are no active daily BTC markets in this snapshot, so no daily thesis or momentum trade can be opened, and the next weekly downside candidate at 74k remains materially weaker than the current weekly position already expressing the bearish view. The disciplined decision is to wait for the pending partial reduction to resolve and otherwise take no new action.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76868.13,
+  "binance_spot_price": 76624.5,
   "positions_before": 1,
   "positions_after": 1
 }
