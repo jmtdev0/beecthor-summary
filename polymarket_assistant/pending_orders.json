@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-04-28T20:01:27.785020Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "53464061424817638631121762450339495106009451507158296493194109520719942457880",
     "side": "BUY",
@@ -14,7 +14,14 @@
     "expiry_validity": "acceptable",
     "market": "Will Bitcoin dip to $76,000 on April 28?",
     "market_slug": "will-bitcoin-dip-to-76k-on-april-28",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-04-28T20:05:08Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-dip-to-76k-on-april-28",
+      "price": 0.99,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xfe5896859b819569b68216a4255ccc345242d923011eaefcc60aeca48d8d9571\",\"takingAmount\":\"1.0101\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x6320a48905ded98bed6960cb3dccefe0ccbe73824649968f0fd3f836f2ceec64\"],\"success\":true}"
+    }
   },
   {
     "order_id": "2026-04-28T20:01:27.860028Z",
