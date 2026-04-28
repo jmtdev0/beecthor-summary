@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-28T14:00:53Z
+- Timestamp: 2026-04-28T18:03:22Z
 - Dry run: False
-- BTC price: 76145.34
+- BTC price: 76217.16
 - Decision action: NO_ACTION
-- Decision summary: No new action: the weekly 76k dip is effectively in full take-profit territory and the monitor has already dispatched a full exit, so this cycle should not duplicate that management or try to force any new trade.
+- Decision summary: No new action: Beecthor remains bearish, but the relisted daily board still lacks real price discovery and the cleanest free weekly dip only carries middling conviction while the account-equity gate is active.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 

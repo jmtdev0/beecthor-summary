@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-28T14:00:53Z",
-  "run_id": "2026-04-28T14-00-08Z",
+  "timestamp": "2026-04-28T18:03:22Z",
+  "run_id": "2026-04-28T18-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-28T14-00-08Z",
+    "run_id": "2026-04-28T18-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.98,
-    "summary": "No new action: the weekly 76k dip is effectively in full take-profit territory and the monitor has already dispatched a full exit, so this cycle should not duplicate that management or try to force any new trade.",
-    "rationale": "Reconciliation is clean. BTC remains bearish short-term around 76161, and Polymarket market data has largely normalized again after the earlier update. The only live tracked position is the weekly BTC 76k dip for April 27-May 3, now priced around 99.95%, which is clearly inside the full take-profit zone. However, the monitor has already dispatched a TAKE_PROFIT sell for the full remaining size and that action is still pending phone execution, so the cycle should avoid issuing a duplicate CLOSE_POSITION. There is still no active daily April 28 board in this snapshot, and cash_available remains zero, which independently blocks any new opening action. The disciplined decision is to wait for the pending full take profit to resolve and otherwise take no new action.",
+    "confidence": 0.83,
+    "summary": "No new action: Beecthor remains bearish, but the relisted daily board still lacks real price discovery and the cleanest free weekly dip only carries middling conviction while the account-equity gate is active.",
+    "rationale": "The latest Beecthor transcript and recent summaries still lean bearish, and Binance remains weak near the lower end of the 24h range. But there are no open positions left to manage, the April 28 daily markets are effectively unpriced with 0.99 asks, and the nearest free weekly bearish expression is only the 74k dip at roughly 50% probability. With cash down to about $0.73 and the equity-below-starting-bankroll risk flag active, there is no valid high-conviction entry.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76145.34,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 76217.16,
+  "positions_before": 0,
+  "positions_after": 0
 }
