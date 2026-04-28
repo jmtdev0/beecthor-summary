@@ -18,7 +18,6 @@ import hashlib
 import hmac
 import json
 import os
-import random
 import sys
 import time
 from pathlib import Path
@@ -26,15 +25,18 @@ from typing import Any
 
 import requests
 from dotenv import load_dotenv
-from eth_keys import keys as eth_keys
-from eth_utils import keccak
-from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
 
 from log_client import refresh_log_client_config, send_server_log
+from polymarket_order_v2 import (
+    CLOB_ORDER_VERSION,
+    ORDER_PATH,
+    build_order_dict_v2,
+    get_clob_version,
+    is_order_version_mismatch_response,
+)
 
 ENV_FILE = Path.home() / '.polymarket.env'
 CLOB_HOST = 'https://clob.polymarket.com'
-ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
@@ -47,11 +49,6 @@ EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 MIN_EXECUTABLE_TAKE_PROFIT_PRICE = TAKE_PROFIT_THRESHOLD
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 MONITOR_EXECUTED_ACTIONS_FILE = Path.home() / '.polymarket_monitor_executed_action_keys'
-
-EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
-CHAIN_ID = 137
-FEE_RATE_BPS = 1000
-SIGNATURE_TYPE = 1  # POLY_PROXY
 
 load_dotenv(ENV_FILE)
 
@@ -106,43 +103,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-class Order(EIP712Struct):
-    salt = Uint(256)
-    maker = Address()
-    signer = Address()
-    taker = Address()
-    tokenId = Uint(256)
-    makerAmount = Uint(256)
-    takerAmount = Uint(256)
-    expiration = Uint(256)
-    nonce = Uint(256)
-    feeRateBps = Uint(256)
-    side = Uint(8)
-    signatureType = Uint(8)
-
-
-DOMAIN = make_domain(
-    name='Polymarket CTF Exchange',
-    version='1',
-    chainId=str(CHAIN_ID),
-    verifyingContract=EXCHANGE_ADDRESS,
-)
-
-
 def safe_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
     except (TypeError, ValueError):
         return default
-
-
-def sign_order(order: Order) -> str:
-    struct_hash = keccak(order.signable_bytes(domain=DOMAIN))
-    pk = eth_keys.PrivateKey(bytes.fromhex(POLY_PRIVATE_KEY.lstrip('0x')))
-    sig = pk.sign_msg_hash(struct_hash)
-    sig_bytes = bytearray(sig.to_bytes())
-    sig_bytes[64] += 27
-    return '0x' + bytes(sig_bytes).hex()
 
 
 class MarketResolvedException(Exception):
@@ -176,62 +141,6 @@ def get_market_price(token_id: str, side: str, amount: float) -> float:
     if levels:
         return float(levels[-1]['price'])
     raise RuntimeError('Empty order book')
-
-
-def round_down(value: float, decimals: int) -> float:
-    factor = 10 ** decimals
-    return int(value * factor) / factor
-
-
-def to_usdc(value: float) -> int:
-    return int(round(value * 1_000_000))
-
-
-def build_order_dict(token_id: str, side: str, amount: float, price: float) -> dict[str, Any]:
-    salt = random.randint(1, 2**32)
-    side_int = 0 if side == 'BUY' else 1
-
-    if side == 'BUY':
-        maker_amount = to_usdc(round_down(amount, 2))
-        taker_amount = to_usdc(round_down(amount / price, 4))
-    else:
-        # Compute taker from the already-rounded maker to keep effective price <= intended price.
-        # Using the raw amount would cause taker/maker > 1 and a 400 "invalid price" rejection.
-        maker_tokens = round_down(amount, 2)
-        maker_amount = to_usdc(maker_tokens)
-        taker_amount = to_usdc(round_down(maker_tokens * price, 4))
-
-    order = Order(
-        salt=salt,
-        maker=POLY_FUNDER,
-        signer=POLY_SIGNER_ADDRESS,
-        taker='0x0000000000000000000000000000000000000000',
-        tokenId=int(token_id),
-        makerAmount=maker_amount,
-        takerAmount=taker_amount,
-        expiration=0,
-        nonce=0,
-        feeRateBps=FEE_RATE_BPS,
-        side=side_int,
-        signatureType=SIGNATURE_TYPE,
-    )
-    signature = sign_order(order)
-
-    return {
-        'salt': salt,
-        'maker': POLY_FUNDER,
-        'signer': POLY_SIGNER_ADDRESS,
-        'taker': '0x0000000000000000000000000000000000000000',
-        'tokenId': str(token_id),
-        'makerAmount': str(maker_amount),
-        'takerAmount': str(taker_amount),
-        'expiration': '0',
-        'nonce': '0',
-        'feeRateBps': str(FEE_RATE_BPS),
-        'side': side,
-        'signatureType': SIGNATURE_TYPE,
-        'signature': signature,
-    }
 
 
 def build_l2_headers(method: str, path: str, body_str: str) -> dict[str, str]:
@@ -389,6 +298,7 @@ def post_order(order_dict: dict[str, Any]) -> requests.Response:
         'owner': POLY_API_KEY,
         'orderType': 'FOK',
         'postOnly': False,
+        'deferExec': False,
     }
     body_str = json.dumps(body, separators=(',', ':'), ensure_ascii=False)
     headers = build_l2_headers('POST', ORDER_PATH, body_str)
@@ -446,6 +356,37 @@ def minimum_executable_price(action: str) -> float:
     if action == 'PARTIAL_TAKE_PROFIT':
         return PARTIAL_TAKE_PROFIT_THRESHOLD
     return 0.001
+
+
+def post_sell_order_with_version_retry(token_id: str, amount: float, price: float) -> requests.Response:
+    order_dict = build_order_dict_v2(
+        token_id,
+        'SELL',
+        amount,
+        price,
+        funder=POLY_FUNDER,
+        signer_address=POLY_SIGNER_ADDRESS,
+        private_key=POLY_PRIVATE_KEY,
+    )
+    resp = post_order(order_dict)
+    if not is_order_version_mismatch_response(resp):
+        return resp
+
+    clob_version = get_clob_version()
+    print(f'[monitor-executor] CLOB reported order_version_mismatch; live version={clob_version}. Retrying once with fresh V2 signature.')
+    if clob_version != CLOB_ORDER_VERSION:
+        return resp
+
+    retry_order = build_order_dict_v2(
+        token_id,
+        'SELL',
+        amount,
+        price,
+        funder=POLY_FUNDER,
+        signer_address=POLY_SIGNER_ADDRESS,
+        private_key=POLY_PRIVATE_KEY,
+    )
+    return post_order(retry_order)
 
 
 def execute_target_position(action: str, fraction: float, target: dict[str, Any], dry_run: bool = False) -> bool:
@@ -522,7 +463,6 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
                 f'No vendo por debajo de {minimum_price:.0%}.'
             )
             return False
-        order_dict = build_order_dict(token_id, 'SELL', amount, price)
     except MarketResolvedException as exc:
         print(f'[monitor-executor] Market already resolved: {exc}')
         send_server_log(
@@ -545,10 +485,19 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         return False
 
     body = {
-        'order': order_dict,
+        'order': build_order_dict_v2(
+            token_id,
+            'SELL',
+            amount,
+            price,
+            funder=POLY_FUNDER,
+            signer_address=POLY_SIGNER_ADDRESS,
+            private_key=POLY_PRIVATE_KEY,
+        ),
         'owner': POLY_API_KEY,
         'orderType': 'FOK',
         'postOnly': False,
+        'deferExec': False,
     }
     if dry_run:
         print('[monitor-executor] DRY RUN payload:')
@@ -556,7 +505,7 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         send_server_log('phone.monitor', 'order_dry_run', 'Built SELL payload successfully', payload={'market_slug': market_slug, 'action': action, 'price': price})
         return True
 
-    resp = post_order(order_dict)
+    resp = post_sell_order_with_version_retry(token_id, amount, price)
     if resp.ok:
         print(f'[monitor-executor] SUCCESS: {resp.text}')
         send_server_log('phone.monitor', 'order_executed', f'{action} executed successfully', payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]})
@@ -607,6 +556,15 @@ def main() -> None:
     ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     print(f'[monitor-executor] {ts} dry_run={args.dry_run}')
     send_server_log('phone.monitor', 'run_started', 'Monitor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
+    clob_version = get_clob_version()
+    if clob_version != CLOB_ORDER_VERSION:
+        send_server_log(
+            'phone.monitor',
+            'clob_version_warning',
+            f'Unexpected CLOB version {clob_version}',
+            level='warning',
+            payload={'expected_version': CLOB_ORDER_VERSION, 'actual_version': clob_version},
+        )
 
     missing = [
         v

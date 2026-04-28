@@ -15,7 +15,6 @@ import hashlib
 import hmac
 import json
 import os
-import random
 import sys
 import time
 from datetime import UTC, datetime, timedelta
@@ -23,16 +22,19 @@ from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
-from eth_keys import keys as eth_keys
-from poly_eip712_structs import Address, EIP712Struct, Uint, make_domain
-from eth_utils import keccak
 
 from log_client import refresh_log_client_config, send_server_log
+from polymarket_order_v2 import (
+    CLOB_ORDER_VERSION,
+    ORDER_PATH,
+    build_order_dict_v2,
+    get_clob_version,
+    is_order_version_mismatch_response,
+)
 
 ENV_FILE = Path.home() / '.polymarket.env'
 EXECUTED_ORDERS_FILE = Path.home() / '.polymarket_executed_order_ids'
 CLOB_HOST = 'https://clob.polymarket.com'
-ORDER_PATH = '/order'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 20
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
@@ -46,12 +48,6 @@ TRADE_LOG_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
     '/polymarket_assistant/trade_log.json'
 )
-
-# Polymarket CTF Exchange on Polygon
-EXCHANGE_ADDRESS = '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E'
-CHAIN_ID = 137
-FEE_RATE_BPS = 1000
-SIGNATURE_TYPE = 1  # POLY_PROXY
 
 load_dotenv(ENV_FILE)
 
@@ -113,46 +109,8 @@ def parse_order_timestamp(order_id: str) -> datetime | None:
         return None
 
 
-# ---------------------------------------------------------------------------
-# EIP-712 order struct (mirrors py_order_utils Order)
-# ---------------------------------------------------------------------------
-
-class Order(EIP712Struct):
-    salt = Uint(256)
-    maker = Address()
-    signer = Address()
-    taker = Address()
-    tokenId = Uint(256)
-    makerAmount = Uint(256)
-    takerAmount = Uint(256)
-    expiration = Uint(256)
-    nonce = Uint(256)
-    feeRateBps = Uint(256)
-    side = Uint(8)
-    signatureType = Uint(8)
-
-
-DOMAIN = make_domain(
-    name='Polymarket CTF Exchange',
-    version='1',
-    chainId=str(CHAIN_ID),
-    verifyingContract=EXCHANGE_ADDRESS,
-)
-
-
 class MarketResolvedException(Exception):
     """Raised when the order book returns 404 because the market already resolved."""
-
-
-def sign_order(order: Order) -> str:
-    """Sign EIP-712 order struct with the private key."""
-    struct_hash = keccak(order.signable_bytes(domain=DOMAIN))
-    pk = eth_keys.PrivateKey(bytes.fromhex(POLY_PRIVATE_KEY.lstrip('0x')))
-    sig = pk.sign_msg_hash(struct_hash)
-    # eth_keys produces v ∈ {0, 1}; Ethereum expects v ∈ {27, 28}
-    sig_bytes = bytearray(sig.to_bytes())
-    sig_bytes[64] += 27
-    return '0x' + bytes(sig_bytes).hex()
 
 
 def get_market_price(token_id: str, side: str, amount: float) -> float:
@@ -199,56 +157,6 @@ def round_down(value: float, decimals: int) -> float:
 
 def clamp_price(value: float) -> float:
     return min(0.999, max(0.001, round(value, 3)))
-
-
-def to_usdc(value: float) -> int:
-    """Convert float USDC to 6-decimal integer (Polymarket uses 1e6)."""
-    return int(round(value * 1_000_000))
-
-
-def build_order_dict(token_id: str, side: str, amount: float, price: float) -> dict:
-    """Build and sign an EIP-712 order, return the dict ready for the CLOB API."""
-    salt = random.randint(1, 2**32)
-    side_int = 0 if side == 'BUY' else 1
-
-    if side == 'BUY':
-        maker_amount = to_usdc(round_down(amount, 2))
-        taker_amount = to_usdc(round_down(amount / price, 4))
-    else:
-        maker_amount = to_usdc(round_down(amount, 2))
-        taker_amount = to_usdc(round_down(amount * price, 4))
-
-    order = Order(
-        salt=salt,
-        maker=POLY_FUNDER,
-        signer=POLY_SIGNER_ADDRESS,
-        taker='0x0000000000000000000000000000000000000000',
-        tokenId=int(token_id),
-        makerAmount=maker_amount,
-        takerAmount=taker_amount,
-        expiration=0,
-        nonce=0,
-        feeRateBps=FEE_RATE_BPS,
-        side=side_int,
-        signatureType=SIGNATURE_TYPE,
-    )
-    signature = sign_order(order)
-
-    return {
-        'salt': salt,
-        'maker': POLY_FUNDER,
-        'signer': POLY_SIGNER_ADDRESS,
-        'taker': '0x0000000000000000000000000000000000000000',
-        'tokenId': str(token_id),
-        'makerAmount': str(maker_amount),
-        'takerAmount': str(taker_amount),
-        'expiration': '0',
-        'nonce': '0',
-        'feeRateBps': str(FEE_RATE_BPS),
-        'side': side,
-        'signatureType': SIGNATURE_TYPE,
-        'signature': signature,
-    }
 
 
 def build_l2_headers(method: str, path: str, body_str: str) -> dict:
@@ -643,6 +551,7 @@ def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
         'owner': POLY_API_KEY,
         'orderType': order_type,
         'postOnly': False,
+        'deferExec': False,
     }
     body_str = json.dumps(body, separators=(',', ':'), ensure_ascii=False)
     headers = build_l2_headers('POST', ORDER_PATH, body_str)
@@ -668,6 +577,45 @@ def build_price_candidates(base_price: float, side: str, order_type: str) -> lis
         if price not in candidates:
             candidates.append(price)
     return candidates
+
+
+def post_order_with_version_retry(
+    token_id: str,
+    side: str,
+    amount: float,
+    price: float,
+    *,
+    order_type: str = 'FOK',
+) -> tuple[requests.Response, dict]:
+    order_dict = build_order_dict_v2(
+        token_id,
+        side,
+        amount,
+        price,
+        funder=POLY_FUNDER,
+        signer_address=POLY_SIGNER_ADDRESS,
+        private_key=POLY_PRIVATE_KEY,
+    )
+    resp = post_order(order_dict, order_type=order_type)
+    if not is_order_version_mismatch_response(resp):
+        return resp, order_dict
+
+    clob_version = get_clob_version()
+    print(f'[executor] CLOB reported order_version_mismatch; live version={clob_version}. Retrying once with fresh V2 signature.')
+    if clob_version != CLOB_ORDER_VERSION:
+        return resp, order_dict
+
+    retry_order = build_order_dict_v2(
+        token_id,
+        side,
+        amount,
+        price,
+        funder=POLY_FUNDER,
+        signer_address=POLY_SIGNER_ADDRESS,
+        private_key=POLY_PRIVATE_KEY,
+    )
+    retry_resp = post_order(retry_order, order_type=order_type)
+    return retry_resp, retry_order
 
 
 def execute_order(pending: dict, dry_run: bool = False) -> bool:
@@ -816,12 +764,20 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
             continue
 
         for candidate_index, price in enumerate(price_candidates, 1):
-            order_dict = build_order_dict(token_id, side, amount, price)
             body = {
-                'order': order_dict,
+                'order': build_order_dict_v2(
+                    token_id,
+                    side,
+                    amount,
+                    price,
+                    funder=POLY_FUNDER,
+                    signer_address=POLY_SIGNER_ADDRESS,
+                    private_key=POLY_PRIVATE_KEY,
+                ),
                 'owner': POLY_API_KEY,
                 'orderType': 'FOK',
                 'postOnly': False,
+                'deferExec': False,
             }
 
             if dry_run:
@@ -840,7 +796,13 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 )
                 return True
 
-            resp = post_order(order_dict)
+            resp, _order_dict = post_order_with_version_retry(
+                token_id,
+                side,
+                amount,
+                price,
+                order_type='FOK',
+            )
             if resp.ok:
                 print(f'[executor] SUCCESS: {resp.text}')
                 send_server_log(
@@ -925,6 +887,15 @@ def main() -> None:
     ts = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     print(f'[executor] {ts} dry_run={args.dry_run}')
     send_server_log('phone.executor', 'run_started', 'Executor run started', payload={'timestamp': ts, 'dry_run': args.dry_run})
+    clob_version = get_clob_version()
+    if clob_version != CLOB_ORDER_VERSION:
+        send_server_log(
+            'phone.executor',
+            'clob_version_warning',
+            f'Unexpected CLOB version {clob_version}',
+            level='warning',
+            payload={'expected_version': CLOB_ORDER_VERSION, 'actual_version': clob_version},
+        )
 
     missing = [v for v in ('POLY_API_KEY', 'POLY_API_SECRET', 'POLY_API_PASSPHRASE',
                            'POLY_FUNDER', 'POLY_SIGNER_ADDRESS', 'POLY_PRIVATE_KEY')
