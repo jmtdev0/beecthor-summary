@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-27T20:01:15Z",
-  "run_id": "2026-04-27T20-00-16Z",
+  "timestamp": "2026-04-28T06:02:25Z",
+  "run_id": "2026-04-28T06-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-27T20-00-16Z",
+    "run_id": "2026-04-28T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.92,
-    "summary": "No new action: the weekly 76k dip is working well, the daily 76k dip remains alive, and there is no justified additional trade with only four hours left in the daily market.",
-    "rationale": "Reconciliation is clean. BTC spot is around 76872 and Binance remains bearish short-term, with price near the session low and no meaningful upside reversal. The weekly 76k dip is performing well at roughly 81.5%, but it is still below the 90-95% take-profit zone, so there is no management action yet. The daily 76k dip has weakened to around 28%, but it remains above the 20% discarded-for-slot threshold and therefore still occupies the daily thesis slot. There is no cleaner additional setup to add: lower daily dip strikes are too weak for a fresh late-session entry, upside reach markets are even weaker, and the current bearish positions already express the thesis cleanly. With only four hours left in the daily market, the disciplined decision is NO_ACTION.",
+    "confidence": 0.9,
+    "summary": "No new action: the weekly 76k dip remains the cleanest live expression of the bearish thesis, there are no daily markets available in this snapshot, and no second weekly entry is better than simply holding the current position.",
+    "rationale": "Reconciliation is clean and account pressure is low. BTC spot is around 76915 and Binance short-term bias is neutral after a mild multi-day pullback, which does not justify adding fresh exposure just because a slot is free. The only active tracked position is the weekly BTC 76k dip for April 27-May 3, currently around 78.5%, which is working but still below the 90% take-profit threshold. There are no active daily BTC markets in this snapshot, so no daily thesis or momentum entry can be justified. On the weekly board, the next downside candidate is 74k dip at roughly 39.5%, but it is materially weaker and less obvious than the existing 76k weekly already expressing the same bearish idea. Upside weekly reach markets are even weaker and do not have confirmation. The disciplined decision is to hold the current weekly and take no new action.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76857.06,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 76952.69,
+  "positions_before": 1,
+  "positions_after": 1
 }

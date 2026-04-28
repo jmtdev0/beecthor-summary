@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-27T20:01:15Z
+- Timestamp: 2026-04-28T06:02:25Z
 - Dry run: False
-- BTC price: 76857.06
+- BTC price: 76952.69
 - Decision action: NO_ACTION
-- Decision summary: No new action: the weekly 76k dip is working well, the daily 76k dip remains alive, and there is no justified additional trade with only four hours left in the daily market.
+- Decision summary: No new action: the weekly 76k dip remains the cleanest live expression of the bearish thesis, there are no daily markets available in this snapshot, and no second weekly entry is better than simply holding the current position.
 - Validation: True (ok)
-- Open positions before: 2
-- Open positions after: 2
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 

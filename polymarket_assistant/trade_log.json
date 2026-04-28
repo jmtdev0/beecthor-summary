@@ -10672,5 +10672,57 @@
     "pnl_usd": -0.5989,
     "pnl_pct": -62.85,
     "source": "monitor_executor"
+  },
+  {
+    "timestamp": "2026-04-28T06:02:25Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-28T06-00-16Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-28T06-00-16Z",
+      "action": "NO_ACTION",
+      "confidence": 0.9,
+      "summary": "No new action: the weekly 76k dip remains the cleanest live expression of the bearish thesis, there are no daily markets available in this snapshot, and no second weekly entry is better than simply holding the current position.",
+      "rationale": "Reconciliation is clean and account pressure is low. BTC spot is around 76915 and Binance short-term bias is neutral after a mild multi-day pullback, which does not justify adding fresh exposure just because a slot is free. The only active tracked position is the weekly BTC 76k dip for April 27-May 3, currently around 78.5%, which is working but still below the 90% take-profit threshold. There are no active daily BTC markets in this snapshot, so no daily thesis or momentum entry can be justified. On the weekly board, the next downside candidate is 74k dip at roughly 39.5%, but it is materially weaker and less obvious than the existing 76k weekly already expressing the same bearish idea. Upside weekly reach markets are even weaker and do not have confirmation. The disciplined decision is to hold the current weekly and take no new action.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 76952.69,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
