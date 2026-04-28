@@ -1,74 +1,36 @@
 [
   {
-    "order_id": "2026-04-27T08:01:45.519218Z",
-    "status": "executed",
+    "order_id": "2026-04-28T20:01:27.785020Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "99952381712140010663190903310686635350985727261126391157754143949079739516520",
+    "token_id": "53464061424817638631121762450339495106009451507158296493194109520719942457880",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.64,
+    "max_entry_probability": 0.5,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
     "momentum_confirmed": true,
-    "expiry_validity": "strong",
-    "market": "Will Bitcoin dip to $77,000 on April 27?",
-    "market_slug": "will-bitcoin-dip-to-77k-on-april-27",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-27T08:05:04Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-77k-on-april-27",
-      "price": 0.63,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x7144c8d5305b6dbbb96860c8b3823a85ba03dd512563c2aebd0fafa36f2067ac\",\"takingAmount\":\"1.5873\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x8c43ff9c1e56ee4d1aef86264b3c489ecdbca563e9dbf710e4597b837a62727d\"],\"success\":true}"
-    }
+    "expiry_validity": "acceptable",
+    "market": "Will Bitcoin dip to $76,000 on April 28?",
+    "market_slug": "will-bitcoin-dip-to-76k-on-april-28",
+    "outcome": "Yes"
   },
   {
-    "order_id": "2026-04-27T08:01:45.661316Z",
-    "status": "executed",
+    "order_id": "2026-04-28T20:01:27.860028Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "83144337247634864961262274325271176451916061495186341262746751364066663244507",
+    "token_id": "24852099828734771171973845299131127611699140424349861198229416478350812072098",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.66,
+    "max_entry_probability": 0.5,
     "market_type": "weekly",
     "slot_name": "weekly_thesis",
     "beecthor_aligned": true,
     "momentum_confirmed": true,
     "expiry_validity": "strong",
-    "market": "Will Bitcoin dip to $76,000 April 27-May 3?",
-    "market_slug": "will-bitcoin-dip-to-76k-april-27-may-3",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-27T08:05:13Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-76k-april-27-may-3",
-      "price": 0.67,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x29f70c0ce4fdc4fb6a16a26f3ec7aec770a4f923ec2fa1672071a65e28febc21\",\"takingAmount\":\"1.492536\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x7385d1aa341f5f9b82bc5a0d01b887d240b6cd1d122ce248b3ea68d7feac5526\"],\"success\":true}"
-    }
-  },
-  {
-    "order_id": "2026-04-27T18:01:31.392988Z",
-    "status": "executed",
-    "type": "OPEN_POSITION",
-    "token_id": "96973424087289375049875212513258931664688449734888238280936984007651286771037",
-    "side": "BUY",
-    "stake_usd": 1.0,
-    "max_entry_probability": 0.37,
-    "market_type": "daily",
-    "slot_name": "daily_thesis",
-    "beecthor_aligned": true,
-    "momentum_confirmed": true,
-    "expiry_validity": "strong",
-    "market": "Will Bitcoin dip to $76,000 on April 27?",
-    "market_slug": "will-bitcoin-dip-to-76k-on-april-27",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-27T18:05:05Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-76k-on-april-27",
-      "price": 0.35,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x602ad340ae7e1a192741ce40212b0c27839400295777f09fcc69346d6d1cf769\",\"takingAmount\":\"2.857141\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x75cf7f525c090b466d3c3d4eec1d2dfed223441d4c280df38a0308cb6769e363\"],\"success\":true}"
-    }
+    "market": "Will Bitcoin dip to $74,000 April 27-May 3?",
+    "market_slug": "will-bitcoin-dip-to-74k-april-27-may-3",
+    "outcome": "Yes"
   }
 ]

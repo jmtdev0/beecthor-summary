@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-28T18:03:22Z
+- Timestamp: 2026-04-28T20:01:27Z
 - Dry run: False
-- BTC price: 76217.16
-- Decision action: NO_ACTION
-- Decision summary: No new action: Beecthor remains bearish, but the relisted daily board still lacks real price discovery and the cleanest free weekly dip only carries middling conviction while the account-equity gate is active.
+- BTC price: 76386.76
+- Decision action: OPEN_POSITION
+- Decision summary: Open the daily 76k dip and the weekly 74k dip: the bearish Beecthor thesis is still intact, Binance remains weak near support, and these are the closest clean downside expressions with valid expiry.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
@@ -13,7 +13,42 @@
 
 ```json
 {
-  "performed": false,
-  "details": null
+  "performed": true,
+  "details": [
+    {
+      "order_id": "2026-04-28T20:01:27.785020Z",
+      "status": "pending_phone_execution",
+      "type": "OPEN_POSITION",
+      "token_id": "53464061424817638631121762450339495106009451507158296493194109520719942457880",
+      "side": "BUY",
+      "stake_usd": 1.0,
+      "max_entry_probability": 0.5,
+      "market_type": "daily",
+      "slot_name": "daily_thesis",
+      "beecthor_aligned": true,
+      "momentum_confirmed": true,
+      "expiry_validity": "acceptable",
+      "market": "Will Bitcoin dip to $76,000 on April 28?",
+      "market_slug": "will-bitcoin-dip-to-76k-on-april-28",
+      "outcome": "Yes"
+    },
+    {
+      "order_id": "2026-04-28T20:01:27.860028Z",
+      "status": "pending_phone_execution",
+      "type": "OPEN_POSITION",
+      "token_id": "24852099828734771171973845299131127611699140424349861198229416478350812072098",
+      "side": "BUY",
+      "stake_usd": 1.0,
+      "max_entry_probability": 0.5,
+      "market_type": "weekly",
+      "slot_name": "weekly_thesis",
+      "beecthor_aligned": true,
+      "momentum_confirmed": true,
+      "expiry_validity": "strong",
+      "market": "Will Bitcoin dip to $74,000 April 27-May 3?",
+      "market_slug": "will-bitcoin-dip-to-74k-april-27-may-3",
+      "outcome": "Yes"
+    }
+  ]
 }
 ```
