@@ -46,5 +46,22 @@
       "price": 0.46,
       "response": "{\"errorMsg\":\"\",\"orderID\":\"0xc0705976e5e6278468099e3ac118db332c2a340ffe38614c6833d5e1aea440cc\",\"takingAmount\":\"2.173912\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0xe3bf63441f6570ba3f2375566aad219a99a874a6c1a3cea6ae288db640fc8e77\"],\"success\":true}"
     }
+  },
+  {
+    "order_id": "2026-04-29T06:01:28.457221Z",
+    "status": "pending_phone_execution",
+    "type": "OPEN_POSITION",
+    "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
+    "side": "BUY",
+    "stake_usd": 1.0,
+    "max_entry_probability": 0.62,
+    "market_type": "daily",
+    "slot_name": "daily_momentum",
+    "beecthor_aligned": false,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "market": "Will Bitcoin reach $78,000 on April 29?",
+    "market_slug": "will-bitcoin-reach-78k-on-april-29",
+    "outcome": "Yes"
   }
 ]
