@@ -11729,5 +11729,23 @@
     "binance_spot_price": 75965.76,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-04-29T18:16:17Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
+    "market_title": "Will Bitcoin dip to $75,000 on April 29?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 2.0,
+    "fraction": 1.0,
+    "avg_entry_price": 0.5,
+    "exit_price": 0.999,
+    "entry_cost_usd": 1.0,
+    "exit_proceeds_usd": 1.998,
+    "pnl_usd": 0.998,
+    "pnl_pct": 99.8,
+    "source": "monitor_executor"
   }
 ]
