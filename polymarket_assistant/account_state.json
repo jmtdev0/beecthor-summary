@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 8.947016,
+  "cash_available": 7.911016,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.1195,
+  "open_exposure": 1.6917,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -26,13 +26,28 @@
       "shares": 2.1739,
       "avg_price": 0.4599,
       "entry_cost_usd": 0.9999,
-      "current_price": 0.515,
-      "current_value_usd": 1.1195,
-      "cash_pnl_usd": 0.1195,
+      "current_price": 0.47,
+      "current_value_usd": 1.0217,
+      "cash_pnl_usd": 0.0217,
+      "status": "open",
+      "slot_status": "active"
+    },
+    {
+      "event_slug": "what-price-will-bitcoin-hit-on-april-29",
+      "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
+      "market_title": "Will Bitcoin dip to $75,000 on April 29?",
+      "position_side": "Yes",
+      "token_id": "107140592162163090266473055008772957944664540464903696939549076930505032406460",
+      "shares": 2.0,
+      "avg_price": 0.5,
+      "entry_cost_usd": 1.0,
+      "current_price": 0.335,
+      "current_value_usd": 0.67,
+      "cash_pnl_usd": -0.3299,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-04-29T16:37:01Z"
+  "last_synced_at": "2026-04-29T18:03:11Z"
 }

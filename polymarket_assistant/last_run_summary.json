@@ -1,33 +1,15 @@
 {
-  "timestamp": "2026-04-29T16:37:01Z",
-  "run_id": "2026-04-29T16-35-41Z",
+  "timestamp": "2026-04-29T18:03:11Z",
+  "run_id": "2026-04-29T18-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-29T16-35-41Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.83,
-    "summary": "Open the daily BTC 75k dip: the stale bearish Beecthor thesis now has clear Binance confirmation, while the weekly 74k dip remains the structural thesis position.",
-    "rationale": "Beecthor's latest available thesis is still D-2, so fresh bearish entries require exceptional clarity plus live confirmation. That confirmation is now present: Binance has shifted to bearish short-term, BTC is down about 1.9% over 12h, trading just 0.17% above the 24h low, and open interest is contracting as price presses lower. The weekly 74k dip remains the structural bearish thesis expression and is now repricing in our favor, but it does not block a same-day thesis slot. Under nearest-strike-first, the closest reasonable bearish daily below spot is 75k on April 29 at about 43.5%; that sits just under the preferred band but is still acceptable as a soft-filter exception because the directional alignment and same-day execution reality are now clean. No existing position needs management first, so the disciplined move is to add the daily 75k dip with the early-stage $1 cap.",
+    "run_id": "2026-04-29T18-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.77,
+    "summary": "No new action: the live bearish pair remains the weekly 74k dip plus the daily 75k dip, and there is no cleaner additional edge right now.",
+    "rationale": "BTC is still leaning bearish, but the daily thesis slot is already occupied by the 75k dip and that position is already at the current early-stage live cash cap. The weekly 74k dip remains the closest valid weekly bearish expression. The next daily bearish strike (74k dip) is too discounted with only about 6 hours left, the weekly 72k dip is still too weak versus the closer weekly 74k dip, and there is no clean opposite-direction momentum setup worth using a secondary slot.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-april-29",
-        "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 75000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.45
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -36,21 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-29",
-      "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 75000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.45,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -67,28 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-29T16:37:01.463926Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "107140592162163090266473055008772957944664540464903696939549076930505032406460",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.45,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "market": "Will Bitcoin dip to $75,000 on April 29?",
-        "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 75743.34,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 75965.76,
+  "positions_before": 2,
+  "positions_after": 2
 }
