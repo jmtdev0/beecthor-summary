@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-29T10:03:31Z
+- Timestamp: 2026-04-29T12:01:05Z
 - Dry run: False
-- BTC price: 77731.89
-- Decision action: REDUCE_POSITION
-- Decision summary: Partially de-risk the daily BTC 78k reach: it is already in the 80-85% partial take-profit zone, while no additional daily or weekly entry currently offers a cleaner edge.
+- BTC price: 77591.69
+- Decision action: NO_ACTION
+- Decision summary: No new action: the daily 78k reach has already been partially de-risked, the weekly 74k dip remains open but not yet invalidated enough for an exception exit, and no fresh slot offers a cleaner confirmed edge.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
@@ -13,19 +13,7 @@
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-04-29T10:03:31.751727Z",
-      "status": "pending_phone_execution",
-      "type": "REDUCE_POSITION",
-      "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
-      "side": "SELL",
-      "amount": 0.39125,
-      "market_slug": "will-bitcoin-reach-78k-on-april-29",
-      "outcome": "Yes",
-      "fraction": 0.5
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```

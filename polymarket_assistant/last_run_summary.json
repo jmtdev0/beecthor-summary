@@ -1,31 +1,21 @@
 {
-  "timestamp": "2026-04-29T10:03:31Z",
-  "run_id": "2026-04-29T10-00-06Z",
+  "timestamp": "2026-04-29T12:01:05Z",
+  "run_id": "2026-04-29T12-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-29T10-00-06Z",
-    "action": "REDUCE_POSITION",
-    "confidence": 0.73,
-    "summary": "Partially de-risk the daily BTC 78k reach: it is already in the 80-85% partial take-profit zone, while no additional daily or weekly entry currently offers a cleaner edge.",
-    "rationale": "The open daily 78k reach is trading around 82.5% with roughly 14 hours left, which fits the playbook's partial take-profit band and is not an imminent-expiry situation. Binance is still bullish short term near the 24h high, so adding a fresh bearish daily DIP would fight live structure, while the next weekly bullish reach is still too low-probability to justify new exposure. The weekly 74k dip remains live but weak and should not be averaged into from this snapshot. Reducing half of the profitable daily momentum position locks gains while preserving upside if 78k resolves.",
-    "position_managements": [
-      {
-        "should_manage_existing": true,
-        "action": "REDUCE_POSITION",
-        "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
-        "target_outcome": "Yes",
-        "reason": "take_profit",
-        "reduce_fraction": 0.5
-      }
-    ],
+    "run_id": "2026-04-29T12-00-06Z",
+    "action": "NO_ACTION",
+    "confidence": 0.81,
+    "summary": "No new action: the daily 78k reach has already been partially de-risked, the weekly 74k dip remains open but not yet invalidated enough for an exception exit, and no fresh slot offers a cleaner confirmed edge.",
+    "rationale": "Beecthor's latest available thesis is still structurally bearish, but it is now D-2 stale and Binance remains bullish short term, with BTC still close to the 24h high and no fresh bearish rejection. That keeps a new daily thesis DIP unattractive, especially with the nearest bearish daily 76k dip only around 21%. The daily 78k reach was already reduced and now sits near 74%, below the partial take-profit band, so there is no further management edge right now. The weekly 74k dip is weak around 22%, but the exceptional invalidation exit threshold has not been cleanly reached and the macro thesis is not fully broken. No new weekly reach has enough probability or confirmation to justify filling the secondary weekly slot.",
+    "position_managements": [],
     "new_positions": [],
     "position_management": {
-      "should_manage_existing": true,
-      "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
-      "target_outcome": "Yes",
-      "reason": "take_profit",
-      "reduce_fraction": 0.5,
-      "action": "REDUCE_POSITION"
+      "should_manage_existing": false,
+      "target_market_slug": "",
+      "target_outcome": "",
+      "reason": "none",
+      "reduce_fraction": 0.5
     },
     "new_position": {
       "should_open": false,
@@ -52,22 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-29T10:03:31.751727Z",
-        "status": "pending_phone_execution",
-        "type": "REDUCE_POSITION",
-        "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
-        "side": "SELL",
-        "amount": 0.39125,
-        "market_slug": "will-bitcoin-reach-78k-on-april-29",
-        "outcome": "Yes",
-        "fraction": 0.5
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77731.89,
+  "binance_spot_price": 77591.69,
   "positions_before": 2,
   "positions_after": 2
 }

@@ -11442,5 +11442,57 @@
     "binance_spot_price": 77731.89,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-04-29T12:01:05Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-29T12-00-06Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-29T12-00-06Z",
+      "action": "NO_ACTION",
+      "confidence": 0.81,
+      "summary": "No new action: the daily 78k reach has already been partially de-risked, the weekly 74k dip remains open but not yet invalidated enough for an exception exit, and no fresh slot offers a cleaner confirmed edge.",
+      "rationale": "Beecthor's latest available thesis is still structurally bearish, but it is now D-2 stale and Binance remains bullish short term, with BTC still close to the 24h high and no fresh bearish rejection. That keeps a new daily thesis DIP unattractive, especially with the nearest bearish daily 76k dip only around 21%. The daily 78k reach was already reduced and now sits near 74%, below the partial take-profit band, so there is no further management edge right now. The weekly 74k dip is weak around 22%, but the exceptional invalidation exit threshold has not been cleanly reached and the macro thesis is not fully broken. No new weekly reach has enough probability or confirmation to justify filling the secondary weekly slot.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77591.69,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]
