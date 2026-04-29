@@ -40,5 +40,22 @@
       "price": 0.81,
       "response": "{\"errorMsg\":\"\",\"orderID\":\"0x0e4433f88d25e1c7c8e30f5b668e3946ec7320348c5b5d0045c94c1b17e0b76c\",\"takingAmount\":\"0.3159\",\"makingAmount\":\"0.39\",\"status\":\"matched\",\"transactionsHashes\":[\"0x4d68bf5de8b92b0efe0eaae904975db0b44dfcfe2a816999ff7a664aef94e511\"],\"success\":true}"
     }
+  },
+  {
+    "order_id": "2026-04-29T16:37:01.463926Z",
+    "status": "pending_phone_execution",
+    "type": "OPEN_POSITION",
+    "token_id": "107140592162163090266473055008772957944664540464903696939549076930505032406460",
+    "side": "BUY",
+    "stake_usd": 1.0,
+    "max_entry_probability": 0.45,
+    "market_type": "daily",
+    "slot_name": "daily_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "market": "Will Bitcoin dip to $75,000 on April 29?",
+    "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
+    "outcome": "Yes"
   }
 ]
