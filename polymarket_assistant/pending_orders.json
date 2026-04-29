@@ -25,13 +25,20 @@
   },
   {
     "order_id": "2026-04-29T10:03:31.751727Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "REDUCE_POSITION",
     "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
     "side": "SELL",
     "amount": 0.39125,
     "market_slug": "will-bitcoin-reach-78k-on-april-29",
     "outcome": "Yes",
-    "fraction": 0.5
+    "fraction": 0.5,
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-04-29T10:05:04Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-78k-on-april-29",
+      "price": 0.81,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x0e4433f88d25e1c7c8e30f5b668e3946ec7320348c5b5d0045c94c1b17e0b76c\",\"takingAmount\":\"0.3159\",\"makingAmount\":\"0.39\",\"status\":\"matched\",\"transactionsHashes\":[\"0x4d68bf5de8b92b0efe0eaae904975db0b44dfcfe2a816999ff7a664aef94e511\"],\"success\":true}"
+    }
   }
 ]
