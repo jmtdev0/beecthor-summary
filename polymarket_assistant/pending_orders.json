@@ -49,7 +49,7 @@
   },
   {
     "order_id": "2026-04-29T06:01:28.457221Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
     "side": "BUY",
@@ -63,6 +63,12 @@
     "market": "Will Bitcoin reach $78,000 on April 29?",
     "market_slug": "will-bitcoin-reach-78k-on-april-29",
     "outcome": "Yes",
-    "execution_status_detail": "Requeued after executor CLOB V2 fix"
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-04-29T06:35:30Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-78k-on-april-29",
+      "price": 0.64,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xe2721775089a54aca4676d1e60b88848d31bab5af32fb499dc1f37988161700c\",\"takingAmount\":\"1.5625\",\"makingAmount\":\"1\",\"status\":\"matched\",\"transactionsHashes\":[\"0x3f2a9e6e3e849c15ac8874c8cba9c22c4089f334f9f3a6d5cbd2d838c71e1132\"],\"success\":true}"
+    }
   }
 ]
