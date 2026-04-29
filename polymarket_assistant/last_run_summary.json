@@ -1,33 +1,15 @@
 {
-  "timestamp": "2026-04-29T06:01:28Z",
-  "run_id": "2026-04-29T06-00-06Z",
+  "timestamp": "2026-04-29T08:01:02Z",
+  "run_id": "2026-04-29T08-00-12Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-29T06-00-06Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.67,
-    "summary": "Open the daily 78k reach as a momentum slot: the weekly 74k dip stays open as the bearish thesis position, but Binance is showing a clear same-day bullish continuation that the portfolio is not currently capturing.",
-    "rationale": "Beecthor's latest available work is still structurally bearish, so the weekly 74k dip remains the thesis expression and does not justify a forced bearish add while BTC is reclaiming strength. The transcript is now D-2 stale, which makes fresh thesis-aligned bearish entries less attractive unless Binance confirms downside. Instead, Binance shows bullish short-term bias, a 12h gain of about 1.26%, price trading near the 24h high, and expanding open interest. With 18 hours left in the daily board, the cleanest opposite-trend expression is the nearest upside strike, 78k reach, at about 61% probability. That fits the daily momentum slot and stays within the early-stage $1 cap.",
+    "run_id": "2026-04-29T08-00-12Z",
+    "action": "NO_ACTION",
+    "confidence": 0.85,
+    "summary": "No new action: the weekly 74k dip and the daily 78k reach remain the correct live pair, and there is no fresh third setup with enough edge.",
+    "rationale": "The latest Beecthor context is still structurally bearish, so the weekly 74k dip remains a valid thesis position, but Binance is still showing bullish short-term bias, which is why the daily 78k reach momentum position also remains valid. Neither open position is near any partial or full take-profit threshold, and neither is invalidated enough to justify a forced reduction. For new entries, the bearish daily thesis slot should stay unused because the transcript is now D-2 stale and Binance is not confirming downside. The nearest bullish weekly continuation is only the 82k reach at about 9%, which fails the weekly probability gate. That leaves no valid high-conviction new trade.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_momentum",
-        "beecthor_aligned": false,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-april-29",
-        "market_slug": "will-bitcoin-reach-78k-on-april-29",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 78000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.62
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -36,21 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-april-29",
-      "market_slug": "will-bitcoin-reach-78k-on-april-29",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.62,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_momentum",
-      "beecthor_aligned": false,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -67,28 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-04-29T06:01:28.457221Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.62,
-        "market_type": "daily",
-        "slot_name": "daily_momentum",
-        "beecthor_aligned": false,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "market": "Will Bitcoin reach $78,000 on April 29?",
-        "market_slug": "will-bitcoin-reach-78k-on-april-29",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77277.04,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 77070.4,
+  "positions_before": 2,
+  "positions_after": 2
 }
