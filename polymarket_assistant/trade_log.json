@@ -11368,5 +11368,79 @@
     "pnl_usd": 0.125,
     "pnl_pct": 25.0,
     "source": "monitor_executor"
+  },
+  {
+    "timestamp": "2026-04-29T10:03:31Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-29T10-00-06Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-29T10-00-06Z",
+      "action": "REDUCE_POSITION",
+      "confidence": 0.73,
+      "summary": "Partially de-risk the daily BTC 78k reach: it is already in the 80-85% partial take-profit zone, while no additional daily or weekly entry currently offers a cleaner edge.",
+      "rationale": "The open daily 78k reach is trading around 82.5% with roughly 14 hours left, which fits the playbook's partial take-profit band and is not an imminent-expiry situation. Binance is still bullish short term near the 24h high, so adding a fresh bearish daily DIP would fight live structure, while the next weekly bullish reach is still too low-probability to justify new exposure. The weekly 74k dip remains live but weak and should not be averaged into from this snapshot. Reducing half of the profitable daily momentum position locks gains while preserving upside if 78k resolves.",
+      "position_managements": [
+        {
+          "should_manage_existing": true,
+          "action": "REDUCE_POSITION",
+          "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
+          "target_outcome": "Yes",
+          "reason": "take_profit",
+          "reduce_fraction": 0.5
+        }
+      ],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": true,
+        "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
+        "target_outcome": "Yes",
+        "reason": "take_profit",
+        "reduce_fraction": 0.5,
+        "action": "REDUCE_POSITION"
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": true,
+      "details": [
+        {
+          "order_id": "2026-04-29T10:03:31.751727Z",
+          "status": "pending_phone_execution",
+          "type": "REDUCE_POSITION",
+          "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
+          "side": "SELL",
+          "amount": 0.39125,
+          "market_slug": "will-bitcoin-reach-78k-on-april-29",
+          "outcome": "Yes",
+          "fraction": 0.5
+        }
+      ]
+    },
+    "binance_spot_price": 77731.89,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]

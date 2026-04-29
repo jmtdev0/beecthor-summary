@@ -1,21 +1,31 @@
 {
-  "timestamp": "2026-04-29T08:01:02Z",
-  "run_id": "2026-04-29T08-00-12Z",
+  "timestamp": "2026-04-29T10:03:31Z",
+  "run_id": "2026-04-29T10-00-06Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-29T08-00-12Z",
-    "action": "NO_ACTION",
-    "confidence": 0.85,
-    "summary": "No new action: the weekly 74k dip and the daily 78k reach remain the correct live pair, and there is no fresh third setup with enough edge.",
-    "rationale": "The latest Beecthor context is still structurally bearish, so the weekly 74k dip remains a valid thesis position, but Binance is still showing bullish short-term bias, which is why the daily 78k reach momentum position also remains valid. Neither open position is near any partial or full take-profit threshold, and neither is invalidated enough to justify a forced reduction. For new entries, the bearish daily thesis slot should stay unused because the transcript is now D-2 stale and Binance is not confirming downside. The nearest bullish weekly continuation is only the 82k reach at about 9%, which fails the weekly probability gate. That leaves no valid high-conviction new trade.",
-    "position_managements": [],
+    "run_id": "2026-04-29T10-00-06Z",
+    "action": "REDUCE_POSITION",
+    "confidence": 0.73,
+    "summary": "Partially de-risk the daily BTC 78k reach: it is already in the 80-85% partial take-profit zone, while no additional daily or weekly entry currently offers a cleaner edge.",
+    "rationale": "The open daily 78k reach is trading around 82.5% with roughly 14 hours left, which fits the playbook's partial take-profit band and is not an imminent-expiry situation. Binance is still bullish short term near the 24h high, so adding a fresh bearish daily DIP would fight live structure, while the next weekly bullish reach is still too low-probability to justify new exposure. The weekly 74k dip remains live but weak and should not be averaged into from this snapshot. Reducing half of the profitable daily momentum position locks gains while preserving upside if 78k resolves.",
+    "position_managements": [
+      {
+        "should_manage_existing": true,
+        "action": "REDUCE_POSITION",
+        "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
+        "target_outcome": "Yes",
+        "reason": "take_profit",
+        "reduce_fraction": 0.5
+      }
+    ],
     "new_positions": [],
     "position_management": {
-      "should_manage_existing": false,
-      "target_market_slug": "",
-      "target_outcome": "",
-      "reason": "none",
-      "reduce_fraction": 0.5
+      "should_manage_existing": true,
+      "target_market_slug": "will-bitcoin-reach-78k-on-april-29",
+      "target_outcome": "Yes",
+      "reason": "take_profit",
+      "reduce_fraction": 0.5,
+      "action": "REDUCE_POSITION"
     },
     "new_position": {
       "should_open": false,
@@ -42,10 +52,22 @@
     "message": "ok"
   },
   "execution": {
-    "performed": false,
-    "details": null
+    "performed": true,
+    "details": [
+      {
+        "order_id": "2026-04-29T10:03:31.751727Z",
+        "status": "pending_phone_execution",
+        "type": "REDUCE_POSITION",
+        "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
+        "side": "SELL",
+        "amount": 0.39125,
+        "market_slug": "will-bitcoin-reach-78k-on-april-29",
+        "outcome": "Yes",
+        "fraction": 0.5
+      }
+    ]
   },
-  "binance_spot_price": 77070.4,
+  "binance_spot_price": 77731.89,
   "positions_before": 2,
   "positions_after": 2
 }
