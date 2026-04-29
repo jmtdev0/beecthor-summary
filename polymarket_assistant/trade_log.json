@@ -11350,5 +11350,23 @@
     "binance_spot_price": 77070.4,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-04-29T09:55:18Z",
+    "type": "trade_reduced",
+    "market_slug": "will-bitcoin-reach-78k-on-april-29",
+    "market_title": "Will Bitcoin reach $78,000 on April 29?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "partial_take_profit",
+    "shares": 0.7812,
+    "fraction": 0.5,
+    "avg_entry_price": 0.64,
+    "exit_price": 0.8,
+    "entry_cost_usd": 0.5,
+    "exit_proceeds_usd": 0.625,
+    "pnl_usd": 0.125,
+    "pnl_pct": 25.0,
+    "source": "monitor_executor"
   }
 ]
