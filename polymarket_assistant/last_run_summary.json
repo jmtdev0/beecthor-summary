@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-30T12:00:51Z",
-  "run_id": "2026-04-30T12-00-02Z",
+  "timestamp": "2026-04-30T14:01:02Z",
+  "run_id": "2026-04-30T14-00-07Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-30T12-00-02Z",
+    "run_id": "2026-04-30T14-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.82,
-    "summary": "No new action: the weekly 74k dip and the daily 77k reach remain the right frontier positions, and there is still no cleaner third edge to add or obvious management trigger to act on.",
-    "rationale": "BTC is still stuck in a neutral intraday posture around 76k, which keeps both live ideas plausible: the weekly 74k dip still expresses Beecthor's structural bearish map, while the daily 77k reach still fits the corrective rebound scenario he explicitly allowed before a larger rollover. Neither position is near take-profit, neither is weak enough for exceptional invalidation, and both remain under the relevant discard/invalidation thresholds. A fresh daily 75k dip at about 37% would now directly conflict with the still-live 77k rebound setup without decisive new bearish confirmation, while 74k daily and 72k weekly are still too weak/far. Best move is to hold current exposure and wait for clearer direction.",
+    "confidence": 0.8,
+    "summary": "No new action: the daily 77k rebound trade is working, the weekly 74k dip remains open but not invalidated enough for an exception exit, and there is no clean additional edge to add.",
+    "rationale": "Binance has shifted to bullish_short_term and the bearish-bias correction flag is active, which supports the existing daily 77k reach and argues against adding any fresh bearish daily. At the same time, the weekly 74k dip has weakened to about 30%, but it is still above the exceptional invalidation band and there is not yet a decisive structural reversal strong enough to force an early exit. The current book already captures both sides of the map: structural bearish weekly plus corrective bullish daily. The next daily reach at 78k is still too weak around 16.5%, while bearish dailies are now badly misaligned with live structure. Best move is to hold.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76072.44,
+  "binance_spot_price": 76460.25,
   "positions_before": 2,
   "positions_after": 2
 }

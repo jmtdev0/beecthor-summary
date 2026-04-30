@@ -12068,5 +12068,57 @@
     "binance_spot_price": 76072.44,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-04-30T14:01:02Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-30T14-00-07Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-30T14-00-07Z",
+      "action": "NO_ACTION",
+      "confidence": 0.8,
+      "summary": "No new action: the daily 77k rebound trade is working, the weekly 74k dip remains open but not invalidated enough for an exception exit, and there is no clean additional edge to add.",
+      "rationale": "Binance has shifted to bullish_short_term and the bearish-bias correction flag is active, which supports the existing daily 77k reach and argues against adding any fresh bearish daily. At the same time, the weekly 74k dip has weakened to about 30%, but it is still above the exceptional invalidation band and there is not yet a decisive structural reversal strong enough to force an early exit. The current book already captures both sides of the map: structural bearish weekly plus corrective bullish daily. The next daily reach at 78k is still too weak around 16.5%, while bearish dailies are now badly misaligned with live structure. Best move is to hold.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 76460.25,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]
