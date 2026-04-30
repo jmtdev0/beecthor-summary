@@ -12172,5 +12172,57 @@
     "binance_spot_price": 76372.27,
     "positions_before": 2,
     "positions_after": 2
+  },
+  {
+    "timestamp": "2026-04-30T20:00:51Z",
+    "type": "cycle_run",
+    "run_id": "2026-04-30T20-00-00Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-04-30T20-00-00Z",
+      "action": "NO_ACTION",
+      "confidence": 0.88,
+      "summary": "No new action: both live positions are weaker, but neither is yet invalidated enough for an exception exit and there is no quality replacement left on the daily board.",
+      "rationale": "The bullish corrective daily and the structural bearish weekly have both faded, but they are still above the exceptional invalidation band: the daily 77k reach is around 37.5% and the weekly 74k dip around 25.5%. That is poor, yet still not a valid forced-exit zone under the playbook. Binance remains modestly bullish/neutral intraday, so there is no decisive break that cleanly invalidates one side and justifies immediate rotation. With only about 4 hours until daily expiry, the remaining daily alternatives are extremely weak: 75k dip is about 4%, 74k dip about 1.2%, and 78k reach about 3.7%. Best move is to avoid forcing a late low-quality switch and reassess only if a true invalidation or take-profit condition appears.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 76409.3,
+    "positions_before": 2,
+    "positions_after": 2
   }
 ]

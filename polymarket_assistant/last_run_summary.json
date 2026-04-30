@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-30T18:01:11Z",
-  "run_id": "2026-04-30T18-00-16Z",
+  "timestamp": "2026-04-30T20:00:51Z",
+  "run_id": "2026-04-30T20-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-30T18-00-16Z",
+    "run_id": "2026-04-30T20-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "No new action: both live positions have weakened, but neither is yet invalidated enough for an exception exit and no fresh daily edge remains with only 6 hours left.",
-    "rationale": "The corrective rebound thesis has faded and the structural bearish weekly also remains under pressure, but the two open positions are still above the exceptional invalidation band: the daily 77k reach is around 32% and the weekly 74k dip around 28.5%. That is weak, but not yet a valid forced-exit zone under the playbook. Binance is only neutral now, not strongly trending in a direction that cleanly invalidates one side and justifies immediate rotation. The remaining daily markets are also poor: 75k dip is only about 10% and 78k reach about 4.5%, both too weak this late in the day. Best move is to hold, avoid forcing a low-quality replacement, and reassess closer to real invalidation or a cleaner directional break.",
+    "confidence": 0.88,
+    "summary": "No new action: both live positions are weaker, but neither is yet invalidated enough for an exception exit and there is no quality replacement left on the daily board.",
+    "rationale": "The bullish corrective daily and the structural bearish weekly have both faded, but they are still above the exceptional invalidation band: the daily 77k reach is around 37.5% and the weekly 74k dip around 25.5%. That is poor, yet still not a valid forced-exit zone under the playbook. Binance remains modestly bullish/neutral intraday, so there is no decisive break that cleanly invalidates one side and justifies immediate rotation. With only about 4 hours until daily expiry, the remaining daily alternatives are extremely weak: 75k dip is about 4%, 74k dip about 1.2%, and 78k reach about 3.7%. Best move is to avoid forcing a late low-quality switch and reassess only if a true invalidation or take-profit condition appears.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76372.27,
+  "binance_spot_price": 76409.3,
   "positions_before": 2,
   "positions_after": 2
 }
