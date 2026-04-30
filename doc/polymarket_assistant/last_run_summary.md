@@ -1,37 +1,19 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-30T08:02:30Z
+- Timestamp: 2026-04-30T10:01:06Z
 - Dry run: False
-- BTC price: 76094.41
-- Decision action: OPEN_POSITION
-- Decision summary: Open the daily BTC 77k reach: the weekly 74k dip remains the structural bearish thesis, but today's cleaner same-day expression is a corrective rebound toward 77k.
+- BTC price: 76113.87
+- Decision action: NO_ACTION
+- Decision summary: No new action: the weekly 74k dip and the daily 77k reach remain the two live frontier positions, and no cleaner additional edge is available right now.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 2
+- Open positions after: 2
 
 ## Execution
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-04-30T08:02:30.736824Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "15332316345973463550814651531881749100584457586607920746408312298035564812122",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.5,
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "market": "Will Bitcoin reach $77,000 on April 30?",
-      "market_slug": "will-bitcoin-reach-77k-on-april-30",
-      "outcome": "Yes"
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```
