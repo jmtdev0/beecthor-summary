@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-30T14:01:02Z",
-  "run_id": "2026-04-30T14-00-07Z",
+  "timestamp": "2026-04-30T18:01:11Z",
+  "run_id": "2026-04-30T18-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-30T14-00-07Z",
+    "run_id": "2026-04-30T18-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.8,
-    "summary": "No new action: the daily 77k rebound trade is working, the weekly 74k dip remains open but not invalidated enough for an exception exit, and there is no clean additional edge to add.",
-    "rationale": "Binance has shifted to bullish_short_term and the bearish-bias correction flag is active, which supports the existing daily 77k reach and argues against adding any fresh bearish daily. At the same time, the weekly 74k dip has weakened to about 30%, but it is still above the exceptional invalidation band and there is not yet a decisive structural reversal strong enough to force an early exit. The current book already captures both sides of the map: structural bearish weekly plus corrective bullish daily. The next daily reach at 78k is still too weak around 16.5%, while bearish dailies are now badly misaligned with live structure. Best move is to hold.",
+    "confidence": 0.86,
+    "summary": "No new action: both live positions have weakened, but neither is yet invalidated enough for an exception exit and no fresh daily edge remains with only 6 hours left.",
+    "rationale": "The corrective rebound thesis has faded and the structural bearish weekly also remains under pressure, but the two open positions are still above the exceptional invalidation band: the daily 77k reach is around 32% and the weekly 74k dip around 28.5%. That is weak, but not yet a valid forced-exit zone under the playbook. Binance is only neutral now, not strongly trending in a direction that cleanly invalidates one side and justifies immediate rotation. The remaining daily markets are also poor: 75k dip is only about 10% and 78k reach about 4.5%, both too weak this late in the day. Best move is to hold, avoid forcing a low-quality replacement, and reassess closer to real invalidation or a cleaner directional break.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76460.25,
+  "binance_spot_price": 76372.27,
   "positions_before": 2,
   "positions_after": 2
 }

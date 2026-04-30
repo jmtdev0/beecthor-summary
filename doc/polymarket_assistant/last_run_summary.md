@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-04-30T14:01:02Z
+- Timestamp: 2026-04-30T18:01:11Z
 - Dry run: False
-- BTC price: 76460.25
+- BTC price: 76372.27
 - Decision action: NO_ACTION
-- Decision summary: No new action: the daily 77k rebound trade is working, the weekly 74k dip remains open but not invalidated enough for an exception exit, and there is no clean additional edge to add.
+- Decision summary: No new action: both live positions have weakened, but neither is yet invalidated enough for an exception exit and no fresh daily edge remains with only 6 hours left.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
