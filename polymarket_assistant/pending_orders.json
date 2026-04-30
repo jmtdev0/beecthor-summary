@@ -1,68 +1,19 @@
 [
   {
-    "order_id": "2026-04-29T06:01:28.457221Z",
-    "status": "executed",
+    "order_id": "2026-04-30T08:02:30.736824Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
+    "token_id": "15332316345973463550814651531881749100584457586607920746408312298035564812122",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.62,
-    "market_type": "daily",
-    "slot_name": "daily_momentum",
-    "beecthor_aligned": false,
-    "momentum_confirmed": true,
-    "expiry_validity": "strong",
-    "market": "Will Bitcoin reach $78,000 on April 29?",
-    "market_slug": "will-bitcoin-reach-78k-on-april-29",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-29T06:35:30Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-78k-on-april-29",
-      "price": 0.64,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xe2721775089a54aca4676d1e60b88848d31bab5af32fb499dc1f37988161700c\",\"takingAmount\":\"1.5625\",\"makingAmount\":\"1\",\"status\":\"matched\",\"transactionsHashes\":[\"0x3f2a9e6e3e849c15ac8874c8cba9c22c4089f334f9f3a6d5cbd2d838c71e1132\"],\"success\":true}"
-    }
-  },
-  {
-    "order_id": "2026-04-29T10:03:31.751727Z",
-    "status": "executed",
-    "type": "REDUCE_POSITION",
-    "token_id": "57722554520156505715633555744850513630960988017882145772694294313960696690730",
-    "side": "SELL",
-    "amount": 0.39125,
-    "market_slug": "will-bitcoin-reach-78k-on-april-29",
-    "outcome": "Yes",
-    "fraction": 0.5,
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-29T10:05:04Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-78k-on-april-29",
-      "price": 0.81,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x0e4433f88d25e1c7c8e30f5b668e3946ec7320348c5b5d0045c94c1b17e0b76c\",\"takingAmount\":\"0.3159\",\"makingAmount\":\"0.39\",\"status\":\"matched\",\"transactionsHashes\":[\"0x4d68bf5de8b92b0efe0eaae904975db0b44dfcfe2a816999ff7a664aef94e511\"],\"success\":true}"
-    }
-  },
-  {
-    "order_id": "2026-04-29T16:37:01.463926Z",
-    "status": "executed",
-    "type": "OPEN_POSITION",
-    "token_id": "107140592162163090266473055008772957944664540464903696939549076930505032406460",
-    "side": "BUY",
-    "stake_usd": 1.0,
-    "max_entry_probability": 0.45,
+    "max_entry_probability": 0.5,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
     "momentum_confirmed": true,
     "expiry_validity": "strong",
-    "market": "Will Bitcoin dip to $75,000 on April 29?",
-    "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-04-29T16:37:50Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-75k-on-april-29",
-      "price": 0.5,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x6f0c63308ced86ac5aefac72070bd92708069f48aa901f70378b8ffb589f630a\",\"takingAmount\":\"2\",\"makingAmount\":\"1\",\"status\":\"matched\",\"transactionsHashes\":[\"0xfa0df2c32966f588713ed2ae215eef83a1c15909b06bbf34f567b0073a075556\"],\"success\":true}"
-    }
+    "market": "Will Bitcoin reach $77,000 on April 30?",
+    "market_slug": "will-bitcoin-reach-77k-on-april-30",
+    "outcome": "Yes"
   }
 ]
