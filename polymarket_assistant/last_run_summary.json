@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-04-29T20:00:52Z",
-  "run_id": "2026-04-29T20-00-03Z",
+  "timestamp": "2026-04-30T06:01:36Z",
+  "run_id": "2026-04-30T06-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-04-29T20-00-03Z",
+    "run_id": "2026-04-30T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.84,
-    "summary": "No new action: the weekly 74k dip remains the live bearish thesis, and the remaining daily board is too late and too discounted for a clean fresh entry.",
-    "rationale": "BTC remains short-term bearish, but the only active position left is the weekly 74k dip, which is still the closest valid weekly bearish expression. With only about 4 hours until daily expiry, the remaining daily opportunities are poor: 74k dip is still too discounted around 10.9%, 78k reach is effectively dead around 3.4%, and there is no clean same-day setup strong enough to justify using a daily slot this late in the session. Reconciliation is healthy, but there is no valid edge to add here.",
+    "confidence": 0.72,
+    "summary": "No new action: the weekly 74k dip remains the live bearish thesis, but the fresh daily board is not clean enough yet for a new entry.",
+    "rationale": "Beecthor remains bearish and the weekly 74k dip is still the correct live thesis position. However, the latest video also warned that the downside structure was not especially clean, and Binance is now neutral intraday rather than actively bearish. The closest daily bearish strike, 75k dip, is already advanced around 63% after much of the move has happened, while 74k dip is still materially farther and only around 22.5%. On the other side, 77k reach has some price appeal but is not supported by a clear bullish continuation or by the main Beecthor thesis. With no clean same-day confirmation in either direction, preserving capital is better than forcing a daily entry here.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 75570.38,
+  "binance_spot_price": 75580.08,
   "positions_before": 1,
   "positions_after": 1
 }
