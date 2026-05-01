@@ -12529,5 +12529,23 @@
     "binance_spot_price": 77464.79,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-01T13:35:54Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-reach-78k-on-may-1",
+    "market_title": "Will Bitcoin reach $78,000 on May 1?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.8867,
+    "fraction": 1.0,
+    "avg_entry_price": 0.5299,
+    "exit_price": 0.999,
+    "entry_cost_usd": 0.9998,
+    "exit_proceeds_usd": 1.8848,
+    "pnl_usd": 0.885,
+    "pnl_pct": 88.52,
+    "source": "monitor_executor"
   }
 ]
