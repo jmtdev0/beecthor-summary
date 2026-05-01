@@ -12764,5 +12764,57 @@
     "binance_spot_price": 78581.27,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-01T20:00:58Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-01T20-00-03Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-05-01T20-00-03Z",
+      "action": "NO_ACTION",
+      "confidence": 0.83,
+      "summary": "No new action: the daily 79k reach is now discarded for slot usage, but it is not a clean exceptional-invalidation exit and there is no quality replacement left on the board.",
+      "rationale": "The open 79k reach has faded to about 20% with only roughly 4 hours left, so it should no longer block slot availability and is correctly treated as discarded for slot usage. However, this is still not a clean exceptional-invalidation exit under the playbook: the threshold is only barely met, Binance is still bullish short term rather than opposite to the trade, and the broader rebound thesis has not been decisively structurally rejected. At the same time, no fresh replacement edge exists: 80k reach is only about 1.25%, and bearish dailies are even weaker while still misaligned with live execution reality. Best move is to hold the residual discarded position and avoid forcing a low-quality late switch.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 78368.16,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
