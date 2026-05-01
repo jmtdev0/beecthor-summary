@@ -1,33 +1,15 @@
 {
-  "timestamp": "2026-05-01T06:01:40Z",
-  "run_id": "2026-05-01T06-00-16Z",
+  "timestamp": "2026-05-01T08:01:25Z",
+  "run_id": "2026-05-01T08-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-01T06-00-16Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.76,
-    "summary": "Open the daily BTC 78k reach: Beecthor still frames the move as a corrective rebound, and Binance is clearly supporting that same-day extension.",
-    "rationale": "The latest Beecthor summary remains structurally bearish on the higher timeframe, but it explicitly allows a corrective rebound with immediate resistance around 77.9k and even a possible stretch higher before the larger bearish thesis resumes. Binance is now bullish short term: BTC is up about 1.0% over 12h and 1.3% over 24h, trading close to the 24h high, while bearish-bias correction remains active. With no open positions and the weekly bearish dips now too weak to justify fresh exposure, the cleanest new frontier trade is the nearest daily bullish strike above spot. Under closest-strike-first, 78k on May 1 at about 51.5% is the right expression; the next daily reach at 79k is materially farther and much weaker, while bearish dailies are badly misaligned with live structure.",
+    "run_id": "2026-05-01T08-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.84,
+    "summary": "No new action: the daily 78k reach remains the right live expression of the corrective rebound, and there is no cleaner second position to add.",
+    "rationale": "Binance remains bullish short term with expanding open interest and price still trading close to the 24h high, so the existing 78k reach daily continues to be the correct live position. It is not near take-profit and not near exceptional invalidation. Re-adding is not allowed because the position is already at the full early-stage $1 live cash cap. The next bullish daily at 79k is materially farther and only around 15%, while the bearish dailies and weekly dips remain badly misaligned with current execution reality. With no clean weekly frontier and no justified second daily, the disciplined move is to hold.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-1",
-        "market_slug": "will-bitcoin-reach-78k-on-may-1",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 78000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.55
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -36,21 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-1",
-      "market_slug": "will-bitcoin-reach-78k-on-may-1",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.55,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -67,28 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-01T06:01:40.607327Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "36265610561309643392920172211114620428079182934870169223036506841525136377163",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.55,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "market": "Will Bitcoin reach $78,000 on May 1?",
-        "market_slug": "will-bitcoin-reach-78k-on-may-1",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77160.81,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 77112.92,
+  "positions_before": 1,
+  "positions_after": 1
 }
