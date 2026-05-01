@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-01T14:01:01Z
+- Timestamp: 2026-05-01T18:00:56Z
 - Dry run: False
-- BTC price: 78720.34
+- BTC price: 78581.27
 - Decision action: NO_ACTION
-- Decision summary: No new action: the daily 79k reach remains the right live trade, but it is not yet in the playbook take-profit band and there is no clean second setup to add.
+- Decision summary: No new action: the daily 79k reach remains the correct live trade, and there is still no justified management trigger or replacement setup.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1

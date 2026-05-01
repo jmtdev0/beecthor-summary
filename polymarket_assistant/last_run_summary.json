@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-01T14:01:01Z",
-  "run_id": "2026-05-01T14-00-06Z",
+  "timestamp": "2026-05-01T18:00:56Z",
+  "run_id": "2026-05-01T18-00-07Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-01T14-00-06Z",
+    "run_id": "2026-05-01T18-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.79,
-    "summary": "No new action: the daily 79k reach remains the right live trade, but it is not yet in the playbook take-profit band and there is no clean second setup to add.",
-    "rationale": "Binance remains strongly bullish short term, with price pressing the highs and open interest expanding, so the existing 79k reach daily remains the correct live expression of the rebound thesis. The next daily bullish frontier at 80k is too weak around 11.5%, while bearish dailies and bearish weeklies remain completely out of sync with current execution reality. Even though the open position is already profitable, the live market probability for 79k reach is still only around 58.5%, so it has not reached the playbook's partial take-profit band. Best move is to keep holding the current daily and avoid forcing another trade.",
+    "confidence": 0.87,
+    "summary": "No new action: the daily 79k reach remains the correct live trade, and there is still no justified management trigger or replacement setup.",
+    "rationale": "Binance remains bullish short term with price holding near the highs and open interest still expanding, so the existing 79k reach daily remains the right live expression of the rebound thesis. The position is only slightly below breakeven and is not near take-profit or exceptional invalidation. Re-adding is not allowed because it already uses the full early-stage $1 live cash cap. The next bullish daily at 80k is now too weak around 4.5%, while bearish dailies and weekly dips remain completely out of sync with current execution reality. With only about 6 hours left until daily expiry, the disciplined move is to hold the current daily and avoid forcing a low-quality switch.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78720.34,
+  "binance_spot_price": 78581.27,
   "positions_before": 1,
   "positions_after": 1
 }
