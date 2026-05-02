@@ -1,13 +1,13 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-01T20:00:58Z
+- Timestamp: 2026-05-02T06:00:56Z
 - Dry run: False
-- BTC price: 78368.16
+- BTC price: 78217.52
 - Decision action: NO_ACTION
-- Decision summary: No new action: the daily 79k reach is now discarded for slot usage, but it is not a clean exceptional-invalidation exit and there is no quality replacement left on the board.
+- Decision summary: No new action: reconciliation is broken, so the playbook blocks any fresh entry even though the daily 79k reach would otherwise be the cleanest live candidate.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 

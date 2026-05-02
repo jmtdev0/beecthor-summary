@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-01T20:00:58Z",
-  "run_id": "2026-05-01T20-00-03Z",
+  "timestamp": "2026-05-02T06:00:56Z",
+  "run_id": "2026-05-02T06-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-01T20-00-03Z",
+    "run_id": "2026-05-02T06-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.83,
-    "summary": "No new action: the daily 79k reach is now discarded for slot usage, but it is not a clean exceptional-invalidation exit and there is no quality replacement left on the board.",
-    "rationale": "The open 79k reach has faded to about 20% with only roughly 4 hours left, so it should no longer block slot availability and is correctly treated as discarded for slot usage. However, this is still not a clean exceptional-invalidation exit under the playbook: the threshold is only barely met, Binance is still bullish short term rather than opposite to the trade, and the broader rebound thesis has not been decisively structurally rejected. At the same time, no fresh replacement edge exists: 80k reach is only about 1.25%, and bearish dailies are even weaker while still misaligned with live execution reality. Best move is to hold the residual discarded position and avoid forcing a low-quality late switch.",
+    "confidence": 0.93,
+    "summary": "No new action: reconciliation is broken, so the playbook blocks any fresh entry even though the daily 79k reach would otherwise be the cleanest live candidate.",
+    "rationale": "The latest Beecthor summary still allows further corrective upside and Binance remains supportive enough that 79k reach on May 2 would otherwise be the nearest reasonable bullish daily. However, the reconciliation gate is currently broken because the system is missing a closure record for will-bitcoin-reach-79k-on-may-1:Yes. Under the playbook, no new positions may be opened until the state is repaired. That rule overrides the market opportunity, so the only valid decision for this cycle is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78368.16,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 78217.52,
+  "positions_before": 0,
+  "positions_after": 0
 }
