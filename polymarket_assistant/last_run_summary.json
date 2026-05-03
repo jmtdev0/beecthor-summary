@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-03T12:02:17Z",
-  "run_id": "2026-05-03T12-00-03Z",
+  "timestamp": "2026-05-03T14:01:12Z",
+  "run_id": "2026-05-03T14-00-08Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-03T12-00-03Z",
+    "run_id": "2026-05-03T14-00-08Z",
     "action": "NO_ACTION",
-    "confidence": 0.79,
-    "summary": "No new action: the daily 79k reach thesis position remains valid and profitable, but it is still below the partial take-profit zone and no second same-day edge is clean enough.",
-    "rationale": "BTC is trading around 78.66k with bullish short-term Binance context, so the existing daily 79k reach position remains the correct live thesis expression. However, the market is still around 77.5-80.0% probability, which is below the playbook partial take-profit band of 80-85%, so there is no reason to reduce yet. Re-adding the same market is not justified because the live position already captures the thesis and any extra sizing would only make sense if the cash-per-position cap still clearly allowed it. No secondary daily or weekly market offers a cleaner edge: 80k reach is still too far for the remaining time window, while downside dailies and weeklys are too weak and out of sync with current price action.",
+    "confidence": 0.82,
+    "summary": "No new action: the live 79k reach daily remains the correct thesis expression, but it is still below partial take-profit territory and no second slot offers a cleaner edge.",
+    "rationale": "BTC is trading around 78.7k with bullish short-term Binance structure, which keeps the open daily 79k reach position aligned with the current live setup. That position is profitable, but the market is only around 70% probability, still below the playbook partial take-profit band of 80-85%, so there is no clear reason to reduce. Re-adding is unnecessary here because the existing position already captures the same thesis and remains within the early-stage single-position cap logic. No second daily or weekly entry is cleaner: 80k reach is still too stretched for the remaining hours, while bearish dip markets remain weak and out of sync with the current price action.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -48,7 +48,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78682.81,
+  "binance_spot_price": 78689.77,
   "positions_before": 1,
   "positions_after": 1
 }
