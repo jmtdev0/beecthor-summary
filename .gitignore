@@ -24,6 +24,7 @@ polymarket_assistant/.env
 polymarket_assistant/derived_credentials.env
 polymarket_assistant/credentials_snapshot.json
 polymarket_assistant/performance_snapshot.json
+polymarket_assistant/tax_exports/
 
 CHAT.md
 .claude/settings.local.json

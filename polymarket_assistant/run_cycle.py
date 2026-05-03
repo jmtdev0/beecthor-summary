@@ -44,6 +44,8 @@ BINANCE_LS_RATIO_URL = 'https://fapi.binance.com/futures/data/globalLongShortAcc
 BINANCE_OI_URL = 'https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT'
 BINANCE_OI_HIST_URL = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=1h&limit=5'
 FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
+ACTIVITY_LOOKBACK_LIMIT = 100
+DAILY_SUCCESS_COOLDOWN_PRICE = 0.90
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
@@ -774,6 +776,126 @@ def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
     return normalized
 
 
+def parse_activity_timestamp(value: Any) -> datetime | None:
+    if value in (None, ''):
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(float(value), tz=UTC)
+        except (OverflowError, OSError, ValueError):
+            return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def is_btc_price_hit_activity(entry: dict[str, Any]) -> bool:
+    title = str(entry.get('title') or entry.get('market_title') or '')
+    lowered = title.lower()
+    return 'bitcoin' in lowered and ('reach $' in lowered or 'dip to $' in lowered)
+
+
+def is_successful_daily_exit_activity(entry: dict[str, Any]) -> bool:
+    if not is_btc_price_hit_activity(entry):
+        return False
+    title = str(entry.get('title') or entry.get('market_title') or '')
+    event_slug = str(entry.get('eventSlug') or entry.get('event_slug') or '')
+    if infer_btc_market_type(title, event_slug=event_slug) != 'daily':
+        return False
+
+    activity_type = str(entry.get('type') or entry.get('activityType') or '').upper()
+    side = str(entry.get('side') or '').upper()
+    if activity_type == 'REDEEM':
+        return safe_float(entry.get('usdcSize') or entry.get('usdc_amount')) > 0
+    if activity_type == 'TRADE' and side == 'SELL':
+        return safe_float(entry.get('price')) >= DAILY_SUCCESS_COOLDOWN_PRICE
+    return False
+
+
+def summarize_successful_exit(entry: dict[str, Any]) -> dict[str, Any]:
+    ts = parse_activity_timestamp(entry.get('timestamp') or entry.get('createdAt'))
+    activity_type = str(entry.get('type') or entry.get('activityType') or '').upper()
+    side = str(entry.get('side') or '').upper()
+    if activity_type == 'REDEEM':
+        trigger = 'redeem'
+    elif activity_type == 'TRADE' and side == 'SELL':
+        trigger = 'take_profit_sell'
+    else:
+        trigger = activity_type.lower() or 'unknown'
+    return {
+        'timestamp_utc': ts.strftime('%Y-%m-%dT%H:%M:%SZ') if ts else '',
+        'trigger': trigger,
+        'market_slug': entry.get('slug') or entry.get('marketSlug') or '',
+        'event_slug': entry.get('eventSlug') or entry.get('event_slug') or '',
+        'market_title': entry.get('title') or entry.get('market_title') or '',
+        'outcome': entry.get('outcome') or '',
+        'side': side,
+        'price': safe_float(entry.get('price')),
+        'usdc_size': safe_float(entry.get('usdcSize') or entry.get('usdc_amount')),
+        'transaction_hash': entry.get('transactionHash') or '',
+    }
+
+
+def build_daily_success_cooldown(config: dict[str, str]) -> dict[str, Any]:
+    """Return whether new BTC daily openings are blocked after a same-day win."""
+    now = datetime.now(UTC)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    next_day = day_start + timedelta(days=1)
+    result: dict[str, Any] = {
+        'active': False,
+        'activity_available': False,
+        'utc_day': day_start.date().isoformat(),
+        'cooldown_until_utc': next_day.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'rule': 'No new BTC daily reach/dip positions after a successful daily exit in the same UTC day.',
+        'successful_exit_count_today': 0,
+        'first_successful_exit': None,
+        'recent_successful_exits': [],
+        'error': '',
+    }
+    user = config.get('POLY_FUNDER') or config.get('POLY_SIGNER_ADDRESS')
+    if not user:
+        result['error'] = 'missing Polymarket user address'
+        return result
+
+    try:
+        response = requests.get(
+            f'{DATA_API_HOST}/activity',
+            params={'user': user, 'limit': ACTIVITY_LOOKBACK_LIMIT, 'offset': 0},
+            timeout=30,
+        )
+        response.raise_for_status()
+        activity = response.json()
+    except requests.RequestException as exc:
+        result['error'] = f'activity fetch failed: {exc}'
+        return result
+
+    if not isinstance(activity, list):
+        result['error'] = 'activity response was not a list'
+        return result
+
+    result['activity_available'] = True
+    matches: list[dict[str, Any]] = []
+    for entry in activity:
+        if not isinstance(entry, dict):
+            continue
+        ts = parse_activity_timestamp(entry.get('timestamp') or entry.get('createdAt'))
+        if not ts or ts < day_start or ts >= next_day:
+            continue
+        if is_successful_daily_exit_activity(entry):
+            matches.append(summarize_successful_exit(entry))
+
+    matches.sort(key=lambda item: item.get('timestamp_utc') or '')
+    result['successful_exit_count_today'] = len(matches)
+    result['active'] = bool(matches)
+    result['first_successful_exit'] = matches[0] if matches else None
+    result['recent_successful_exits'] = matches[:5]
+    return result
+
+
 def fetch_balance_allowance(client: ClobClient, config: dict[str, str]) -> dict[str, Any]:
     return client.get_balance_allowance(
         BalanceAllowanceParams(
@@ -867,6 +989,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     recent_summaries = read_recent_summaries()
     binance = fetch_binance_snapshot()
     strategy_pressure = summarize_strategy_pressure(account_state, positions, binance, recent_summaries)
+    daily_success_cooldown = build_daily_success_cooldown(config)
     save_json(PERFORMANCE_SNAPSHOT_PATH, {'timestamp': now_utc(), **strategy_pressure})
     reconciliation = build_reconciliation_status(
         raw_account_state,
@@ -883,6 +1006,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
         'strategy_pressure': strategy_pressure,
+        'daily_success_cooldown': daily_success_cooldown,
         'reconciliation': reconciliation,
         'market_time_context': build_market_time_context(),
         'binance': binance,
@@ -1156,6 +1280,7 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
     spot_price = binance['spot_price']
     market_time = context.get('market_time_context') or {}
     strategy_pressure = context.get('strategy_pressure') or {}
+    daily_success_cooldown = context.get('daily_success_cooldown') or {}
 
     if action == 'OPEN_POSITION':
         reconciliation = context.get('reconciliation') or {}
@@ -1232,6 +1357,15 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 daily_range = max(1.0, safe_float(binance.get('daily_range_usd')))
                 if live_probability < 0.65 or strike_distance > max(450.0, daily_range * 0.30):
                     return False, 'Late-session daily entry rejected: weak expiry validity'
+            if mtype == 'daily':
+                if not daily_success_cooldown.get('activity_available', False):
+                    return False, 'Daily entry rejected: could not verify same-day successful-exit cooldown'
+                if daily_success_cooldown.get('active'):
+                    first_exit = daily_success_cooldown.get('first_successful_exit') or {}
+                    return False, (
+                        'Daily entry rejected: successful BTC daily exit already occurred today '
+                        f"({first_exit.get('timestamp_utc', 'unknown')} {first_exit.get('market_slug', '')})"
+                    )
             if mtype == 'weekly':
                 if hours_until_weekly_close < 72:
                     return False, 'Weekly entry rejected: too late in the weekly period'

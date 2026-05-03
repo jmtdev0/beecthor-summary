@@ -39,6 +39,7 @@ DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 20
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
 BUY_FOK_REPRICE_OFFSETS = (0.0, 0.01, 0.02, 0.03, 0.05)
+MAX_OPEN_POSITION_BUY_PRICE = 0.90
 MAX_PENDING_ORDER_AGE_MINUTES = 120
 PENDING_ORDERS_API_URL = (
     'https://api.github.com/repos/jmtdev0/beecthor-summary/contents'
@@ -50,6 +51,7 @@ TRADE_LOG_API_URL = (
 )
 
 load_dotenv(ENV_FILE)
+NEG_RISK_CACHE: dict[str, bool] = {}
 
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
@@ -550,8 +552,8 @@ def post_order(order_dict: dict, order_type: str = 'FOK') -> requests.Response:
         'order': order_dict,
         'owner': POLY_API_KEY,
         'orderType': order_type,
-        'postOnly': False,
         'deferExec': False,
+        'postOnly': False,
     }
     body_str = json.dumps(body, separators=(',', ':'), ensure_ascii=False)
     headers = build_l2_headers('POST', ORDER_PATH, body_str)
@@ -573,7 +575,10 @@ def build_price_candidates(base_price: float, side: str, order_type: str) -> lis
 
     candidates: list[float] = []
     for offset in BUY_FOK_REPRICE_OFFSETS:
-        price = clamp_price(base_price + offset)
+        raw_price = base_price + offset
+        if raw_price > MAX_OPEN_POSITION_BUY_PRICE:
+            continue
+        price = clamp_price(raw_price)
         if price not in candidates:
             candidates.append(price)
     return candidates
@@ -736,6 +741,45 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         print(f'[executor] Attempt {attempt}/{max_attempts} — querying order book...')
         try:
             base_price = get_market_price(token_id, side, amount)
+            if side == 'BUY' and order_type == 'OPEN_POSITION' and base_price > MAX_OPEN_POSITION_BUY_PRICE:
+                detail = (
+                    'Live OPEN_POSITION price is above the phone execution cap '
+                    f'({base_price:.1%} > {MAX_OPEN_POSITION_BUY_PRICE:.0%})'
+                )
+                print(f'[executor] Skipping high-probability order: {detail}')
+                send_server_log(
+                    'phone.executor',
+                    'order_skipped',
+                    'Pending OPEN_POSITION skipped because live probability is too high',
+                    payload={
+                        'order_id': order_id,
+                        'market_slug': pending.get('market_slug'),
+                        'reason': 'live_probability_too_high',
+                        'live_probability': round(base_price, 4),
+                        'max_allowed_probability': MAX_OPEN_POSITION_BUY_PRICE,
+                    },
+                )
+                update_pending_order_status(
+                    order_id,
+                    'skipped_probability_too_high',
+                    detail,
+                    {
+                        'market_slug': pending.get('market_slug'),
+                        'live_probability': round(base_price, 4),
+                        'max_allowed_probability': MAX_OPEN_POSITION_BUY_PRICE,
+                    },
+                )
+                save_executed_order_id(order_id)
+                if not dry_run:
+                    send_telegram(
+                        '\u26a0\ufe0f OPEN_POSITION descartada por precio demasiado alto:\n'
+                        f'{market}\n'
+                        f'{outcome}\n'
+                        f'Precio vivo: {base_price:.0%}\n'
+                        f'Límite del móvil: {MAX_OPEN_POSITION_BUY_PRICE:.0%}\n'
+                        'Riesgo/recompensa demasiado pobre para abrir ahora.'
+                    )
+                return True
             price_candidates = build_price_candidates(base_price, side, order_type)
             print(f'[executor] Market price: {base_price} | candidates={price_candidates}')
         except MarketResolvedException as exc:
@@ -776,8 +820,8 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 ),
                 'owner': POLY_API_KEY,
                 'orderType': 'FOK',
-                'postOnly': False,
                 'deferExec': False,
+                'postOnly': False,
             }
 
             if dry_run:

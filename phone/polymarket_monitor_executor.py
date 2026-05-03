@@ -42,6 +42,7 @@ RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
 PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
 TAKE_PROFIT_THRESHOLD = 0.90
+ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 # Do not execute a take-profit sale below the configured threshold, even if the
 # server saw >= 90% a few seconds earlier. The live executable book price is the
@@ -63,6 +64,7 @@ POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
 GH_TOKEN = os.environ.get('GH_TOKEN', '')
 
 TRADE_LOG_API_URL = 'https://api.github.com/repos/jmtdev0/beecthor-summary/contents/polymarket_assistant/trade_log.json'
+NEG_RISK_CACHE: dict[str, bool] = {}
 
 
 def refresh_runtime_config() -> None:
@@ -253,7 +255,11 @@ def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None,
         return 'TAKE_PROFIT', 1.0
     if prob >= PARTIAL_TAKE_PROFIT_THRESHOLD:
         return 'PARTIAL_TAKE_PROFIT', 0.5
-    if 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD and safe_float(position.get('currentValue')) >= 0.05:
+    if (
+        ENABLE_EXCEPTIONAL_STOP_LOSS
+        and 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD
+        and safe_float(position.get('currentValue')) >= 0.05
+    ):
         return 'EXCEPTIONAL_STOP_LOSS', 1.0
     return None, None
 
@@ -297,8 +303,8 @@ def post_order(order_dict: dict[str, Any]) -> requests.Response:
         'order': order_dict,
         'owner': POLY_API_KEY,
         'orderType': 'FOK',
-        'postOnly': False,
         'deferExec': False,
+        'postOnly': False,
     }
     body_str = json.dumps(body, separators=(',', ':'), ensure_ascii=False)
     headers = build_l2_headers('POST', ORDER_PATH, body_str)
@@ -496,8 +502,8 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         ),
         'owner': POLY_API_KEY,
         'orderType': 'FOK',
-        'postOnly': False,
         'deferExec': False,
+        'postOnly': False,
     }
     if dry_run:
         print('[monitor-executor] DRY RUN payload:')

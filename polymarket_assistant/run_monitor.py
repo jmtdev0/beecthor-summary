@@ -38,6 +38,7 @@ MONITOR_HISTORY_PATH = ASSISTANT_DIR / 'monitor_history.json'
 
 PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
 TAKE_PROFIT_THRESHOLD = 0.90
+ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 MAX_MONITOR_HISTORY_ENTRIES = 24
@@ -206,7 +207,11 @@ def main() -> None:
             candidates.append((0, pos, 'TAKE_PROFIT', 1.0))
         elif prob >= PARTIAL_TAKE_PROFIT_THRESHOLD:
             candidates.append((1, pos, 'PARTIAL_TAKE_PROFIT', 0.5))
-        elif 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD and safe_float(pos.get('current_value')) >= 0.05:
+        elif (
+            ENABLE_EXCEPTIONAL_STOP_LOSS
+            and 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD
+            and safe_float(pos.get('current_value')) >= 0.05
+        ):
             candidates.append((2, pos, 'EXCEPTIONAL_STOP_LOSS', 1.0))
     candidates.sort(key=lambda item: (item[0], -safe_float(item[1].get('cur_price'))))
 

@@ -16,7 +16,7 @@ Each automated cycle must follow these steps strictly in order:
 1. **Discarded-slot check** — No automated stop-loss. If a daily or weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks a fresher entry of the same type; it does **not** mean force-sell it.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
 3. **Partial take-profit check** — If a position reaches `80-85%` probability and expiry is not imminent, consider reducing `40-60%` to lock in profit while leaving upside for full resolution.
-4. **Exceptional invalidation check** — Normal stop-loss remains disabled, but a full exit is allowed when probability is `<= 15-20%`, the thesis no longer supports the trade, Binance confirms opposite structure, and executable liquidity is acceptable.
+4. **Exceptional invalidation check** — Disabled. No automated exceptional stop-loss may be executed. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold by the server or the phone.
 5. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 6. **Account-equity gate** — Before opening any new position, review cash, live open value, discarded-position loss, and net equity versus starting bankroll. If the account is carrying too much hidden pain, reduce risk or return `NO_ACTION`.
 7. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
@@ -113,7 +113,7 @@ Four allowed BTC price-hit slots, tracked separately:
 - Stop loss:
   - disabled — no automated stop-loss exits
   - if a daily or weekly position drops to `<= 20%`, it may be treated as discarded for slot availability, but it still remains open until take-profit or natural resolution
-  - exception: a thesis-invalidated exit is allowed only when probability is `<= 15-20%`, the original thesis is no longer valid, Binance confirms the opposite direction, and liquidity is acceptable
+  - no exceptional stop-loss exits are allowed automatically; do not sell losing positions solely because they reached `<= 15-20%`
 - Take profit:
   - consider partial exit once market probability reaches `80-85%`
   - consider exit once market probability reaches `90%`
@@ -124,6 +124,19 @@ Four allowed BTC price-hit slots, tracked separately:
 ## Execution freshness
 
 - A pending entry order older than `120` minutes is stale and must be skipped instead of executed blindly.
+- Phone execution live-price guard: even if the server approved an entry earlier, the phone must skip any `OPEN_POSITION` buy whose live Polymarket probability is now `> 90%`. The server-side entry cap remains stricter (`< 85%`), but the phone guard protects against fast repricing between decision and execution.
+
+## Post-win daily cooldown
+
+- Strict daily rule: if any BTC daily `REACH` or `DIP` position resolves in our favor or is exited via take-profit on a given UTC day, do not open any new BTC daily `REACH` or `DIP` position until the next UTC day.
+- The server must compute this from Polymarket account activity before calling the LLM and expose the result in the run context. If the activity check is unavailable, new daily openings are invalid until the check works again.
+- Rationale: once the daily move has already paid, additional same-day daily entries are usually late-chase trades with worse risk/reward. Historical account activity shows that continuing to open daily positions after the first fulfilled position has reduced performance.
+- Weekly positions are not automatically forbidden after a daily win, but they require exceptional confirmation:
+  - clear continuation beyond the fulfilled daily level
+  - no lateral/chop regime
+  - entry probability still within the normal playbook range
+  - explicit rationale explaining why this is not chasing the move
+- If these weekly exception conditions are not met, wait for the next UTC day.
 
 ## Reconciliation rules
 
