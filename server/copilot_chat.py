@@ -35,6 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
+TIP_PATH = REPO_ROOT / 'TIP.md'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
 PENDING_ORDERS_PATH = REPO_ROOT / 'polymarket_assistant' / 'pending_orders.json'
@@ -453,6 +454,21 @@ def save_json(path: Path, payload: Any) -> None:
 
 def save_history(history: list[dict[str, Any]]) -> None:
     HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding='utf-8')
+
+
+def load_text(path: Path, default: str = '') -> str:
+    try:
+        return path.read_text(encoding='utf-8')
+    except Exception:
+        return default
+
+
+def save_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    normalized = content.replace('\r\n', '\n')
+    if normalized and not normalized.endswith('\n'):
+        normalized += '\n'
+    path.write_text(normalized, encoding='utf-8')
 
 
 def load_history() -> list[dict[str, Any]]:
@@ -1623,6 +1639,23 @@ def private_root():
 def private_polymarket():
     snapshot = build_polymarket_snapshot()
     trace_lanes = build_private_trace_lanes()
+    tip_text = load_text(TIP_PATH, '')
+    tip_saved = request.args.get('tip_saved', '').strip()
+    tip_feedback = None
+    if tip_saved == 'ok':
+        tip_feedback = {
+            'text': '✓ TIP.md guardado en el servidor. No se ha hecho commit automático.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        }
+    elif tip_saved == 'error':
+        tip_feedback = {
+            'text': '✗ No se pudo guardar TIP.md. Revisa los logs de la app.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
+        }
     manual_sell = request.args.get('manual_sell', '').strip()
     manual_sell_market = request.args.get('manual_sell_market', '').strip()
     manual_sell_outcome = request.args.get('manual_sell_outcome', '').strip()
@@ -1707,6 +1740,31 @@ def private_polymarket():
         ✓ {{ triggered_label }} lanzado en background — revisa los logs en unos minutos.
       </div>
       {% endif %}
+      {% if tip_feedback %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ tip_feedback.bg }};border:1px solid {{ tip_feedback.border }};color:{{ tip_feedback.color }};font-weight:600;font-size:.93rem">
+        {{ tip_feedback.text }}
+      </div>
+      {% endif %}
+      <section class="surface-card" style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <h2 class="section-title" style="margin:0 0 8px">TIP.md</h2>
+            <div class="muted">Notas situacionales para los ciclos automáticos. Se leen junto con el playbook. Este fichero se guarda solo en el servidor.</div>
+            <div class="muted" style="margin-top:6px;font-size:.82rem">{{ tip_path }}</div>
+          </div>
+        </div>
+        <form method="POST" action="/private/tip" style="margin-top:14px">
+          <textarea
+            name="content"
+            spellcheck="false"
+            placeholder="Write situational trading notes for the next cycles..."
+            style="width:100%;min-height:240px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"
+          >{{ tip_text }}</textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button type="submit" style="width:auto;padding:10px 18px">Guardar TIP.md</button>
+          </div>
+        </form>
+      </section>
       <div class="trace-grid">
         {% for lane in trace_lanes %}
         <section class="trace-lane">
@@ -1907,9 +1965,25 @@ def private_polymarket():
         trace_lanes=trace_lanes,
         triggered=triggered,
         triggered_label=triggered_label,
+        tip_feedback=tip_feedback,
+        tip_path=str(TIP_PATH),
+        tip_text=tip_text,
         manual_sell_feedback=manual_sell_feedback,
         **snapshot,
     )
+
+
+@app.route('/private/tip', methods=['POST'])
+@require_private
+def private_tip_save():
+    content = request.form.get('content', '')
+    try:
+        save_text(TIP_PATH, content)
+        append_jsonl_event('app.tip', 'tip_saved', 'info', 'TIP.md updated from private dashboard', {'path': str(TIP_PATH), 'chars': len(content)})
+        return redirect(url_for('private_polymarket', tip_saved='ok'))
+    except Exception as exc:
+        append_jsonl_event('app.tip', 'tip_save_failed', 'error', f'Failed to save TIP.md: {exc}', {'path': str(TIP_PATH)})
+        return redirect(url_for('private_polymarket', tip_saved='error'))
 
 
 @app.route('/private/polymarket/timeline')
