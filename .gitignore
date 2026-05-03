@@ -19,12 +19,22 @@ Thumbs.db
 .idea/
 # Local runtime data
 server_runtime_logs/
+flask.log
+server/*.log
+server/*.bak
+server/copilot_chat.py.*.bak
+TIP.md
 # Polymarket assistant secrets
 polymarket_assistant/.env
 polymarket_assistant/derived_credentials.env
 polymarket_assistant/credentials_snapshot.json
 polymarket_assistant/performance_snapshot.json
 polymarket_assistant/tax_exports/
+polymarket_assistant/monitor_dispatch_state.json
+polymarket_assistant/monitor_history.json
+polymarket_assistant/*.bak
+polymarket_assistant/trade_log.json.*
+polymarket_assistant/run_monitor.py.*.bak
 
 CHAT.md
 .claude/settings.local.json
