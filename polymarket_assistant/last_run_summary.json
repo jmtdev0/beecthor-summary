@@ -1,21 +1,24 @@
 {
-  "timestamp": "2026-05-03T10:00:53Z",
-  "run_id": "2026-05-03T10-00-04Z",
+  "timestamp": "2026-05-03T12:02:17Z",
+  "run_id": "2026-05-03T12-00-03Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-03T10-00-04Z",
+    "run_id": "2026-05-03T12-00-03Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "No new action: the daily 79k reach remains the correct live position, and it still has not reached a management threshold.",
-    "rationale": "The open 79k reach is still aligned with the nearest upside cluster from the latest Beecthor map, and Binance is neutral rather than showing a clean reversal against it. The position is nicely profitable, but the live market probability is only around 65%, still below the playbook partial take-profit band. Re-adding is not allowed because the position already uses the full early-stage $1 live cash cap, and all nearby alternative daily or weekly contracts remain materially weaker. The disciplined move is to keep holding the current daily and wait for either a stronger extension or a real invalidation.",
+    "confidence": 0.79,
+    "summary": "No new action: the daily 79k reach thesis position remains valid and profitable, but it is still below the partial take-profit zone and no second same-day edge is clean enough.",
+    "rationale": "BTC is trading around 78.66k with bullish short-term Binance context, so the existing daily 79k reach position remains the correct live thesis expression. However, the market is still around 77.5-80.0% probability, which is below the playbook partial take-profit band of 80-85%, so there is no reason to reduce yet. Re-adding the same market is not justified because the live position already captures the thesis and any extra sizing would only make sense if the cash-per-position cap still clearly allowed it. No secondary daily or weekly market offers a cleaner edge: 80k reach is still too far for the remaining time window, while downside dailies and weeklys are too weak and out of sync with current price action.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
       "target_outcome": "",
-      "reason": "none",
-      "reduce_fraction": 0.5
+      "reason": "",
+      "reduce_fraction": 0.5,
+      "should_close": false,
+      "market_slug": "",
+      "outcome": ""
     },
     "new_position": {
       "should_open": false,
@@ -45,7 +48,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78534.39,
+  "binance_spot_price": 78682.81,
   "positions_before": 1,
   "positions_after": 1
 }

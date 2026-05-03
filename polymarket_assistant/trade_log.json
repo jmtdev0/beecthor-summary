@@ -13397,5 +13397,60 @@
     "binance_spot_price": 78534.39,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-03T12:02:17Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-03T12-00-03Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-05-03T12-00-03Z",
+      "action": "NO_ACTION",
+      "confidence": 0.79,
+      "summary": "No new action: the daily 79k reach thesis position remains valid and profitable, but it is still below the partial take-profit zone and no second same-day edge is clean enough.",
+      "rationale": "BTC is trading around 78.66k with bullish short-term Binance context, so the existing daily 79k reach position remains the correct live thesis expression. However, the market is still around 77.5-80.0% probability, which is below the playbook partial take-profit band of 80-85%, so there is no reason to reduce yet. Re-adding the same market is not justified because the live position already captures the thesis and any extra sizing would only make sense if the cash-per-position cap still clearly allowed it. No secondary daily or weekly market offers a cleaner edge: 80k reach is still too far for the remaining time window, while downside dailies and weeklys are too weak and out of sync with current price action.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "",
+        "reduce_fraction": 0.5,
+        "should_close": false,
+        "market_slug": "",
+        "outcome": ""
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 78682.81,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
