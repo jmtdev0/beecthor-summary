@@ -13275,5 +13275,23 @@
     "binance_spot_price": 78226.91,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-03T06:01:25Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-reach-79k-on-may-3",
+    "market_title": "Will Bitcoin reach $79,000 on May 3?",
+    "position_side": "Yes",
+    "token_id": "52167261179122662312096749935999441465068389405828106924095314566558291822667",
+    "entry_cost_usd": 1.0,
+    "market_type": "daily",
+    "slot_name": "daily_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
