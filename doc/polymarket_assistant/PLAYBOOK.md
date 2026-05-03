@@ -2,12 +2,13 @@
 
 ## Core principles
 
-1. Beecthor provides the thesis, but Binance provides execution reality.
+1. Beecthor provides the primary thesis, but Binance provides execution reality.
 2. A Beecthor video from today or yesterday (D-1) is considered current — betting is allowed. A video from two or more days ago (D-2+) is stale — only open a position if the thesis is exceptionally clear and Binance confirms the direction; otherwise skip.
 3. The latest transcript is mandatory context.
 4. Recent transcripts and recent entries in `analyses_log.json` must be reviewed before any bet.
 5. Prefer conservative BTC price-hit markets first. Floor markets are out of scope and must not be used.
 6. **No-trade is the default in lateral BTC regimes.** If BTC is chopping inside a tight range, the system should protect capital, manage existing positions, and wait for a confirmed break/rejection instead of forcing fresh expiry-based bets.
+7. The LLM may trade against Beecthor only when the last ~48h of BTC price action clearly shows that Beecthor's thesis is wrong or badly timed. This must be explicit in the decision rationale.
 
 ## Cycle steps (in order)
 
@@ -15,20 +16,20 @@ Each automated cycle must follow these steps strictly in order:
 
 1. **Discarded-slot check** — No automated stop-loss. If a daily or weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks a fresher entry of the same type; it does **not** mean force-sell it.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
-3. **Partial take-profit check** — If a position reaches `80-85%` probability and expiry is not imminent, consider reducing `40-60%` to lock in profit while leaving upside for full resolution.
-4. **Exceptional invalidation check** — Disabled. No automated exceptional stop-loss may be executed. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold by the server or the phone.
+3. **Partial take-profit check** — If a position reaches `80-85%` probability and expiry is not imminent, automatically reduce `40-60%` to lock in profit while leaving upside for full resolution.
+4. **Exceptional invalidation check** — Disabled. No stop-loss sale may be executed by the server, the phone, or the LLM. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold.
 5. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 6. **Account-equity gate** — Before opening any new position, review cash, live open value, discarded-position loss, and net equity versus starting bankroll. If the account is carrying too much hidden pain, reduce risk or return `NO_ACTION`.
 7. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
 8. **Range / no-trade gate** — Before scouting new entries, decide whether BTC is in a lateral regime. If the last `24-72h` show compression, repeated failed extensions, and no clean break of the local range, the default decision for new entries is `NO_ACTION`. Existing positions may still be monitored, reduced, closed, or allowed to resolve.
-9. **Scout opportunities** — Default to the two primary slots first: `daily thesis` and `weekly thesis`. Only if Binance is showing a very clear continuation that does not fit the main Beecthor thesis should the system consider the secondary slots (`daily momentum` and `weekly momentum`). For each slot (`daily thesis / daily momentum / weekly thesis / weekly momentum`), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
+9. **Scout opportunities** — Daily markets have priority. Weekly markets are optional and should only be opened when the setup is clear; it is always acceptable to leave the weekly slot empty. Default to the two primary slots first: `daily thesis` and `weekly thesis`. Only if Binance is showing a very clear continuation that does not fit the main Beecthor thesis should the system consider the secondary slots (`daily momentum` and `weekly momentum`). For each slot (`daily thesis / daily momentum / weekly thesis / weekly momentum`), check whether it is occupied by an **active** position. Discarded daily / weekly positions do not block the slot. If the slot is free, scan active BTC price-hit markets of that type on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
-   - Preferably between `45%` and `84%` probability on Polymarket (hard cap at `< 85%`).
+   - Preferably between `45%` and `90%` probability on Polymarket (hard cap at `> 90%`).
    - For weekly markets: prioritize entering early in the period with the most obvious strike.
    - For the **daily momentum** slot: it may go against the main Beecthor thesis, but only when Binance shows a very clear intraday continuation that is cleaner than forcing the thesis-aligned daily.
-10. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions when they are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
+10. **Place bet (if valid)** — If viable markets are found, open positions following the entry rules below. A cycle may open up to **two** new positions only as **one daily + one weekly** when both are independently justified and respect slot and cash limits. Most cycles should still open `0` or `1` positions.
 
 ## Market scope
 
@@ -46,7 +47,7 @@ Four allowed BTC price-hit slots, tracked separately:
 - The **daily momentum** slot exists to exploit a very clear intraday continuation even when it runs against the original thesis. This is not revenge trading and must not be used to average down a failed idea.
 - The **weekly thesis** slot is the default structural expression of Beecthor's main directional view. The goal is to **enter early** and pick the **most obvious strike** given the current thesis.
 - The **weekly momentum** slot exists only for cases where price action is showing a very clear weekly continuation that does not fit the main Beecthor thesis cleanly enough to ignore.
-- The default portfolio intention is therefore **1 daily thesis + 1 weekly thesis**. The two momentum slots are secondary and should stay empty unless the market is showing a very clear non-thesis trend worth exploiting.
+- The default portfolio intention is therefore **daily first**, plus **1 weekly thesis only if the weekly setup is clearly attractive**. The two momentum slots are secondary and should stay empty unless the market is showing a very clear non-thesis trend worth exploiting.
 - The two weekly slots are not meant for random extra exposure. They exist so the system can hold up to **two frontier weekly expressions** around the current price structure when closest-strike-first logic still shows edge.
 - In practice, the weekly momentum slot should only be used for the next clean weekly strike once the weekly thesis slot is already occupied or discarded. Do not skip nearer weekly strikes just to force a farther story.
 - Not allowed:
@@ -73,11 +74,12 @@ Four allowed BTC price-hit slots, tracked separately:
 - If BTC looks bearish, first evaluate the closest downside target below price before considering farther downside targets.
 - For the **daily momentum** slot, closest-strike-first still applies. If momentum clearly points up, prefer `75k reach` before `76k reach`; if momentum clearly points down, prefer the nearest downside strike first.
 - For the **weekly momentum** slot, closest-strike-first also applies. It should mirror frontier price action, not become a license to jump straight to a far weekly narrative.
-- It is acceptable to skip the nearest strike when it is already effectively resolved, already `>= 85%`, or offers clearly worse risk/reward than the next clean expression.
+- It is acceptable to skip the nearest strike when it is already effectively resolved, already `> 90%`, or offers clearly worse risk/reward than the next clean expression.
 - Do not chase the next weekly strike just because the previous target already hit. If the setup requires one more extension after a strong move has already happened, demand clear Binance continuation evidence and a modest remaining distance.
 - Reject daily setups that need a fresh second leg after much of the move has already happened, or that are more likely to resolve one day late than before the current expiry.
 - With less than `4h` left in a daily market, only open a new daily position when the strike is close, the probability is strong but below the hard cap, and Binance momentum points directly at that strike.
-- After a large intraday move, do not chase the next strike unless the market consolidates/retests or Binance shows fresh continuation. Avoid paying for "one more push" after most of the move is already spent.
+- **UTC-day move cooling rule:** if BTC has already moved roughly `$1,000` from the UTC day open in one direction, do not open a fresh position in that same direction. It is rare for another clean same-direction leg to pay before expiry, and these entries usually become late-chase trades.
+- After a large intraday move, do not chase the next strike unless the market consolidates/retests or Binance shows fresh continuation in the opposite or reset structure. Avoid paying for "one more push" after most of the move is already spent.
 - **Lateral regime / range lock:** when BTC has spent the last `24-72h` moving mostly sideways inside a narrow local range, do not open fresh daily or weekly positions from the middle of that range. Price-hit markets punish correct-but-early direction calls when expiry is tight.
 - In a lateral regime, opening a `DIP` requires a clean breakdown: loss of the local range low, failed reclaim, downside expansion, or clear bearish repricing on Polymarket.
 - In a lateral regime, opening a `REACH` requires a clean breakout: reclaim/break of the local range high, acceptance above it, upside expansion, or clear bullish repricing on Polymarket.
@@ -88,18 +90,18 @@ Four allowed BTC price-hit slots, tracked separately:
   - it does not occupy the active slot of its type
   - it does not justify reopening the exact same market/outcome just to average down
   - any replacement trade of the same type must be materially cleaner than the discarded one
-- **Polymarket probabilities are guidelines, not hard rules.** They move in real time with the BTC spot price — a market at 70% today may drop to 40% tomorrow simply because price moved away from the strike, with no change in the underlying thesis. Polymarket probabilities carry noise and should never be trusted more than Beecthor's directional analysis. When the two conflict, favor Beecthor's thesis.
-- As a general guide, prefer markets with a Polymarket probability between `45%` and `84%` when the direction is aligned with Beecthor's thesis. If the probability is within this range and the thesis is aligned, there should be a strong reason to skip — do not invent vague excuses to avoid the trade.
+- **Polymarket probabilities are guidelines, except for the hard `> 90%` entry cap.** They move in real time with the BTC spot price — a market at 70% today may drop to 40% tomorrow simply because price moved away from the strike, with no change in the underlying thesis. Polymarket probabilities carry noise and should not override Beecthor's directional analysis unless the last ~48h of BTC price action clearly contradicts Beecthor.
+- As a general guide, prefer markets with a Polymarket probability between `45%` and `90%` when the direction is aligned with Beecthor's thesis. If the probability is within this range and the thesis is aligned, there should be a strong reason to skip — do not invent vague excuses to avoid the trade.
 - Proximity of the current BTC price to the strike is NOT a valid rejection reason on its own. The market price already reflects that proximity. If the thesis is aligned, that is sufficient.
 - Be cautious below `45%` (limited market consensus). Apply this as a soft filter, not an absolute cutoff — a slightly out-of-range market with a very clear thesis is still worth considering.
-- **Hard rule: never open a position with probability `>= 85%`.** Risk/reward is too poor at that level — potential gain is minimal while downside remains real. No exceptions.
-- Prefer higher-probability conservative setups when they still align with the thesis and stay below the 85% cap.
+- **Hard rule: never open a position with probability `> 90%`.** Risk/reward is too poor above that level — potential gain is minimal while downside remains real. No exceptions.
+- Prefer higher-probability conservative setups when they still align with the thesis and stay at or below the 90% cap.
 - As a portfolio construction rule, try to fill only the thesis-aligned daily and weekly slots whenever possible. Secondary momentum slots should only be filled when price action is clearly trending in a way that the main Beecthor thesis is not capturing well enough.
 - Beecthor-bias correction: if recent Beecthor summaries remain bearish while BTC is flat or net higher over the same period, bearish `DIP` entries require explicit Binance rejection evidence (lower high, failed reclaim, support loss, downside expansion, or clear bearish repricing). Without that evidence, evaluate the nearest `REACH` momentum setup before forcing another bearish entry.
 - Weekly entries require stricter evidence than daily entries. Prefer opening them in the first half of the weekly period, avoid weak probabilities below `25%` unless evidence is exceptional, and do not open a weekly trade just because a slot is free.
 - If discarded-position unrealized losses exceed `15-20%` of current bankroll, do not add new exposure in the same broad direction unless confirmation is exceptional.
 - Maximum simultaneous exposure: **4 active open positions total**. Daily / weekly positions marked as discarded for slot purposes do not count toward the active-position cap.
-- Maximum new openings per cycle: **2**.
+- Maximum new openings per cycle: **2**, but only as **one daily + one weekly**. Never open two new daily positions or two new weekly positions in the same cycle.
 - Maximum managed positions per cycle: **2**.
 - Position cap by type:
   - **2 active daily** positions maximum
@@ -111,11 +113,11 @@ Four allowed BTC price-hit slots, tracked separately:
 ## Exit rules
 
 - Stop loss:
-  - disabled — no automated stop-loss exits
+  - disabled — no stop-loss exits
   - if a daily or weekly position drops to `<= 20%`, it may be treated as discarded for slot availability, but it still remains open until take-profit or natural resolution
-  - no exceptional stop-loss exits are allowed automatically; do not sell losing positions solely because they reached `<= 15-20%`
+  - no exceptional stop-loss exits are allowed; do not sell losing positions solely because they reached `<= 15-20%` or because the thesis looks invalidated
 - Take profit:
-  - consider partial exit once market probability reaches `80-85%`
+  - automatically partial-exit `40-60%` once market probability reaches `80-85%` and expiry is not imminent
   - consider exit once market probability reaches `90%`
   - default full take profit range: `90-95%`
   - if two positions independently hit the take-profit zone in the same review, exiting both is valid
@@ -124,19 +126,14 @@ Four allowed BTC price-hit slots, tracked separately:
 ## Execution freshness
 
 - A pending entry order older than `120` minutes is stale and must be skipped instead of executed blindly.
-- Phone execution live-price guard: even if the server approved an entry earlier, the phone must skip any `OPEN_POSITION` buy whose live Polymarket probability is now `> 90%`. The server-side entry cap remains stricter (`< 85%`), but the phone guard protects against fast repricing between decision and execution.
+- Phone execution live-price guard: even if the server approved an entry earlier, the phone must skip any `OPEN_POSITION` buy whose live Polymarket probability is now `> 90%`. This matches the server-side hard cap and protects against fast repricing between decision and execution.
 
 ## Post-win daily cooldown
 
 - Strict daily rule: if any BTC daily `REACH` or `DIP` position resolves in our favor or is exited via take-profit on a given UTC day, do not open any new BTC daily `REACH` or `DIP` position until the next UTC day.
 - The server must compute this from Polymarket account activity before calling the LLM and expose the result in the run context. If the activity check is unavailable, new daily openings are invalid until the check works again.
 - Rationale: once the daily move has already paid, additional same-day daily entries are usually late-chase trades with worse risk/reward. Historical account activity shows that continuing to open daily positions after the first fulfilled position has reduced performance.
-- Weekly positions are not automatically forbidden after a daily win, but they require exceptional confirmation:
-  - clear continuation beyond the fulfilled daily level
-  - no lateral/chop regime
-  - entry probability still within the normal playbook range
-  - explicit rationale explaining why this is not chasing the move
-- If these weekly exception conditions are not met, wait for the next UTC day.
+- Weekly positions are not automatically forbidden after a daily win. They still require the normal weekly-quality evidence, a clean setup, no lateral/chop regime, entry probability within the playbook range, and explicit rationale explaining why this is not chasing the already-paid daily move.
 
 ## Reconciliation rules
 

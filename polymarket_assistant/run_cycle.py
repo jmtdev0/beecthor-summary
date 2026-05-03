@@ -46,6 +46,8 @@ BINANCE_OI_HIST_URL = 'https://fapi.binance.com/futures/data/openInterestHist?sy
 FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
 ACTIVITY_LOOKBACK_LIMIT = 100
 DAILY_SUCCESS_COOLDOWN_PRICE = 0.90
+MAX_ENTRY_PROBABILITY = 0.90
+UTC_DAY_DIRECTIONAL_MOVE_CAP_USD = 1000.0
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
@@ -475,6 +477,23 @@ def fetch_binance_kline_trends() -> dict[str, Any]:
     return {'windows': windows, 'short_term_bias': bias}
 
 
+def fetch_utc_day_open() -> float | None:
+    """Return the current Binance UTC daily candle open price."""
+    try:
+        response = requests.get(
+            BINANCE_KLINES_URL,
+            params={'symbol': 'BTCUSDT', 'interval': '1d', 'limit': 1},
+            timeout=20,
+        )
+        response.raise_for_status()
+        rows = response.json()
+    except Exception:
+        return None
+    if not rows:
+        return None
+    return safe_float(rows[-1][1]) or None
+
+
 def fetch_binance_snapshot() -> dict[str, Any]:
     ticker = requests.get(BINANCE_TICKER_URL, timeout=20)
     ticker.raise_for_status()
@@ -501,6 +520,15 @@ def fetch_binance_snapshot() -> dict[str, Any]:
         'pct_below_24h_high': pct_from_high,
         'pct_above_24h_low': pct_from_low,
     }
+    utc_day_open = fetch_utc_day_open()
+    if utc_day_open:
+        utc_day_move_usd = spot - utc_day_open
+        snapshot.update({
+            'utc_day_open': round(utc_day_open, 2),
+            'utc_day_move_usd': round(utc_day_move_usd, 2),
+            'utc_day_move_abs_usd': round(abs(utc_day_move_usd), 2),
+            'utc_day_move_percent': round((spot / utc_day_open - 1) * 100, 2) if utc_day_open else 0.0,
+        })
     for fetcher, key in [
         (fetch_btc_funding_rate, 'funding_rate'),
         (fetch_long_short_ratio, 'long_short_ratio'),
@@ -1332,10 +1360,10 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             live_probability = outcome_probability(market, outcome)
             if max_entry_probability <= 0 or max_entry_probability > 1:
                 return False, 'Price-hit max_entry_probability must be between 0 and 1'
+            if live_probability > MAX_ENTRY_PROBABILITY:
+                return False, 'Outcome probability is above the 90% hard cap'
             if max_entry_probability < live_probability:
                 return False, 'Price-hit max_entry_probability is below the current live market probability'
-            if live_probability >= 0.85:
-                return False, 'Outcome probability is at or above the 85% hard cap'
             expiry_validity = str(target.get('expiry_validity') or '').strip().lower()
             if expiry_validity not in {'strong', 'acceptable'}:
                 return False, 'Opening requires expiry_validity strong or acceptable'
@@ -1387,12 +1415,22 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 return False, 'Discarded-position pain budget blocks adding same-direction exposure'
             if strategy_pressure.get('risk_flags', {}).get('equity_below_starting_bankroll') and live_probability < 0.65:
                 return False, 'Account-equity gate blocks low-conviction new exposure'
+            utc_day_move_usd = safe_float(binance.get('utc_day_move_usd'))
+            chasing_utc_up = trade_direction == 'bullish' and utc_day_move_usd >= UTC_DAY_DIRECTIONAL_MOVE_CAP_USD
+            chasing_utc_down = trade_direction == 'bearish' and utc_day_move_usd <= -UTC_DAY_DIRECTIONAL_MOVE_CAP_USD
+            if chasing_utc_up or chasing_utc_down:
+                return False, (
+                    'UTC-day move cooling rule rejects same-direction entry after '
+                    f'${UTC_DAY_DIRECTIONAL_MOVE_CAP_USD:.0f}+ move from the UTC open'
+                )
             change_24h = safe_float(binance.get('price_change_percent_24h'))
             chasing_up = trade_direction == 'bullish' and change_24h >= 3.0
             chasing_down = trade_direction == 'bearish' and change_24h <= -3.0
             if (chasing_up or chasing_down) and live_probability < 0.65:
                 return False, 'Post-big-move cooling rule rejects chasing without strong probability'
             requested_type_counts[mtype] = requested_type_counts.get(mtype, 0) + 1
+            if requested_type_counts[mtype] > 1:
+                return False, f'Max 1 requested {mtype} position per cycle'
             max_type_positions = active_slot_limit_for_market_type(account_state, mtype)
             if max_type_positions <= 0:
                 return False, f'{mtype.capitalize()} markets are disabled'
@@ -1438,6 +1476,8 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             match = next((pos for pos in positions if pos['market_slug'] == target_slug and pos['outcome'] == target_outcome), None)
             if not match:
                 return False, 'Requested managed position is not currently open'
+            if safe_float(match.get('cash_pnl')) < 0:
+                return False, 'Stop-loss exits are disabled: cannot sell a losing position'
             if management_action == 'REDUCE_POSITION':
                 fraction = safe_float(management.get('reduce_fraction'), 0.0)
                 if fraction <= 0.0 or fraction >= 1.0:
