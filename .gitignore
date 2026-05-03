@@ -30,6 +30,7 @@ polymarket_assistant/derived_credentials.env
 polymarket_assistant/credentials_snapshot.json
 polymarket_assistant/performance_snapshot.json
 polymarket_assistant/tax_exports/
+polymarket_assistant/last_monitor_action.json
 polymarket_assistant/monitor_dispatch_state.json
 polymarket_assistant/monitor_history.json
 polymarket_assistant/*.bak
