@@ -1,5 +1,9 @@
 # Changelog
 
+### 04/05/2026
+* `server/run_polymarket_cycle.sh` versionado y desplegado como wrapper operativo del VPS: el ciclo automático ya no intenta escribir en el chat de VS Code, sino que genera snapshot + prompt y ejecuta `codex exec` en modo CLI con `gpt-5.5`, `model_reasoning_effort=xhigh`, `approval=never` y `sandbox=read-only`.
+* `doc/polymarket_assistant/codex_cycle_prompt.md` y `codex_cycle_instructions.md` actualizados al contrato CLI: Codex debe devolver JSON puro como respuesta final; el wrapper guarda esa respuesta en `decision_file`, la valida y cae a `NO_ACTION` si no hay JSON válido.
+
 ### 25/04/2026
 * Dashboard privado de Polymarket ampliado con un enlace a `BTC timeline`: nueva vista SVG en `server/copilot_chat.py` que dibuja la cronología horizontal de `binance_spot_price` desde `polymarket_assistant/trade_log.json` y superpone compras de Polymarket en verde/rojo según su PnL, dejando las abiertas en gris.
 * `phone/polymarket_executor.py` now backfills `trade_opened` records into `polymarket_assistant/trade_log.json` when a phone-side BUY is executed or when the executor detects that the position was already opened outside the queue.

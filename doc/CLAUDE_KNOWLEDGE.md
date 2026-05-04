@@ -95,7 +95,8 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 | File | Purpose |
 |------|---------|
 | `server/copilot_chat.py` | Flask dashboard: Polymarket zone, Beecthor gallery, logs, APIs |
-| `/root/scripts/vscode_chat_send.sh` | xdotool helper to type into VS Code chat |
+| `/root/run_polymarket_cycle.sh` / `server/run_polymarket_cycle.sh` | VPS operator wrapper: builds context, asks Codex CLI for a JSON decision, then runs `run_cycle_codex.py --decision-file` |
+| `/root/scripts/vscode_chat_send.sh` | Legacy xdotool helper for manual/private chat workflows; no longer used by the scheduled operator cycle |
 | `/root/scripts/codex_heartbeat.sh` | Proof-of-concept: sends time-write prompt to Codex (cron removed) |
 
 ---
@@ -266,19 +267,19 @@ Orphaned `xfce4-session` (PID 22258, running since 2026-03-26) held `org.xfce.Se
 
 ---
 
-## VS Code / Codex Automation
+## Codex CLI Automation
 
-- VS Code runs on display `:10` on the VPS (xrdp session)
-- `xdotool` is installed and can interact with VS Code even with mstsc disconnected
-- `/root/scripts/vscode_chat_send.sh` types a message into the active VS Code chat input
+- Codex CLI is installed on the VPS as `/usr/bin/codex` and authenticated under `/root`.
+- `/root/.codex/config.toml` defaults to `model = "gpt-5.5"` and `model_reasoning_effort = "xhigh"`.
+- `/root/run_polymarket_cycle.sh` runs `codex exec` directly with `approval=never`, `sandbox=read-only`, and `--output-last-message "$DECISION_FILE"`.
+- The model returns pure JSON; the wrapper validates it and falls back to `NO_ACTION` if the response is missing or invalid.
+- VS Code/xrdp/xdotool are no longer part of the scheduled operator decision path.
 - **Codex heartbeat experiment**: cron every 4h asked Codex to append current time to `/root/codex_heartbeat.txt`. Ran successfully for 1.5 days. Cron removed after validation (2026-04-16).
-- **Codex as decision engine**: `/root/run_polymarket_cycle.sh` builds context, sends the trigger to Codex via xdotool, waits for a decision JSON, then runs `run_cycle_codex.py --decision-file`.
 
 ---
 
 ## Pending / Known Limitations
 
 - **On-chain redemption**: not implemented. Funder proxy ABI is custom/unverified. LOST positions are filtered from GPT context. WON positions are sold via CLOB before resolution.
-- **Codex as decision engine**: planned but not implemented. Would replace Copilot CLI call with VS Code chat roundtrip.
 - **Performance snapshot**: activates at ≥3 `trade_closed` entries in trade_log. Currently at 2.
 - **Beecthor DIP bias**: GPT tends to bet DIP because Beecthor is structurally bearish. PLAYBOOK updated to explicitly require evaluating both directions.
