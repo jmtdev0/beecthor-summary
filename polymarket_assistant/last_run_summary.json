@@ -1,24 +1,21 @@
 {
-  "timestamp": "2026-05-03T20:02:45Z",
-  "run_id": "2026-05-03T20-00-06Z",
+  "timestamp": "2026-05-04T06:07:23Z",
+  "run_id": "2026-05-04T06-00-07Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-03T20-00-06Z",
+    "run_id": "2026-05-04T06-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "No new action: the open 79k reach daily remains the right live position, but it is still below partial take-profit territory and there is no second edge with clean expiry timing.",
-    "rationale": "BTC is holding around 78.76k and the 79k reach daily remains the best same-day expression of the live thesis, with the open position still active and profitable. However, the market is only around 75% probability, still below the playbook partial take-profit band of 80-85%, so there is no reason to reduce yet. Re-adding the same market is unnecessary because the current position already captures the thesis and no materially better re-entry has appeared. With only four hours left until daily close, no secondary setup is clean enough: 80k reach is too stretched for the remaining window, while 78k dip and lower bearish contracts remain out of sync with the neutral-to-firm live structure and lack clean same-day confirmation.",
+    "confidence": 0.0,
+    "summary": "Automatic Codex cycle fallback: NO_ACTION.",
+    "rationale": "Codex auto-cycle fallback: no valid decision file was produced in time.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
       "target_outcome": "",
-      "reason": "",
-      "reduce_fraction": 0.5,
-      "should_close": false,
-      "market_slug": "",
-      "outcome": ""
+      "reason": "none",
+      "reduce_fraction": 0.5
     },
     "new_position": {
       "should_open": false,
@@ -48,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78783.23,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 79951.18,
+  "positions_before": 0,
+  "positions_after": 0
 }
