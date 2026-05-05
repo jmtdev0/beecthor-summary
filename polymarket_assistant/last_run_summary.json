@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-05T08:04:32Z",
-  "run_id": "2026-05-05T08-00-06Z",
+  "timestamp": "2026-05-05T10:02:15Z",
+  "run_id": "2026-05-05T10-00-04Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-05T08-00-06Z",
+    "run_id": "2026-05-05T10-00-04Z",
     "action": "OPEN_POSITION",
-    "confidence": 0.72,
-    "summary": "Open one weekly thesis position on BTC reaching 82k before the May 4-10 expiry.",
-    "rationale": "No open positions need management, reconciliation is ok, cash is available, and daily cooldown is inactive. Latest Beecthor context is macro bearish but explicitly allows the current upside sweep toward 81k-82k and possibly higher before a later sell zone. Binance confirms short-term bullish momentum at 80844.97 with rising 48h/72h structure and no bearish rejection yet, so bearish DIP entries are blocked by the bias-correction rule. Daily 82k reach is vulnerable to the near-1000 USD UTC-day move cooling rule, but the weekly 82k reach has strong expiry validity with 136h remaining, is the nearest clean upside weekly strike, and is priced below the 90% cap at 0.77.",
+    "confidence": 0.74,
+    "summary": "Open one weekly thesis BTC reach position at 82k for the May 4-10 market.",
+    "rationale": "No open positions need management; reconciliation is ok, cash is available, and daily cooldown is inactive. Latest Beecthor context is D-1 and allows an upside sweep toward 81k-82k and possibly 83k-85k before a later bearish sell zone. Binance is short-term bullish at 80579 with BTC net higher over 24-72h and no confirmed bearish rejection, so bearish DIP entries are blocked by the bias-correction rule. The weekly 82k reach is the nearest clean upside weekly strike, has strong expiry validity with about 134h remaining, and is below the 90% cap at 0.68.",
     "position_managements": [],
     "new_positions": [
       {
@@ -25,7 +25,7 @@
         "strike": 82000,
         "floor_level": 0,
         "stake_usd": 1.0,
-        "max_entry_probability": 0.85
+        "max_entry_probability": 0.75
       }
     ],
     "position_management": {
@@ -43,7 +43,7 @@
       "direction": "bullish",
       "strike": 82000,
       "stake_usd": 1.0,
-      "max_entry_probability": 0.85,
+      "max_entry_probability": 0.75,
       "position_kind": "price_hit",
       "market_type": "weekly",
       "slot_name": "weekly_thesis",
@@ -63,16 +63,32 @@
     }
   },
   "validation": {
-    "ok": false,
-    "message": "UTC-day move cooling rule rejects same-direction entry after $1000+ move from the UTC open"
+    "ok": true,
+    "message": "ok"
   },
   "execution": {
-    "performed": false,
-    "details": {
-      "rejected": "UTC-day move cooling rule rejects same-direction entry after $1000+ move from the UTC open"
-    }
+    "performed": true,
+    "details": [
+      {
+        "order_id": "2026-05-05T10:02:15.051729Z",
+        "status": "pending_phone_execution",
+        "type": "OPEN_POSITION",
+        "token_id": "42112008351019858235072032791305715674143331968300157397814961656387165810511",
+        "side": "BUY",
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.75,
+        "market_type": "weekly",
+        "slot_name": "weekly_thesis",
+        "beecthor_aligned": true,
+        "momentum_confirmed": true,
+        "expiry_validity": "strong",
+        "market": "Will Bitcoin reach $82,000 May 4-10?",
+        "market_slug": "will-bitcoin-reach-82k-may-4-10",
+        "outcome": "Yes"
+      }
+    ]
   },
-  "binance_spot_price": 80875.18,
+  "binance_spot_price": 80534.33,
   "positions_before": 0,
   "positions_after": 0
 }
