@@ -14398,5 +14398,23 @@
     "binance_spot_price": 80960.01,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-05T13:17:07Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-reach-82k-may-4-10",
+    "market_title": "Will Bitcoin reach $82,000 May 4-10?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.4285,
+    "fraction": 1.0,
+    "avg_entry_price": 0.7,
+    "exit_price": 0.9,
+    "entry_cost_usd": 1.0,
+    "exit_proceeds_usd": 1.2857,
+    "pnl_usd": 0.2857,
+    "pnl_pct": 28.57,
+    "source": "monitor_executor"
   }
 ]
