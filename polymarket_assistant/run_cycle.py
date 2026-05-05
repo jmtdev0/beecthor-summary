@@ -47,7 +47,6 @@ FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
 ACTIVITY_LOOKBACK_LIMIT = 100
 DAILY_SUCCESS_COOLDOWN_PRICE = 0.90
 MAX_ENTRY_PROBABILITY = 0.90
-UTC_DAY_DIRECTIONAL_MOVE_CAP_USD = 1000.0
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
@@ -1415,15 +1414,6 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 return False, 'Discarded-position pain budget blocks adding same-direction exposure'
             if strategy_pressure.get('risk_flags', {}).get('equity_below_starting_bankroll') and live_probability < 0.65:
                 return False, 'Account-equity gate blocks low-conviction new exposure'
-            if mtype == 'daily':
-                utc_day_move_usd = safe_float(binance.get('utc_day_move_usd'))
-                chasing_utc_up = trade_direction == 'bullish' and utc_day_move_usd >= UTC_DAY_DIRECTIONAL_MOVE_CAP_USD
-                chasing_utc_down = trade_direction == 'bearish' and utc_day_move_usd <= -UTC_DAY_DIRECTIONAL_MOVE_CAP_USD
-                if chasing_utc_up or chasing_utc_down:
-                    return False, (
-                        'Daily UTC-day move cooling rule rejects same-direction entry after '
-                        f'${UTC_DAY_DIRECTIONAL_MOVE_CAP_USD:.0f}+ move from the UTC open'
-                    )
             change_24h = safe_float(binance.get('price_change_percent_24h'))
             chasing_up = trade_direction == 'bullish' and change_24h >= 3.0
             chasing_down = trade_direction == 'bearish' and change_24h <= -3.0

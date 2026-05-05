@@ -43,6 +43,7 @@ Your task:
 - Correct for Beecthor's structural bearish bias: when recent Beecthor summaries are bearish but BTC is flat or net higher, require Binance rejection evidence before proposing a bearish DIP.
 - Treat discarded open positions as real account pain even when they no longer block slot availability.
 - If the market already prices in the move too aggressively, do not force a trade.
+- If a BTC daily position has already resolved in our favor or been exited via take-profit today, do not propose another daily position until the next UTC day.
 - You may open up to 2 new positions in one cycle when they fit the free slots and are independently justified.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
 - Do not mix CLOSE and REDUCE actions in the same response.
