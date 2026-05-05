@@ -14328,5 +14328,23 @@
     "binance_spot_price": 80534.33,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-05T10:02:15Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-reach-82k-may-4-10",
+    "market_title": "Will Bitcoin reach $82,000 May 4-10?",
+    "position_side": "Yes",
+    "token_id": "42112008351019858235072032791305715674143331968300157397814961656387165810511",
+    "entry_cost_usd": 1.0,
+    "market_type": "weekly",
+    "slot_name": "weekly_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
