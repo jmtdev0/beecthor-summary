@@ -1,8 +1,8 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-05T18:01:52Z
+- Timestamp: 2026-05-05T20:01:39Z
 - Dry run: False
-- BTC price: 81333.64
+- BTC price: 81664.89
 - Decision action: NO_ACTION
 - Decision summary: No open positions to manage and no valid fresh BTC price-hit entry this cycle.
 - Validation: True (ok)
