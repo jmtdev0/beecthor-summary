@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 9.094821,
+  "cash_available": 10.363621,
   "realized_pnl": 0.3412,
-  "open_exposure": 1.0999,
+  "open_exposure": 0,
   "max_open_positions": 4,
   "max_daily_positions": 2,
   "max_weekly_positions": 2,
@@ -16,23 +16,7 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "what-price-will-bitcoin-hit-may-4-10",
-      "market_slug": "will-bitcoin-reach-82k-may-4-10",
-      "market_title": "Will Bitcoin reach $82,000 May 4-10?",
-      "position_side": "Yes",
-      "token_id": "42112008351019858235072032791305715674143331968300157397814961656387165810511",
-      "shares": 1.4285,
-      "avg_price": 0.7,
-      "entry_cost_usd": 0.9999,
-      "current_price": 0.77,
-      "current_value_usd": 1.0999,
-      "cash_pnl_usd": 0.0999,
-      "status": "open",
-      "slot_status": "active"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-05-05T12:01:58Z"
+  "last_synced_at": "2026-05-05T14:01:34Z"
 }
