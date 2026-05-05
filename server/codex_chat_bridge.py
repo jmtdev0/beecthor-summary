@@ -17,7 +17,7 @@ BRIDGE_DIR = Path(os.environ.get('CODEX_CHAT_BRIDGE_DIR', '/var/lib/codex-chat-b
 BRIDGE_DIR.mkdir(parents=True, exist_ok=True)
 VSCODE_CHAT_SEND_SCRIPT = Path(os.environ.get('CODEX_CHAT_SEND_SCRIPT', '/root/scripts/vscode_chat_send.sh'))
 BRIDGE_REPLY_WRITER = Path(os.environ.get('CODEX_BRIDGE_REPLY_WRITER', '/root/scripts/codex_bridge_write_reply.sh'))
-BRIDGE_TIMEOUT_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_TIMEOUT_SECONDS', '150'))
+BRIDGE_TIMEOUT_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_TIMEOUT_SECONDS', '600'))
 BRIDGE_STALE_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_STALE_SECONDS', '1800'))
 BRIDGE_POLL_INTERVAL_MS = int(os.environ.get('CODEX_CHAT_BRIDGE_POLL_INTERVAL_MS', '1500'))
 BRIDGE_SEND_TIMEOUT_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_SEND_TIMEOUT_SECONDS', '90'))

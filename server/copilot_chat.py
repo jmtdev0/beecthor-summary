@@ -15,6 +15,7 @@ from typing import Any
 
 import requests
 from codex_chat_bridge import (
+    BRIDGE_TIMEOUT_SECONDS,
     bridge_request_status as get_bridge_request_status,
     reconcile_bridge_requests,
     start_bridge_request,
@@ -2241,12 +2242,13 @@ def private_chat():
     </div>
     <script>
       const hist=document.getElementById('history'); hist.scrollTop=hist.scrollHeight;
+      const bridgeWaitTimeoutMs={{ bridge_timeout_seconds * 1000 }};
       function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       function appendBubble(role,text,timestamp){const el=document.createElement('div'); el.className='bubble '+(role==='user'?'user':'bot'); el.innerHTML=esc(text)+'<div class="muted" style="margin-top:8px">'+esc(timestamp)+'</div>'; hist.appendChild(el); hist.scrollTop=hist.scrollHeight;}
       async function waitForBridgeReply(requestId){
         const status=document.getElementById('status');
         const started=Date.now();
-        while((Date.now()-started) < 180000){
+        while((Date.now()-started) < bridgeWaitTimeoutMs){
           const resp=await fetch('/api/private/chat/status/'+encodeURIComponent(requestId));
           const data=await resp.json();
           if(data.status === 'completed' || data.status === 'failed' || data.status === 'timeout'){
@@ -2275,7 +2277,7 @@ def private_chat():
             document.addEventListener('visibilitychange', ()=>{if(document.hidden){clearPreviewTimer(); return;} if(previewDelay() > 0){refreshPreview(false);}});
             refreshPreview(false);
     </script>""" + PAGE_END
-    return render_template_string(html, history=history)
+    return render_template_string(html, history=history, bridge_timeout_seconds=BRIDGE_TIMEOUT_SECONDS)
 
 
 @app.route('/send', methods=['POST'])
