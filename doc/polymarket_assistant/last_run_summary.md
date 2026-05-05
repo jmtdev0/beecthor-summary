@@ -1,11 +1,11 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-05T06:01:36Z
+- Timestamp: 2026-05-05T08:04:32Z
 - Dry run: False
-- BTC price: 80996.83
-- Decision action: NO_ACTION
-- Decision summary: No open positions to manage and no valid new BTC price-hit entry this cycle.
-- Validation: True (ok)
+- BTC price: 80875.18
+- Decision action: OPEN_POSITION
+- Decision summary: Open one weekly thesis position on BTC reaching 82k before the May 4-10 expiry.
+- Validation: False (UTC-day move cooling rule rejects same-direction entry after $1000+ move from the UTC open)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -14,6 +14,8 @@
 ```json
 {
   "performed": false,
-  "details": null
+  "details": {
+    "rejected": "UTC-day move cooling rule rejects same-direction entry after $1000+ move from the UTC open"
+  }
 }
 ```
