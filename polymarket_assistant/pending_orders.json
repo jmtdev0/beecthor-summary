@@ -25,7 +25,7 @@
   },
   {
     "order_id": "2026-05-06T12:02:24.462155Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "1460891191647133112215339536059885176203204530819746770817790272561842810790",
     "side": "BUY",
@@ -38,6 +38,13 @@
     "expiry_validity": "acceptable",
     "market": "Will Bitcoin reach $84,000 May 4-10?",
     "market_slug": "will-bitcoin-reach-84k-may-4-10",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-05-06T12:05:05Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-84k-may-4-10",
+      "price": 0.61,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x360ac1a7016f1858a6d8f86a0591b9cfbbb0a66c07944fcca2e35036c8a91850\",\"takingAmount\":\"1.639343\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0xb183a1dd4675c624106c2f84e436c8a9498228879a38d5cb15f00e15c9b80645\"],\"success\":true}"
+    }
   }
 ]
