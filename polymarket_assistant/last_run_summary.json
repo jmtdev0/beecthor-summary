@@ -1,31 +1,31 @@
 {
-  "timestamp": "2026-05-06T10:04:19Z",
-  "run_id": "2026-05-06T10-00-22Z",
+  "timestamp": "2026-05-06T12:02:24Z",
+  "run_id": "2026-05-06T12-00-13Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-06T10-00-22Z",
+    "run_id": "2026-05-06T12-00-13Z",
     "action": "OPEN_POSITION",
-    "confidence": 0.72,
-    "summary": "Open one small daily BTC 83k reach position.",
-    "rationale": "Reconciliation is ok, cash is available, daily cooldown is inactive, and there are no open positions to manage. Latest Beecthor context remains macro bearish below 86k but explicitly allows a final upside extension through the 81.5k-83k zone and possibly higher before a later sell setup. Binance now confirms upside timing: BTC is 81981.67, up 1.75% over 24h, up 4.05% over 48h, and only 0.1% below the fresh 24h high after breaking above the prior 80530-81791 range. Bearish DIP entries are blocked by the bearish-bias correction because there is no rejection or support loss. The 82k reach is already above the 90% cap, so the nearest actionable upside daily strike is 83k at 0.42 with 14h left, acceptable expiry validity, and a $1 early-stage stake.",
+    "confidence": 0.74,
+    "summary": "Open one small weekly BTC 84k reach while holding the existing daily 83k reach.",
+    "rationale": "The open daily 83k Yes is active at 0.675 and below partial/full take-profit thresholds, so no management is triggered. Reconciliation is ok, daily cooldown is inactive, cash is available, and there is no discarded-position pain. Latest Beecthor context remains macro bearish below 86k but explicitly allows a final upside Z toward 85k-87.7k before a later sell setup. Binance now confirms upside timing at 82522.89, near the 24h high with bullish 24h-72h structure; bearish DIP entries still lack rejection or support-loss evidence. Weekly 82k is already above the 90% entry cap, making weekly 84k Yes the nearest actionable upside weekly strike at 0.62 with 108h left, acceptable expiry validity, and a $1 early-stage stake.",
     "position_managements": [],
     "new_positions": [
       {
         "should_open": true,
         "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
+        "market_type": "weekly",
+        "slot_name": "weekly_thesis",
         "beecthor_aligned": true,
         "momentum_confirmed": true,
         "expiry_validity": "acceptable",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-6",
-        "market_slug": "will-bitcoin-reach-83k-on-may-6",
+        "event_slug": "what-price-will-bitcoin-hit-may-4-10",
+        "market_slug": "will-bitcoin-reach-84k-may-4-10",
         "outcome": "Yes",
         "direction": "bullish",
-        "strike": 83000,
+        "strike": 84000,
         "floor_level": 0,
         "stake_usd": 1.0,
-        "max_entry_probability": 0.5
+        "max_entry_probability": 0.65
       }
     ],
     "position_management": {
@@ -37,16 +37,16 @@
     },
     "new_position": {
       "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-6",
-      "market_slug": "will-bitcoin-reach-83k-on-may-6",
+      "event_slug": "what-price-will-bitcoin-hit-may-4-10",
+      "market_slug": "will-bitcoin-reach-84k-may-4-10",
       "outcome": "Yes",
       "direction": "bullish",
-      "strike": 83000,
+      "strike": 84000,
       "stake_usd": 1.0,
-      "max_entry_probability": 0.5,
+      "max_entry_probability": 0.65,
       "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
+      "market_type": "weekly",
+      "slot_name": "weekly_thesis",
       "beecthor_aligned": true,
       "momentum_confirmed": true,
       "expiry_validity": "acceptable",
@@ -70,25 +70,25 @@
     "performed": true,
     "details": [
       {
-        "order_id": "2026-05-06T10:04:19.359100Z",
+        "order_id": "2026-05-06T12:02:24.462155Z",
         "status": "pending_phone_execution",
         "type": "OPEN_POSITION",
-        "token_id": "103149700553245011215872765760275305407021000867344882145240154485674191037822",
+        "token_id": "1460891191647133112215339536059885176203204530819746770817790272561842810790",
         "side": "BUY",
         "stake_usd": 1.0,
-        "max_entry_probability": 0.5,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
+        "max_entry_probability": 0.65,
+        "market_type": "weekly",
+        "slot_name": "weekly_thesis",
         "beecthor_aligned": true,
         "momentum_confirmed": true,
         "expiry_validity": "acceptable",
-        "market": "Will Bitcoin reach $83,000 on May 6?",
-        "market_slug": "will-bitcoin-reach-83k-on-may-6",
+        "market": "Will Bitcoin reach $84,000 May 4-10?",
+        "market_slug": "will-bitcoin-reach-84k-may-4-10",
         "outcome": "Yes"
       }
     ]
   },
-  "binance_spot_price": 82024.14,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 82462.94,
+  "positions_before": 1,
+  "positions_after": 1
 }

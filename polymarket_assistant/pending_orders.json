@@ -22,5 +22,22 @@
       "price": 0.46,
       "response": "{\"errorMsg\":\"\",\"orderID\":\"0xbe83396a0dd99636f367c236db269c8388b954141a98805783f4a282ad20420e\",\"takingAmount\":\"2.173912\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x64b0e5162f894686f673f4de0d8ff1f8f4f0755734d9b12ea185a37c5a275d76\"],\"success\":true}"
     }
+  },
+  {
+    "order_id": "2026-05-06T12:02:24.462155Z",
+    "status": "pending_phone_execution",
+    "type": "OPEN_POSITION",
+    "token_id": "1460891191647133112215339536059885176203204530819746770817790272561842810790",
+    "side": "BUY",
+    "stake_usd": 1.0,
+    "max_entry_probability": 0.65,
+    "market_type": "weekly",
+    "slot_name": "weekly_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "acceptable",
+    "market": "Will Bitcoin reach $84,000 May 4-10?",
+    "market_slug": "will-bitcoin-reach-84k-may-4-10",
+    "outcome": "Yes"
   }
 ]
