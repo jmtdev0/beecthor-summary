@@ -144,6 +144,43 @@ def new_order_id() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
 
+def compact_telegram_text(value: Any, max_chars: int) -> str:
+    text = re.sub(r'\s+', ' ', str(value or '').strip())
+    if len(text) <= max_chars:
+        return text
+
+    snippet = text[: max_chars + 1]
+    for separator in ('. ', '; ', ', '):
+        index = snippet.rfind(separator)
+        if index >= max_chars * 0.55:
+            return snippet[: index + 1].rstrip() + '...'
+    return snippet[:max_chars].rstrip(' .,;:') + '...'
+
+
+def build_cycle_telegram_message(decision: dict[str, Any], btc_price: Any) -> str:
+    action = decision.get('action', 'UNKNOWN')
+    action_emoji = {
+        'NO_ACTION': '\U0001f7e1',
+        'OPEN_POSITION': '\U0001f7e2',
+        'CLOSE_POSITION': '\U0001f534',
+        'REDUCE_POSITION': '\U0001f7e0',
+    }.get(action, '\u2139\ufe0f')
+    btc = safe_float(btc_price)
+    btc_line = f'BTC ${btc:,.0f}' if btc else 'BTC n/a'
+    summary_text = compact_telegram_text(decision.get('summary'), 220)
+    rationale_text = compact_telegram_text(decision.get('rationale'), 340)
+
+    if summary_text and rationale_text.lower() == summary_text.lower():
+        rationale_text = ''
+
+    parts = [f'{action_emoji} {action}', btc_line]
+    if summary_text:
+        parts.extend(['', summary_text])
+    if rationale_text:
+        parts.extend(['', f'Motivo: {rationale_text}'])
+    return '\n'.join(parts)
+
+
 def normalize_open_target(raw: dict[str, Any] | None, default_kind: str = 'price_hit') -> dict[str, Any]:
     target = dict(DEFAULT_OPEN_TARGET)
     if raw:
@@ -1955,16 +1992,7 @@ def main() -> None:
     _token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
     _chat = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
     if _token and _chat and not args.dry_run:
-        action = decision.get('action', 'UNKNOWN')
-        summary_text = decision.get('summary', '')
-        btc = context['binance']['spot_price']
-        action_emoji = {
-            'NO_ACTION': '\U0001f7e1',
-            'OPEN_POSITION': '\U0001f7e2',
-            'CLOSE_POSITION': '\U0001f534',
-            'REDUCE_POSITION': '\U0001f7e0',
-        }.get(action, '\u2139\ufe0f')
-        msg = f'{action_emoji} {action}\nBTC ${btc:,.0f}\n\n{summary_text}'
+        msg = build_cycle_telegram_message(decision, context['binance']['spot_price'])
         try:
             requests.post(
                 f'https://api.telegram.org/bot{_token}/sendMessage',

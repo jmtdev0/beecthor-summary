@@ -177,16 +177,7 @@ def main() -> None:
     token = config.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
     chat_id = config.get('TELEGRAM_PERSONAL_CHAT_ID') or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
     if token and chat_id and not args.dry_run and not is_automatic_fallback_decision(decision):
-        action = decision.get('action', 'UNKNOWN')
-        summary_text = decision.get('summary', '')
-        btc = context['binance']['spot_price']
-        action_emoji = {
-            'NO_ACTION': '\U0001f7e1',
-            'OPEN_POSITION': '\U0001f7e2',
-            'CLOSE_POSITION': '\U0001f534',
-            'REDUCE_POSITION': '\U0001f7e0',
-        }.get(action, '\u2139\ufe0f')
-        msg = f'{action_emoji} {action}\nBTC ${btc:,.0f}\n\n{summary_text}'
+        msg = base.build_cycle_telegram_message(decision, context['binance']['spot_price'])
         try:
             base.requests.post(
                 f'https://api.telegram.org/bot{token}/sendMessage',
