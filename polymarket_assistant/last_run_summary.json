@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-06T14:02:09Z",
-  "run_id": "2026-05-06T14-00-00Z",
+  "timestamp": "2026-05-06T18:02:25Z",
+  "run_id": "2026-05-06T18-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-06T14-00-00Z",
+    "run_id": "2026-05-06T18-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.86,
-    "summary": "NO_ACTION: hold the existing BTC reach positions; no take-profit, no valid fresh entry.",
-    "rationale": "Reconciliation is ok and daily cooldown is inactive. The daily 83k reach at 0.265 and weekly 84k reach at 0.445 are active, above the discarded threshold and below reduce/close profit thresholds, so no management is triggered. Latest Beecthor context remains macro bearish after the gap close and treats 81.5k-83k as a resistance/reaction zone, but still allows an upside Z toward 85k-87.7k before invalidation above 86k. Binance is now neutral at 81664.68 after a pullback from 82850, with 12h and 24h nearly flat and no clean support loss or downside expansion; bearish DIP entries fail the bias-correction rule, while fresh bullish REACH entries lack continuation and the active daily/weekly markets already use the $1 early-stage cap.",
+    "confidence": 0.88,
+    "summary": "Hold existing BTC positions; no take-profit trigger and no clean new daily edge.",
+    "rationale": "Reconciliation is ok and daily cooldown is inactive. The daily 83k reach is discarded at 0.065 and must not be force-sold or averaged down; the active weekly 84k reach is only 0.365, below reduce/close thresholds. Latest Beecthor context remains bearish around the 81k-83k resistance zone, but he still allows 84k-85.4k before invalidation and wants failed attempts/exhaustion before downside entries. Binance is neutral at 81452.62, flat over 12h/24h and still inside the 80731-82850 range, so a bearish 81k DIP lacks the clean breakdown/support-loss confirmation required by the range and bias-correction gates. Fresh bullish REACH would chase the failed 83k daily and existing 84k weekly exposure.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81577.0,
+  "binance_spot_price": 81488.58,
   "positions_before": 2,
   "positions_after": 2
 }
