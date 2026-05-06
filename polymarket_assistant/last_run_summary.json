@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-06T06:03:19Z",
-  "run_id": "2026-05-06T06-00-15Z",
+  "timestamp": "2026-05-06T08:01:48Z",
+  "run_id": "2026-05-06T08-00-04Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-06T06-00-15Z",
+    "run_id": "2026-05-06T08-00-04Z",
     "action": "NO_ACTION",
-    "confidence": 0.73,
-    "summary": "NO_ACTION: no open positions to manage and no clean new BTC price-hit edge this cycle.",
-    "rationale": "Reconciliation is ok, cash is available, daily cooldown is inactive, and there are no open positions. The latest Beecthor context treats 81.5k-83k as a resistance/reaction zone after the gap close while keeping the macro bearish map below 86k. Binance spot is 81345.76, net higher over 48-72h but short-term neutral and still inside the 80527-81791 24h range, so bearish DIP entries lack the required rejection/support-loss confirmation and bullish REACH entries lack a clean breakout/continuation. Weekly 82k at 0.805 would be re-chasing a just-closed take-profit setup without fresh confirmation.",
+    "confidence": 0.86,
+    "summary": "NO_ACTION: no open positions to manage and no clean BTC price-hit entry this cycle.",
+    "rationale": "Reconciliation is ok, cash is available, daily cooldown is inactive, and there are no open positions. Latest Beecthor context remains bearish at the 81.5k-83k resistance/reaction zone, but Binance spot is 81351 inside the 80527-81791 24h range with neutral short-term bias and no clean rejection, failed reclaim, support loss, or downside expansion. That blocks bearish DIP entries under the bias-correction rule. Bullish REACH entries also lack breakout/acceptance confirmation, and weekly 82k at 0.845 would re-chase a just-closed take-profit setup from the middle of the range.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81346.69,
+  "binance_spot_price": 81385.43,
   "positions_before": 0,
   "positions_after": 0
 }
