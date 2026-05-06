@@ -3,6 +3,10 @@
 ### 06/05/2026
 * Dashboard Polymarket: corregido el conteo `Daily / Weekly` para clasificar posiciones cerradas usando también `slug/eventSlug` de la API de Polymarket y detectar títulos semanales tipo `April 13-19` o `May 4-10`.
 
+### 05/05/2026
+* Añadido modo mínimo Telegram -> Codex para el chat privado con BeecthorDaily: Flask arranca un polling autorizado por `TELEGRAM_PERSONAL_CHAT_ID`, reusa el mismo bridge de `/private/chat`, espera la respuesta de Codex y la devuelve al chat privado de Telegram.
+* El prompt del bridge ahora conserva el origen del mensaje (`/private/chat` o Telegram) sin duplicar la lógica de escritura del `reply_file`.
+
 ### 04/05/2026
 * `server/run_polymarket_cycle.sh` versionado y desplegado como wrapper operativo del VPS: el ciclo automático ya no intenta escribir en el chat de VS Code, sino que genera snapshot + prompt y ejecuta `codex exec` en modo CLI con `gpt-5.5`, `model_reasoning_effort=xhigh`, `approval=never` y `sandbox=read-only`.
 * `doc/polymarket_assistant/codex_cycle_prompt.md` y `codex_cycle_instructions.md` actualizados al contrato CLI: Codex debe devolver JSON puro como respuesta final; el wrapper guarda esa respuesta en `decision_file`, la valida y cae a `NO_ACTION` si no hay JSON válido.

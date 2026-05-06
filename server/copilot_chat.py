@@ -5,6 +5,8 @@ import json
 import os
 import re
 import subprocess
+import threading
+import time
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -70,6 +72,17 @@ PRIVATE_CHAT_VSCODE_CAPTURE_BIN = os.environ.get('PRIVATE_CHAT_VSCODE_CAPTURE_BI
 PRIVATE_CHAT_VSCODE_CAPTURE_TIMEOUT_SECONDS = float(
     os.environ.get('PRIVATE_CHAT_VSCODE_CAPTURE_TIMEOUT_SECONDS', '8')
 )
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+TELEGRAM_BRIDGE_CHAT_ID = (
+    os.environ.get('TELEGRAM_BRIDGE_CHAT_ID')
+    or os.environ.get('TELEGRAM_PERSONAL_CHAT_ID')
+    or ''
+).strip()
+TELEGRAM_BRIDGE_ENABLED = os.environ.get('TELEGRAM_BRIDGE_ENABLED', '1').strip().lower() not in {'0', 'false', 'no', 'off'}
+TELEGRAM_BRIDGE_POLL_TIMEOUT_SECONDS = int(os.environ.get('TELEGRAM_BRIDGE_POLL_TIMEOUT_SECONDS', '25'))
+TELEGRAM_BRIDGE_POLL_SLEEP_SECONDS = float(os.environ.get('TELEGRAM_BRIDGE_POLL_SLEEP_SECONDS', '1'))
+TELEGRAM_BRIDGE_REPLY_CHUNK_SIZE = int(os.environ.get('TELEGRAM_BRIDGE_REPLY_CHUNK_SIZE', '3900'))
+TELEGRAM_BRIDGE_OFFSET_PATH = Path(os.environ.get('TELEGRAM_BRIDGE_OFFSET_PATH') or (LOG_DIR / 'telegram_bridge_offset.txt'))
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -528,6 +541,228 @@ def append_jsonl_event(source: str, event_type: str, level: str, message: str, p
     with log_file_for_source(source).open('a', encoding='utf-8') as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + '\n')
     return event
+
+
+def telegram_bridge_is_configured() -> bool:
+    return TELEGRAM_BRIDGE_ENABLED and bool(TELEGRAM_BOT_TOKEN and TELEGRAM_BRIDGE_CHAT_ID)
+
+
+def telegram_bridge_api_url(method: str) -> str:
+    return f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}'
+
+
+def telegram_bridge_chunks(text: str) -> list[str]:
+    content = (text or '').strip() or '(sin respuesta)'
+    return [
+        content[index:index + TELEGRAM_BRIDGE_REPLY_CHUNK_SIZE]
+        for index in range(0, len(content), TELEGRAM_BRIDGE_REPLY_CHUNK_SIZE)
+    ] or ['(sin respuesta)']
+
+
+def send_telegram_bridge_message(text: str) -> bool:
+    if not telegram_bridge_is_configured():
+        return False
+    ok = True
+    for chunk in telegram_bridge_chunks(text):
+        try:
+            response = requests.post(
+                telegram_bridge_api_url('sendMessage'),
+                json={
+                    'chat_id': TELEGRAM_BRIDGE_CHAT_ID,
+                    'text': chunk,
+                    'disable_web_page_preview': True,
+                },
+                timeout=15,
+            )
+            payload = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+            if response.status_code >= 400 or not payload.get('ok', False):
+                ok = False
+                append_jsonl_event(
+                    'app.telegram',
+                    'telegram_bridge_send_failed',
+                    'error',
+                    'Telegram bridge could not send a message',
+                    {'status_code': response.status_code, 'telegram_error': str(payload)[:500]},
+                )
+        except requests.RequestException as exc:
+            ok = False
+            append_jsonl_event(
+                'app.telegram',
+                'telegram_bridge_send_failed',
+                'error',
+                'Telegram bridge send request failed',
+                {'error': str(exc)[:500]},
+            )
+    return ok
+
+
+def read_telegram_bridge_offset() -> int | None:
+    try:
+        return int(TELEGRAM_BRIDGE_OFFSET_PATH.read_text(encoding='utf-8').strip())
+    except Exception:
+        return None
+
+
+def write_telegram_bridge_offset(offset: int | None) -> None:
+    if offset is None:
+        return
+    TELEGRAM_BRIDGE_OFFSET_PATH.parent.mkdir(parents=True, exist_ok=True)
+    TELEGRAM_BRIDGE_OFFSET_PATH.write_text(str(offset), encoding='utf-8')
+
+
+def fetch_telegram_bridge_updates(offset: int | None, timeout_seconds: int, log_errors: bool = True) -> list[dict[str, Any]]:
+    if not telegram_bridge_is_configured():
+        return []
+    params: dict[str, Any] = {
+        'timeout': timeout_seconds,
+        'allowed_updates': json.dumps(['message']),
+    }
+    if offset is not None:
+        params['offset'] = offset
+    try:
+        response = requests.get(
+            telegram_bridge_api_url('getUpdates'),
+            params=params,
+            timeout=max(timeout_seconds + 10, 15),
+        )
+        payload = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+    except requests.RequestException as exc:
+        if log_errors:
+            append_jsonl_event(
+                'app.telegram',
+                'telegram_bridge_poll_failed',
+                'error',
+                'Telegram bridge poll request failed',
+                {'error': str(exc)[:500]},
+            )
+        return []
+    if response.status_code >= 400 or not payload.get('ok', False):
+        if log_errors:
+            append_jsonl_event(
+                'app.telegram',
+                'telegram_bridge_poll_failed',
+                'error',
+                'Telegram bridge poll returned an error',
+                {'status_code': response.status_code, 'telegram_error': str(payload)[:500]},
+            )
+        return []
+    result = payload.get('result', [])
+    return result if isinstance(result, list) else []
+
+
+def initial_telegram_bridge_offset() -> int | None:
+    persisted = read_telegram_bridge_offset()
+    if persisted is not None:
+        return persisted
+    updates = fetch_telegram_bridge_updates(None, timeout_seconds=0, log_errors=False)
+    update_ids = [item.get('update_id') for item in updates if isinstance(item.get('update_id'), int)]
+    if not update_ids:
+        return None
+    offset = max(update_ids) + 1
+    write_telegram_bridge_offset(offset)
+    append_jsonl_event(
+        'app.telegram',
+        'telegram_bridge_backlog_skipped',
+        'info',
+        'Telegram bridge skipped old pending updates on startup',
+        {'skipped_updates': len(update_ids)},
+    )
+    return offset
+
+
+def telegram_bridge_message_is_authorized(message: dict[str, Any]) -> bool:
+    chat = message.get('chat') if isinstance(message.get('chat'), dict) else {}
+    sender = message.get('from') if isinstance(message.get('from'), dict) else {}
+    allowed = TELEGRAM_BRIDGE_CHAT_ID
+    return str(chat.get('id', '')) == allowed or str(sender.get('id', '')) == allowed
+
+
+def wait_for_codex_bridge_reply(request_id: str) -> str:
+    deadline = time.monotonic() + BRIDGE_TIMEOUT_SECONDS + 30
+    while time.monotonic() < deadline:
+        payload, status_code = get_bridge_request_status(
+            request_id,
+            history_loader=load_history,
+            history_saver=save_history,
+            logger=append_jsonl_event,
+        )
+        if status_code != 200:
+            return payload.get('error', 'No he podido consultar el estado del bridge de Codex.')
+        status = payload.get('status')
+        if status in {'completed', 'failed', 'timeout'}:
+            return payload.get('response') or '(sin respuesta)'
+        poll_after_ms = safe_float(payload.get('poll_after_ms'), 1500.0)
+        time.sleep(max(0.5, min(5.0, poll_after_ms / 1000.0)))
+    return '(timeout - Codex no produjo respuesta dentro de la ventana configurada)'
+
+
+def handle_telegram_bridge_message(message: dict[str, Any]) -> None:
+    if not telegram_bridge_message_is_authorized(message):
+        append_jsonl_event(
+            'app.telegram',
+            'telegram_bridge_unauthorized_message',
+            'warning',
+            'Telegram bridge ignored a message from an unauthorized chat',
+            {'chat_id': str((message.get('chat') or {}).get('id', ''))},
+        )
+        return
+    text = (message.get('text') or '').strip()
+    if not text:
+        return
+    if text.startswith('/start') or text.startswith('/help'):
+        send_telegram_bridge_message(
+            'Estoy operativo. Envíame un mensaje por aquí y lo pasaré a la misma conversación de Codex que usa /private/chat.'
+        )
+        return
+
+    meta, error = start_bridge_request(
+        text,
+        history_loader=load_history,
+        history_saver=save_history,
+        logger=append_jsonl_event,
+        source_label='Telegram private chat',
+    )
+    if error:
+        send_telegram_bridge_message(f'Codex está ocupado ahora mismo: {error}')
+        return
+    if not meta:
+        send_telegram_bridge_message('No he podido iniciar el bridge de Codex.')
+        return
+    if meta.get('status') in {'failed', 'timeout'}:
+        send_telegram_bridge_message(meta.get('response_text', '(bridge request failed)'))
+        return
+
+    send_telegram_bridge_message('Recibido. Lo paso a Codex y te devuelvo la respuesta aquí.')
+    response_text = wait_for_codex_bridge_reply(meta['request_id'])
+    send_telegram_bridge_message(response_text)
+
+
+def telegram_bridge_loop() -> None:
+    offset = initial_telegram_bridge_offset()
+    append_jsonl_event('app.telegram', 'telegram_bridge_started', 'info', 'Telegram bridge polling started')
+    while True:
+        updates = fetch_telegram_bridge_updates(offset, TELEGRAM_BRIDGE_POLL_TIMEOUT_SECONDS)
+        for update in updates:
+            update_id = update.get('update_id')
+            if isinstance(update_id, int):
+                offset = update_id + 1 if offset is None else max(offset, update_id + 1)
+            message = update.get('message')
+            if isinstance(message, dict):
+                handle_telegram_bridge_message(message)
+            write_telegram_bridge_offset(offset)
+        time.sleep(TELEGRAM_BRIDGE_POLL_SLEEP_SECONDS)
+
+
+def start_telegram_bridge_thread() -> None:
+    if not TELEGRAM_BRIDGE_ENABLED:
+        print('[dashboard] Telegram Codex bridge disabled by TELEGRAM_BRIDGE_ENABLED.')
+        return
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_BRIDGE_CHAT_ID:
+        print('[dashboard] Telegram Codex bridge not started - missing TELEGRAM_BOT_TOKEN or TELEGRAM_PERSONAL_CHAT_ID.')
+        return
+    thread = threading.Thread(target=telegram_bridge_loop, name='telegram-codex-bridge', daemon=True)
+    thread.start()
+    print('[dashboard] Telegram Codex bridge polling started.')
 
 
 def enqueue_pending_order(order: dict[str, Any]) -> None:
@@ -2401,4 +2636,5 @@ if __name__ == '__main__':
         print('[dashboard] WARNING: COPILOT_CHAT_PASSWORD not set — private area is unsafe.')
     if not MOBILE_LOG_API_SECRET:
         print('[dashboard] WARNING: MOBILE_LOG_API_SECRET not set — mobile log endpoint will reject all events.')
+    start_telegram_bridge_thread()
     app.run(host='0.0.0.0', port=5050, debug=False)

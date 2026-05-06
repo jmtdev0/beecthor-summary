@@ -94,10 +94,10 @@ def active_request_meta() -> dict[str, Any] | None:
     return None
 
 
-def build_bridge_prompt(message: str, request_id: str, reply_file: Path) -> str:
+def build_bridge_prompt(message: str, request_id: str, reply_file: Path, source_label: str = '/private/chat') -> str:
     return f"""[webchat request_id={request_id} reply_file={reply_file}]
 
-This message comes from /private/chat and should be treated as part of the same ongoing conversation with Javier.
+This message comes from {source_label} and should be treated as part of the same ongoing conversation with Javier.
 Reply normally in this VS Code conversation, and also write the same final user-facing answer as plain UTF-8 text to reply_file.
 If useful, you can write it with this helper:
 {BRIDGE_REPLY_WRITER} {reply_file} <<'EOF'
@@ -214,6 +214,7 @@ def start_bridge_request(
     history_loader: HistoryLoader,
     history_saver: HistorySaver,
     logger: EventLogger | None = None,
+    source_label: str = '/private/chat',
 ) -> tuple[dict[str, Any] | None, str | None]:
     reconcile_bridge_requests(history_loader, history_saver, logger)
     prune_stale_bridge_files()
@@ -223,7 +224,7 @@ def start_bridge_request(
 
     request_id = f'bridge-{datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")}-{uuid4().hex[:8]}'
     paths = request_paths(request_id)
-    prompt = build_bridge_prompt(message, request_id, paths['reply'])
+    prompt = build_bridge_prompt(message, request_id, paths['reply'], source_label=source_label)
     paths['prompt'].write_text(prompt, encoding='utf-8')
 
     timestamp = history_timestamp()
@@ -245,6 +246,7 @@ def start_bridge_request(
         'user_timestamp': timestamp,
         'prompt_file': str(paths['prompt']),
         'reply_file': str(paths['reply']),
+        'source_label': source_label,
         'history_saved': False,
     }
     save_request_meta(meta)
