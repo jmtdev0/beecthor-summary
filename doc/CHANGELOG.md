@@ -1,5 +1,8 @@
 # Changelog
 
+### 06/05/2026
+* Dashboard Polymarket: corregido el conteo `Daily / Weekly` para clasificar posiciones cerradas usando también `slug/eventSlug` de la API de Polymarket y detectar títulos semanales tipo `April 13-19` o `May 4-10`.
+
 ### 04/05/2026
 * `server/run_polymarket_cycle.sh` versionado y desplegado como wrapper operativo del VPS: el ciclo automático ya no intenta escribir en el chat de VS Code, sino que genera snapshot + prompt y ejecuta `codex exec` en modo CLI con `gpt-5.5`, `model_reasoning_effort=xhigh`, `approval=never` y `sandbox=read-only`.
 * `doc/polymarket_assistant/codex_cycle_prompt.md` y `codex_cycle_instructions.md` actualizados al contrato CLI: Codex debe devolver JSON puro como respuesta final; el wrapper guarda esa respuesta en `decision_file`, la valida y cae a `NO_ACTION` si no hay JSON válido.

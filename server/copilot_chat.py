@@ -1219,6 +1219,8 @@ def classify_market_bucket(text: str) -> str:
         return 'weekly'
     if re.search(rf'{month}-\d{{1,2}}-\d{{1,2}}', normalized):
         return 'weekly'
+    if re.search(rf'{month}\s+\d{{1,2}}\s*-\s*\d{{1,2}}', normalized):
+        return 'weekly'
     # Daily: slug contains "on-month-day" or "on april 9" or ends with month-day
     if re.search(rf'on-{month}-\d{{1,2}}', normalized):
         return 'daily'
@@ -1227,6 +1229,20 @@ def classify_market_bucket(text: str) -> str:
     if re.search(rf'-on-\d{{1,2}}$', normalized):
         return 'daily'
     return 'unknown'
+
+
+def market_bucket_text(item: dict[str, Any]) -> str:
+    return (
+        item.get('event_slug')
+        or item.get('eventSlug')
+        or item.get('market_slug')
+        or item.get('marketSlug')
+        or item.get('slug')
+        or item.get('title')
+        or item.get('market_title')
+        or item.get('marketTitle')
+        or ''
+    )
 
 
 def fetch_live_positions() -> list[dict[str, Any]]:
@@ -1352,7 +1368,7 @@ def build_polymarket_snapshot() -> dict[str, Any]:
     daily_count = 0
     weekly_count = 0
     for item in [*open_positions, *closed_positions]:
-        bucket = classify_market_bucket(item.get('event_slug') or item.get('market_slug') or item.get('title') or '')
+        bucket = classify_market_bucket(market_bucket_text(item))
         if bucket == 'daily':
             daily_count += 1
         elif bucket == 'weekly':
@@ -1388,11 +1404,11 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         details_list = raw_details if isinstance(raw_details, list) else ([raw_details] if raw_details else [])
         if entry.get('type') == 'trade_opened':
             market_slug = entry.get('market_slug', '')
-            recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': 'trade_opened', 'market_slug': market_slug, 'category': classify_market_bucket(entry.get('event_slug') or market_slug), 'status': entry.get('status', '')})
+            recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': 'trade_opened', 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(entry)), 'status': entry.get('status', '')})
         elif details_list:
             for details in details_list:
                 market_slug = details.get('market_slug', '')
-                recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_slug), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
+                recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(details)), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
     return {
         'metrics': metrics,
         'positions': positions,
