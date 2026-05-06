@@ -23,20 +23,17 @@ Decision principles:
 
 Position slots:
 - Daily price-hit slots: 2 maximum total (same-day reach/dip markets).
-- Weekly price-hit slots: 2 maximum total (reach/dip markets, weekly expiry).
+- Weekly price-hit slots: 0 for new openings. Weekly reach/dip markets are disabled.
 - One daily slot is the thesis slot.
 - The second daily slot is the momentum slot: it may go against the main Beecthor thesis, but only when Binance confirms a very clear same-day continuation.
-- One weekly slot is the thesis slot.
-- The second weekly slot is the momentum slot: it may go against the main Beecthor thesis, but only when Binance confirms a very clear higher-timeframe continuation.
-- Default portfolio construction should try to use only the thesis-aligned daily and weekly slots. The two momentum slots are secondary and should be used only when price action is clearly trending in a way that the main Beecthor thesis is not capturing well enough.
-- Weekly slots are frontier slots: use them for the one or two closest reasonable weekly strikes that still carry edge around the current price structure; do not jump over nearer weekly strikes just to force a farther narrative.
+- Do not propose `market_type: "weekly"` for a new position. Existing weekly positions may still be managed for take-profit/reduction/close, but no new weekly exposure is allowed.
+- Default portfolio construction should try to use the thesis-aligned daily slot first. The daily momentum slot is secondary and should be used only when price action is clearly trending in a way that the main Beecthor thesis is not capturing well enough.
 - For the momentum daily slot, closest-strike-first still applies. Prefer the nearest clean reach/dip first instead of jumping to a farther strike.
-- For the momentum weekly slot, closest-strike-first also applies. Prefer the nearest clean weekly reach/dip first instead of jumping to a farther weekly strike.
 - Floor markets are disabled and must not be used.
 
 Your task:
 - First evaluate whether any existing open positions should be closed or reduced.
-- Then evaluate whether new price-hit positions should be opened (daily and/or weekly reach/dip market).
+- Then evaluate whether one new daily price-hit position should be opened.
 - Use recent transcripts and summaries to determine whether Beecthor's thesis is still intact, changing, or invalidated.
 - Compare that thesis against the live BTC price and the current Polymarket probabilities.
 - Separate level validity from expiry validity. A level can be correct eventually and still be a bad trade for the current market expiry.
@@ -44,11 +41,11 @@ Your task:
 - Treat discarded open positions as real account pain even when they no longer block slot availability.
 - If the market already prices in the move too aggressively, do not force a trade.
 - If a BTC daily position has already resolved in our favor or been exited via take-profit today, do not propose another daily position until the next UTC day.
-- You may open up to 2 new positions in one cycle when they fit the free slots and are independently justified.
+- You may open at most 1 new position in one cycle, and it must be daily.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
 - Do not mix CLOSE and REDUCE actions in the same response.
-- A market that has already been partially reduced for take-profit is not permanently banned. If the same market/outcome remains active, non-discarded, and newly attractive again, you may re-add to it.
-- Re-adding to an already-open market still uses the same slot and is allowed only when the resulting **live open cash assigned to that market** remains within the current single-position cap (`1$` in early stage, otherwise `15%` of available cash).
+- A daily market that has already been partially reduced for take-profit is not permanently banned. If the same daily market/outcome remains active, non-discarded, and newly attractive again, you may re-add to it.
+- Re-adding to an already-open daily market still uses the same slot and is allowed only when the resulting **live open cash assigned to that market** remains within the current single-position cap (`1$` in early stage, otherwise `15%` of available cash).
 - Do not re-add to a discarded same-market position just to average down.
 
 Return valid JSON only with this schema:
@@ -69,8 +66,8 @@ Return valid JSON only with this schema:
   "new_positions": [
     {
       "position_kind": "price_hit",
-      "market_type": "daily | weekly",
-      "slot_name": "daily_thesis | daily_momentum | weekly_thesis | weekly_momentum",
+      "market_type": "daily",
+      "slot_name": "daily_thesis | daily_momentum",
       "beecthor_aligned": true,
       "momentum_confirmed": true,
       "expiry_validity": "strong | acceptable | weak",
@@ -91,11 +88,11 @@ Rules for output:
 - No commentary before or after the JSON.
 - Use `new_positions: []` when `action != OPEN_POSITION`.
 - Use `position_managements: []` when `action == OPEN_POSITION` or `NO_ACTION`.
-- For `OPEN_POSITION`, return at most 2 items in `new_positions`.
+- For `OPEN_POSITION`, return at most 1 item in `new_positions`.
 - For `CLOSE_POSITION` or `REDUCE_POSITION`, return at most 2 items in `position_managements` and keep the same action for all of them.
 - If uncertain, prefer NO_ACTION.
 - For each proposed new position, only use `expiry_validity: "strong"` or `"acceptable"`. If expiry validity is weak, return NO_ACTION.
-- Do not use the weekly slots as generic extra exposure. Weekly entries require stronger evidence than daily entries.
+- Do not open weekly positions. Weekly entries are disabled after historical performance review.
 - Consider partial take-profit / invalidation exits before proposing fresh entries when open positions are carrying meaningful account risk.
 
 Context snapshot follows.

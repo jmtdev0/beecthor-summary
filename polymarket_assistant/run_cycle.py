@@ -735,7 +735,11 @@ def fetch_active_floor_markets() -> list[dict[str, Any]]:
 
 def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
     all_markets: list[dict[str, Any]] = []
-    event_slugs = _fetch_daily_event_slugs() + _fetch_weekly_event_slugs()
+    # Weekly openings are disabled after historical review showed poor
+    # risk-adjusted performance. Existing weekly positions are still managed
+    # through the live positions path, but weekly markets are no longer offered
+    # as new-entry candidates to the LLM.
+    event_slugs = _fetch_daily_event_slugs()
     for event_slug in event_slugs:
         try:
             response = requests.get(
@@ -1231,7 +1235,7 @@ def active_slot_limit_for_market_type(account_state: dict[str, Any], market_type
     if market_type == 'daily':
         return int(account_state.get('max_daily_positions', 2))
     if market_type == 'weekly':
-        return int(account_state.get('max_weekly_positions', 1))
+        return 0
     return 0
 
 
@@ -1325,7 +1329,7 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         early_stage_threshold = safe_float(account_state.get('early_stage_threshold', 15.0))
         base_stake_pct = safe_float(account_state.get('base_stake_pct', 0.15))
         max_open = int(account_state.get('max_open_positions', 3))
-        max_new_positions = int(account_state.get('max_new_positions_per_cycle', 2))
+        max_new_positions = int(account_state.get('max_new_positions_per_cycle', 1))
         active_positions = [pos for pos in positions if not is_slot_discarded(pos, account_state)]
 
         if len(open_targets) > max_new_positions:
@@ -1376,6 +1380,8 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 if stake_usd > max_stake:
                     return False, f'Price-hit stake ${stake_usd} exceeds {base_stake_pct:.0%} of cash (max ${max_stake})'
             mtype = market.get('market_type', 'daily')
+            if mtype == 'weekly':
+                return False, 'Weekly openings are disabled by the playbook'
             trade_direction = direction_from_market_outcome(market['market_slug'], outcome)
             hours_until_daily_close = safe_float(market_time.get('hours_until_daily_market_close'))
             hours_until_weekly_close = safe_float(market_time.get('hours_until_weekly_market_close'))

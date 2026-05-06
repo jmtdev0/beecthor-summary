@@ -15,6 +15,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sys
 import time
 from datetime import UTC, datetime, timedelta
@@ -52,6 +53,26 @@ TRADE_LOG_API_URL = (
 
 load_dotenv(ENV_FILE)
 NEG_RISK_CACHE: dict[str, bool] = {}
+
+
+def is_weekly_open_position_order(pending: dict) -> bool:
+    if str(pending.get('market_type') or '').lower() == 'weekly':
+        return True
+
+    text = ' '.join(
+        str(pending.get(key) or '')
+        for key in ('market', 'market_slug', 'event_slug', 'title')
+    ).lower()
+    return bool(
+        re.search(
+            r'\b(?:january|february|march|april|may|june|july|august|september|october|november|december)-\d{1,2}-\d{1,2}\b',
+            text,
+        )
+        or re.search(
+            r'\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\s*-\s*\d{1,2}\b',
+            text,
+        )
+    )
 
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_PERSONAL_CHAT_ID', '')
@@ -674,6 +695,39 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                 f'Edad: {age_minutes} min. Mejor esperar una nueva validación del siguiente ciclo.'
             )
 
+        return True
+
+    if side == 'BUY' and order_type == 'OPEN_POSITION' and is_weekly_open_position_order(pending):
+        detail = 'Weekly OPEN_POSITION orders are disabled by the current playbook'
+        print(f'[executor] Skipping weekly order: {detail}')
+        send_server_log(
+            'phone.executor',
+            'order_skipped',
+            'Pending OPEN_POSITION skipped because weekly markets are disabled',
+            payload={
+                'order_id': order_id,
+                'market_slug': pending.get('market_slug'),
+                'reason': 'weekly_disabled',
+                'market_type': pending.get('market_type'),
+            },
+        )
+        update_pending_order_status(
+            order_id,
+            'skipped_weekly_disabled',
+            detail,
+            {
+                'market_slug': pending.get('market_slug'),
+                'market_type': pending.get('market_type'),
+            },
+        )
+        save_executed_order_id(order_id)
+        if not dry_run:
+            send_telegram(
+                '\u26a0\ufe0f OPEN_POSITION weekly descartada:\n'
+                f'{market}\n'
+                f'{outcome}\n'
+                'El playbook actual ha desactivado nuevas entradas weekly.'
+            )
         return True
 
     if side == 'BUY':

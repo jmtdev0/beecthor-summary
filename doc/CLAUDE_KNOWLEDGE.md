@@ -1,6 +1,6 @@
 # Claude Knowledge Base — Beecthor Summary / Polymarket Operator
 
-Last updated: 2026-04-16
+Last updated: 2026-05-06
 
 This file documents everything Claude currently knows about this project. It is intended as a persistent context reference for future conversations.
 
@@ -117,14 +117,15 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 |------|-------------|----------|
 | daily thesis | `will-bitcoin-reach/dip-to-Xk-on-{date}` | 1 |
 | daily momentum | `will-bitcoin-reach/dip-to-Xk-on-{date}` | 1 |
-| weekly | `will-bitcoin-reach/dip-to-Xk-{date-range}` | 1 |
-| **total** | all | **3** |
+| weekly | `will-bitcoin-reach/dip-to-Xk-{date-range}` | 0 new openings |
+| **total** | all | **3 while a legacy weekly remains open** |
 
 ### Entry rules (summary)
 - Base stake: 15% of available cash
 - Early-stage cap: max $1 per trade while portfolio < $15
-- Probability range: 45–84% (hard cap at 85%)
-- Nearest-strike-first rule enforced per type (daily/weekly independent)
+- Probability range: 45–90% guide, with a hard entry cap above 90%
+- Weekly openings are disabled after historical review showed poor performance; legacy weekly positions may still be monitored or exited by take-profit logic.
+- Nearest-strike-first rule enforced for daily markets
 - Both REACH and DIP directions must be evaluated before deciding
 
 ### Exit rules
@@ -140,7 +141,7 @@ run_cycle.py
   3. build_context_snapshot()
        - fetch BTC price, funding rate, L/S ratio from Binance
        - fetch_positions() → active open positions (filtered)
-       - fetch_active_btc_markets() → daily + weekly markets from GAMMA API
+       - fetch_active_btc_markets() → daily markets from GAMMA API; weekly markets are no longer offered for new entries
        - load account_state.json, trade_log.json, transcripts, analyses_log.json
   4. render_prompt() → doc/polymarket_assistant/copilot_prompt.md + full context JSON
   5. run_copilot() → GPT returns JSON decision
@@ -245,7 +246,7 @@ Orphaned `xfce4-session` (PID 22258, running since 2026-03-26) held `org.xfce.Se
   "open_positions": [],
   "max_open_positions": 3,
   "max_daily_positions": 2,
-  "max_weekly_positions": 1,
+  "max_weekly_positions": 0,
   "base_stake_pct": 0.15,
   "early_stage_max_stake": 1.0,
   "early_stage_threshold": 15.0,

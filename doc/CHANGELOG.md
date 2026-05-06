@@ -1,6 +1,7 @@
 # Changelog
 
 ### 06/05/2026
+* Playbook y operador actualizados para dejar de abrir mercados weekly de BTC tras revisar su mal rendimiento histórico: el prompt, la validación del servidor, los límites de estado y el executor del móvil rechazan nuevas compras weekly mientras se siguen gestionando las posiciones weekly heredadas.
 * Dashboard Polymarket: corregido el conteo `Daily / Weekly` para clasificar posiciones cerradas usando también `slug/eventSlug` de la API de Polymarket y detectar títulos semanales tipo `April 13-19` o `May 4-10`.
 
 ### 05/05/2026
