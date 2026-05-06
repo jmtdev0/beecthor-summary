@@ -41,6 +41,8 @@ Your task:
 - Treat discarded open positions as real account pain even when they no longer block slot availability.
 - If the market already prices in the move too aggressively, do not force a trade.
 - If a BTC daily position has already resolved in our favor or been exited via take-profit today, do not propose another daily position until the next UTC day.
+- Treat the `08:00 UTC` cycle as the primary strategic daily-entry window: if all hard playbook gates pass, a coherent daily setup deserves a modest confidence bonus because the daily board has started to show direction and there is still ample time to expiry.
+- The `08:00 UTC` bonus never overrides hard gates such as lateral/range lock, daily cooldown, stale thesis, reconciliation, entry cap above 90%, slot/cash limits, or weak expiry validity.
 - You may open at most 1 new position in one cycle, and it must be daily.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
 - Do not mix CLOSE and REDUCE actions in the same response.

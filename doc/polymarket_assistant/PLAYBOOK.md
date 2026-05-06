@@ -9,6 +9,7 @@
 5. Prefer conservative BTC price-hit markets first. Floor markets are out of scope and must not be used.
 6. **No-trade is the default in lateral BTC regimes.** If BTC is chopping inside a tight range, the system should protect capital, manage existing positions, and wait for a confirmed break/rejection instead of forcing fresh expiry-based bets.
 7. The LLM may trade against Beecthor only when the last ~48h of BTC price action clearly shows that Beecthor's thesis is wrong or badly timed. This must be explicit in the decision rationale.
+8. The `08:00 UTC` cycle is the primary strategic window for daily entries: it is late enough for the Polymarket daily board, which usually starts forming around `04:00 UTC`, to show early direction, but early enough to leave ample time for a daily `REACH/DIP` target to resolve.
 
 ## Cycle steps (in order)
 
@@ -69,6 +70,8 @@ Two allowed BTC price-hit slots, tracked separately:
 - It is acceptable to skip the nearest strike when it is already effectively resolved, already `> 90%`, or offers clearly worse risk/reward than the next clean expression.
 - Do not chase the next strike just because the previous target already hit. If the setup requires one more extension after a strong move has already happened, demand clear Binance continuation evidence and a modest remaining distance.
 - Reject daily setups that need a fresh second leg after much of the move has already happened, or that are more likely to resolve one day late than before the current expiry.
+- **08:00 UTC strategic window:** when the current cycle is around `08:00 UTC`, give a modest confidence bonus to a daily setup that already passes all hard gates and has coherent Beecthor/Binance alignment. Do not demand late-session-level confirmation in this window: the point is to capture the first clean daily expression while there is still enough time for the market to reach the target.
+- The `08:00 UTC` confidence bonus must never override hard protections: reconciliation gate, post-win daily cooldown, lateral/range lock, stale thesis rules, weekly ban, `> 90%` entry cap, cash/slot limits, or weak expiry validity.
 - With less than `4h` left in a daily market, only open a new daily position when the strike is close, the probability is strong but below the hard cap, and Binance momentum points directly at that strike.
 - **Post-win daily cooldown:** if a BTC daily `REACH` or `DIP` position has already resolved in our favor or been exited via take-profit during the current UTC day, do not open any additional BTC daily position until the next UTC day. This rule is about having already captured the daily prediction, not about the absolute size of the UTC-day BTC move.
 - After a large intraday move, do not chase the next strike unless the market consolidates/retests or Binance shows fresh continuation in the opposite or reset structure. Avoid paying for "one more push" after most of the move is already spent.
@@ -137,7 +140,7 @@ Two allowed BTC price-hit slots, tracked separately:
 ## Daily cadence
 
 - Review window 1:
-  - around `08:00`
+  - around `08:00 UTC` — primary strategic daily-entry window
 - Review window 2:
   - after the new Beecthor video is available
 - Automated cycles run every `2 hours` on the server
