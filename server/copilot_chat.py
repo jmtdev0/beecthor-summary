@@ -1487,7 +1487,7 @@ def fetch_live_positions() -> list[dict[str, Any]]:
     try:
         response = requests.get(f'{DATA_API_HOST}/positions', params={'user': user, 'sizeThreshold': 0.01, 'limit': 100}, timeout=20)
         response.raise_for_status()
-        return response.json()
+        return [p for p in response.json() if is_active_live_position_payload(p)]
     except Exception:
         return []
 
@@ -1496,6 +1496,35 @@ def fetch_live_positions() -> list[dict[str, Any]]:
 IGNORED_POSITION_SLUGS: set[str] = {
     'will-december-be-the-best-month-for-bitcoin-in-2026',
 }
+
+
+def parse_position_end_datetime(value: Any) -> datetime | None:
+    if value in (None, ''):
+        return None
+    try:
+        end_dt = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if end_dt.tzinfo is None:
+            end_dt = end_dt.replace(tzinfo=UTC)
+        return end_dt.astimezone(UTC)
+    except Exception:
+        return None
+
+
+def is_active_live_position_payload(position: dict[str, Any]) -> bool:
+    if position.get('slug') in IGNORED_POSITION_SLUGS:
+        return False
+    if safe_float(position.get('size')) <= 0:
+        return False
+    if bool(position.get('redeemable')) or bool(position.get('closed')):
+        return False
+    end_dt = parse_position_end_datetime(position.get('endDate'))
+    if end_dt and end_dt < datetime.now(UTC):
+        return False
+    return True
+
+
+def realized_pnl_for_closed_position(position: dict[str, Any]) -> float:
+    return safe_float(position.get('realizedPnl'), 0.0)
 
 
 def fetch_closed_positions_live() -> list[dict[str, Any]]:
@@ -1595,8 +1624,8 @@ def build_polymarket_snapshot() -> dict[str, Any]:
     starting_bankroll = safe_float(account_state.get('starting_bankroll'))
     total_pnl = round(portfolio_value - starting_bankroll, 6) if starting_bankroll else round(sum(safe_float(item.get('realizedPnl')) for item in closed_positions), 6) + unrealized_pnl
     realized_pnl = round(total_pnl - unrealized_pnl, 6)
-    wins = sum(1 for item in closed_positions if float(item.get('realizedPnl', 0.0)) > 0)
-    losses = sum(1 for item in closed_positions if float(item.get('realizedPnl', 0.0)) < 0)
+    wins = sum(1 for item in closed_positions if realized_pnl_for_closed_position(item) > 0)
+    losses = sum(1 for item in closed_positions if realized_pnl_for_closed_position(item) <= 0)
     total_closed = len(closed_positions)
     total_operations = total_closed + len(open_positions)
     win_rate = round((wins / total_closed) * 100, 1) if total_closed else 0.0
@@ -1626,8 +1655,8 @@ def build_polymarket_snapshot() -> dict[str, Any]:
             }
             for p in open_positions
         ]},
-        {'label': 'Aciertos / fallos', 'value': f'{wins} / {losses}', 'caption': 'closed positions', 'css_class': ''},
-        {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions', 'css_class': 'good' if win_rate >= 50 else 'bad'},
+        {'label': 'Aciertos / fallos', 'value': f'{wins} / {losses}', 'caption': 'closed PnL > 0 / <= 0', 'css_class': ''},
+        {'label': 'Win rate', 'value': f'{win_rate:.1f}%', 'caption': 'closed positions with profit', 'css_class': 'good' if win_rate >= 50 else 'bad'},
         {'label': 'Daily / Weekly', 'value': f'{daily_count} / {weekly_count}', 'caption': 'classified positions', 'css_class': ''},
     ]
     positions = open_positions

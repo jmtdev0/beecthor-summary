@@ -1,5 +1,8 @@
 # Changelog
 
+### 07/05/2026
+* Dashboard Polymarket: las posiciones `redeemable`, cerradas o ya expiradas que aún devuelve la Data API se filtran fuera de "abiertas"; el conteo de aciertos/fallos queda definido por PnL realizado positivo frente a PnL no positivo, incluyendo take-profit como acierto.
+
 ### 06/05/2026
 * Playbook Polymarket: añadido el ciclo de `08:00 UTC` como ventana estratégica principal para aperturas daily, con un plus moderado de confianza cuando el setup ya pasa todas las reglas duras y queda tiempo suficiente hasta expiry.
 * Mensajes personales de Telegram del ciclo Polymarket: recuperada la explicación breve de la decisión al añadir un `Motivo:` compacto derivado del `rationale` tanto para `run_cycle.py` como para `run_cycle_codex.py`.
