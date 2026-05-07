@@ -1620,6 +1620,13 @@ def load_bitcoinaldia_entries() -> list[dict[str, Any]]:
     return sorted(items, key=lambda item: item.get('published_at') or '', reverse=True)
 
 
+def find_bitcoinaldia_entry(video_id: str) -> dict[str, Any] | None:
+    for item in load_bitcoinaldia_entries():
+        if item.get('video_id') == video_id:
+            return item
+    return None
+
+
 def classify_market_bucket(text: str) -> str:
     normalized = (text or '').lower()
     month = r'(january|february|march|april|may|june|july|august|september|october|november|december)'
@@ -2154,50 +2161,25 @@ def bitcoinaldia_index():
       <div class="top">
         <div>
           <h1 class="brand-title">Bitcoin al día</h1>
-          <div class="section-subtitle">Cameo privado con resúmenes de las tres transcripciones más recientes.</div>
+          <div class="section-subtitle">Galería de resúmenes, organizada como una videoteca paralela.</div>
         </div>
       </div>
       {% if items %}
+      <div class="video-grid">
       {% for item in items %}
-      <article style="margin-bottom:34px">
-        <div class="detail-layout">
-          <section class="detail-media">
+      <article class="video-card">
+        <a class="video-link" href="{{ url_for('bitcoinaldia_detail', video_id=item.video_id) }}">
+          <div class="thumb-wrap">
             <img src="{{ item.thumbnail_url }}" alt="{{ item.title }}">
-          </section>
-          <aside class="detail-panel">
-            <div class="muted">{{ item.published_at }} · {{ item.duration }}</div>
-            <h2 class="detail-title">{{ item.title }}</h2>
-            <div class="muted">Transcripción: {% if item.transcript_available %}{{ item.transcript_chars }} caracteres{% else %}no disponible{% endif %}</div>
-            <div class="detail-actions">
-              <a class="button-link" href="{{ item.youtube_url }}" target="_blank" rel="noopener noreferrer">Ver en YouTube</a>
-            </div>
-          </aside>
-        </div>
-        <section class="surface-card detail-summary-card">
-          <div class="detail-summary-label">Resumen</div>
-          <div class="detail-summary-text">{{ item.summary }}</div>
-        </section>
-        {% if item.sections %}
-        <section class="detail-section-grid">
-          {% for section in item.sections %}
-          <article class="detail-section-card">
-            <div class="detail-section-head">
-              <div class="detail-section-icon">•</div>
-              <div class="detail-section-title">{{ section.title }}</div>
-            </div>
-            <div class="detail-section-body">{{ section.body }}</div>
-          </article>
-          {% endfor %}
-        </section>
-        {% endif %}
-        {% if item.transcript_excerpt %}
-        <section class="surface-card detail-fallback">
-          <div class="detail-summary-label">Inicio de transcripción</div>
-          <div class="summary-body">{{ item.transcript_excerpt }}</div>
-        </section>
-        {% endif %}
+          </div>
+          <div class="video-meta">
+            <div class="video-title">{{ item.title }}</div>
+            <div class="video-date">{{ item.published_at }} · {{ item.duration }}</div>
+          </div>
+        </a>
       </article>
       {% endfor %}
+      </div>
       {% else %}
       <section class="empty-state">
         No hay resúmenes de Bitcoin al día preparados todavía.
@@ -2205,6 +2187,63 @@ def bitcoinaldia_index():
       {% endif %}
     </div>""" + PAGE_END
     return render_template_string(html, items=items)
+
+
+@app.route('/bitcoinaldia/<video_id>')
+def bitcoinaldia_detail(video_id: str):
+    item = find_bitcoinaldia_entry(video_id)
+    if not item:
+        return ('Not found', 404)
+    html = page_start(f"{item.get('title', 'Bitcoin al día')} | Resúmenes") + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Bitcoin al día</h1>
+          <div class="section-subtitle">Resumen detallado del vídeo seleccionado.</div>
+        </div>
+        <div class="nav public-tabs">
+          <a class="active" href="{{ url_for('bitcoinaldia_index') }}">Vídeos</a>
+        </div>
+      </div>
+      <div class="detail-layout">
+        <section class="detail-media">
+          <img src="{{ item.thumbnail_url }}" alt="{{ item.title }}">
+        </section>
+        <aside class="detail-panel">
+          <div class="muted">{{ item.published_at }} · {{ item.duration }}</div>
+          <h1 class="detail-title">{{ item.title }}</h1>
+          <div class="muted">Transcripción: {% if item.transcript_available %}{{ item.transcript_chars }} caracteres{% else %}no disponible{% endif %}</div>
+          <div class="detail-actions">
+            <a class="button-link" href="{{ item.youtube_url }}" target="_blank" rel="noopener noreferrer">Ver en YouTube</a>
+            <a class="button-link secondary" href="{{ url_for('bitcoinaldia_index') }}">Volver a vídeos</a>
+          </div>
+        </aside>
+      </div>
+      <section class="surface-card detail-summary-card">
+        <div class="detail-summary-label">Resumen</div>
+        <div class="detail-summary-text">{{ item.summary }}</div>
+      </section>
+      {% if item.sections %}
+      <section class="detail-section-grid">
+        {% for section in item.sections %}
+        <article class="detail-section-card">
+          <div class="detail-section-head">
+            <div class="detail-section-icon">•</div>
+            <div class="detail-section-title">{{ section.title }}</div>
+          </div>
+          <div class="detail-section-body">{{ section.body }}</div>
+        </article>
+        {% endfor %}
+      </section>
+      {% endif %}
+      {% if item.transcript_excerpt %}
+      <section class="surface-card detail-fallback">
+        <div class="detail-summary-label">Inicio de transcripción</div>
+        <div class="summary-body">{{ item.transcript_excerpt }}</div>
+      </section>
+      {% endif %}
+    </div>""" + PAGE_END
+    return render_template_string(html, item=item)
 
 
 TRIGGER_LABELS = {

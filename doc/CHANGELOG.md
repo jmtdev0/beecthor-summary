@@ -1,6 +1,7 @@
 # Changelog
 
 ### 07/05/2026
+* `Bitcoin al día` cambia a una galería pública de tarjetas clicables, equivalente a la videoteca Beecthor, con detalle por vídeo en ruta propia.
 * Añadida sección pública `Bitcoin al día` en Flask para mostrar resúmenes y extractos de las tres transcripciones recientes, con datos versionados bajo `data/`.
 * Añadida primera simulación pública de resumen Beecthor sobre el lateral de BTC alrededor de 80k, marcada como experimento sin validez operativa.
 * Añadida pestaña pública de simulaciones de resúmenes Beecthor en Flask, con fuente separada en `doc/beecthor_simulations.json` y aviso explícito de experimento sin validez operativa.
