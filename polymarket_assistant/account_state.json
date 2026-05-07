@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 8.296683,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.377,
+  "open_exposure": 0.4754,
   "max_open_positions": 3,
   "max_daily_positions": 2,
   "max_weekly_positions": 0,
@@ -26,13 +26,13 @@
       "shares": 1.6393,
       "avg_price": 0.6099,
       "entry_cost_usd": 0.9999,
-      "current_price": 0.23,
-      "current_value_usd": 0.377,
-      "cash_pnl_usd": -0.6229,
+      "current_price": 0.29,
+      "current_value_usd": 0.4754,
+      "cash_pnl_usd": -0.5245,
       "status": "open",
       "slot_status": "active"
     }
   ],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-05-07T06:01:08Z"
+  "last_synced_at": "2026-05-07T08:02:08Z"
 }
