@@ -1,6 +1,7 @@
 # Changelog
 
 ### 07/05/2026
+* Añadida sección pública `Bitcoin al día` en Flask para mostrar resúmenes y extractos de las tres transcripciones recientes, con datos versionados bajo `data/`.
 * Añadida primera simulación pública de resumen Beecthor sobre el lateral de BTC alrededor de 80k, marcada como experimento sin validez operativa.
 * Añadida pestaña pública de simulaciones de resúmenes Beecthor en Flask, con fuente separada en `doc/beecthor_simulations.json` y aviso explícito de experimento sin validez operativa.
 * Dashboard Polymarket: las posiciones `redeemable`, cerradas o ya expiradas que aún devuelve la Data API se filtran fuera de "abiertas"; el conteo de aciertos/fallos queda definido por PnL realizado positivo frente a PnL no positivo, incluyendo take-profit como acierto.

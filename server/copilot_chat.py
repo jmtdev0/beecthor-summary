@@ -39,6 +39,7 @@ ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
 SIMULATED_SUMMARIES_PATH = REPO_ROOT / 'doc' / 'beecthor_simulations.json'
+BITCOINALDIA_SUMMARIES_PATH = REPO_ROOT / 'data' / 'bitcoinaldia_summaries.json'
 TIP_PATH = REPO_ROOT / 'TIP.md'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
@@ -1594,6 +1595,31 @@ def find_simulation(simulation_id: str) -> dict[str, Any] | None:
     return None
 
 
+def load_bitcoinaldia_entries() -> list[dict[str, Any]]:
+    raw_entries = load_json(BITCOINALDIA_SUMMARIES_PATH, [])
+    if not isinstance(raw_entries, list):
+        return []
+    items = []
+    for entry in raw_entries:
+        if not isinstance(entry, dict):
+            continue
+        transcript_path = REPO_ROOT / str(entry.get('transcript_path') or '')
+        transcript = load_text(transcript_path)
+        transcript_excerpt = re.sub(r'\s+', ' ', transcript).strip()
+        if len(transcript_excerpt) > 420:
+            transcript_excerpt = transcript_excerpt[:420].rstrip(' ,.;:') + '...'
+        items.append(
+            {
+                **entry,
+                'sections': entry.get('sections') if isinstance(entry.get('sections'), list) else [],
+                'transcript_available': transcript_path.exists(),
+                'transcript_chars': len(transcript),
+                'transcript_excerpt': transcript_excerpt,
+            }
+        )
+    return sorted(items, key=lambda item: item.get('published_at') or '', reverse=True)
+
+
 def classify_market_bucket(text: str) -> str:
     normalized = (text or '').lower()
     month = r'(january|february|march|april|may|june|july|august|september|october|november|december)'
@@ -2118,6 +2144,67 @@ def public_simulation_detail(simulation_id: str):
       {% endif %}
     </div>""" + PAGE_END
     return render_template_string(html, item=item)
+
+
+@app.route('/bitcoinaldia')
+def bitcoinaldia_index():
+    items = load_bitcoinaldia_entries()
+    html = page_start('Bitcoin al día | Resúmenes') + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Bitcoin al día</h1>
+          <div class="section-subtitle">Cameo privado con resúmenes de las tres transcripciones más recientes.</div>
+        </div>
+      </div>
+      {% if items %}
+      {% for item in items %}
+      <article style="margin-bottom:34px">
+        <div class="detail-layout">
+          <section class="detail-media">
+            <img src="{{ item.thumbnail_url }}" alt="{{ item.title }}">
+          </section>
+          <aside class="detail-panel">
+            <div class="muted">{{ item.published_at }} · {{ item.duration }}</div>
+            <h2 class="detail-title">{{ item.title }}</h2>
+            <div class="muted">Transcripción: {% if item.transcript_available %}{{ item.transcript_chars }} caracteres{% else %}no disponible{% endif %}</div>
+            <div class="detail-actions">
+              <a class="button-link" href="{{ item.youtube_url }}" target="_blank" rel="noopener noreferrer">Ver en YouTube</a>
+            </div>
+          </aside>
+        </div>
+        <section class="surface-card detail-summary-card">
+          <div class="detail-summary-label">Resumen</div>
+          <div class="detail-summary-text">{{ item.summary }}</div>
+        </section>
+        {% if item.sections %}
+        <section class="detail-section-grid">
+          {% for section in item.sections %}
+          <article class="detail-section-card">
+            <div class="detail-section-head">
+              <div class="detail-section-icon">•</div>
+              <div class="detail-section-title">{{ section.title }}</div>
+            </div>
+            <div class="detail-section-body">{{ section.body }}</div>
+          </article>
+          {% endfor %}
+        </section>
+        {% endif %}
+        {% if item.transcript_excerpt %}
+        <section class="surface-card detail-fallback">
+          <div class="detail-summary-label">Inicio de transcripción</div>
+          <div class="summary-body">{{ item.transcript_excerpt }}</div>
+        </section>
+        {% endif %}
+      </article>
+      {% endfor %}
+      {% else %}
+      <section class="empty-state">
+        No hay resúmenes de Bitcoin al día preparados todavía.
+      </section>
+      {% endif %}
+    </div>""" + PAGE_END
+    return render_template_string(html, items=items)
 
 
 TRIGGER_LABELS = {
