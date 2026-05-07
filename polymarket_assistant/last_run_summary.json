@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-06T20:01:11Z",
-  "run_id": "2026-05-06T20-00-13Z",
+  "timestamp": "2026-05-07T06:01:08Z",
+  "run_id": "2026-05-07T06-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-06T20-00-13Z",
+    "run_id": "2026-05-07T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.9,
-    "summary": "NO_ACTION: hold existing BTC positions; no take-profit trigger and no valid fresh daily edge.",
-    "rationale": "Reconciliation is ok and daily cooldown is inactive. The daily 83k reach is discarded at 0.04 and must not be force-sold or averaged down; the active weekly 84k reach is only 0.36, below reduce/close thresholds. Latest Beecthor remains macro bearish below 86k but allows 84k-85.4k before invalidation, while Binance is neutral at 81477.48, flat over 24h and still inside the 80731-82850 range after a failed upside extension. Bearish 81k DIP lacks clean breakdown/support-loss confirmation under the range and bearish-bias correction gates, and bullish REACH would chase the failed 83k daily with weak same-day timing.",
+    "confidence": 0.92,
+    "summary": "NO_ACTION: hold the existing weekly 84k reach; reconciliation is broken and no take-profit trigger is present.",
+    "rationale": "Reconciliation reports a missing closure record for will-bitcoin-reach-83k-on-may-6:Yes, so new entries are hard-gated. The existing weekly 84k Yes is active at 0.23, below reduce/close take-profit thresholds and above the discarded threshold; stop-loss exits are disabled. Latest Beecthor context remains bearish below 86k, but BTC at 81069 is still inside the recent range after a pullback from 82850, so no management action is justified.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81472.47,
-  "positions_before": 2,
-  "positions_after": 2
+  "binance_spot_price": 81060.48,
+  "positions_before": 1,
+  "positions_after": 1
 }
