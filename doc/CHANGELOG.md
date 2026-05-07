@@ -1,6 +1,7 @@
 # Changelog
 
 ### 07/05/2026
+* Añadida pestaña pública de simulaciones de resúmenes Beecthor en Flask, con fuente separada en `doc/beecthor_simulations.json` y aviso explícito de experimento sin validez operativa.
 * Dashboard Polymarket: las posiciones `redeemable`, cerradas o ya expiradas que aún devuelve la Data API se filtran fuera de "abiertas"; el conteo de aciertos/fallos queda definido por PnL realizado positivo frente a PnL no positivo, incluyendo take-profit como acierto.
 
 ### 06/05/2026

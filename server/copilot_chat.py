@@ -38,6 +38,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
+SIMULATED_SUMMARIES_PATH = REPO_ROOT / 'doc' / 'beecthor_simulations.json'
 TIP_PATH = REPO_ROOT / 'TIP.md'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
@@ -146,6 +147,65 @@ img{display:block;max-width:100%}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
 }
 .video-date{font-size:.95rem;color:#9ca3af}
+.public-tabs a{
+  padding:8px 12px;border-radius:999px;background:transparent;color:#d7dee7
+}
+.public-tabs a.active{background:#fff;color:#111;font-weight:800}
+.public-tabs a:hover{background:#272727;color:#fff}
+.public-tabs a.active:hover{background:#fff;color:#111}
+.simulation-warning{
+  display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;
+  margin-bottom:22px;padding:18px 20px;border-radius:20px;
+  background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.05));
+  border:1px solid rgba(245,158,11,.32);box-shadow:var(--shadow)
+}
+.simulation-warning-icon{font-size:1.7rem;line-height:1}
+.simulation-warning-title{font-size:.9rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#facc15;margin-bottom:4px}
+.simulation-warning-copy{color:#f8fafc;line-height:1.55}
+.simulation-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.simulation-card{
+  min-height:100%;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease
+}
+.simulation-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(245,158,11,.4);
+  background:linear-gradient(180deg, rgba(245,158,11,.08), rgba(255,255,255,.02))
+}
+.simulation-link{display:flex;flex-direction:column;gap:14px;padding:20px;min-height:100%}
+.simulation-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.simulation-badge{
+  display:inline-flex;align-items:center;gap:6px;width:max-content;
+  padding:6px 10px;border-radius:999px;background:rgba(245,158,11,.16);
+  color:#fcd34d;font-size:.78rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase
+}
+.simulation-title{font-size:1.2rem;line-height:1.25;font-weight:800;margin:0;color:#fff}
+.simulation-date{font-size:.88rem;color:#9ca3af;white-space:nowrap}
+.simulation-excerpt{color:#dce6f5;line-height:1.55}
+.simulation-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.simulation-pill{
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.035);
+  color:#cbd5e1;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:.85rem;
+}
+.empty-state{
+  padding:28px;border:1px dashed rgba(255,255,255,.16);border-radius:22px;
+  background:rgba(255,255,255,.025);color:#cbd5e1;line-height:1.65
+}
+.simulation-detail-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
+.simulation-hero{padding:26px}
+.simulation-hero h1{font-size:2.15rem;line-height:1.05;letter-spacing:-.04em;margin:12px 0}
+.simulation-prose{font-size:1.06rem;line-height:1.75;color:#eef4ff;white-space:pre-wrap}
+.simulation-side{display:flex;flex-direction:column;gap:12px}
+.simulation-fact{padding:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.simulation-fact-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:#8fb9ff;font-weight:800;margin-bottom:6px}
 .detail-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr);gap:28px;align-items:start}
 .detail-media,.detail-panel,.surface-card,.metric-card,.stream-card,.chat-card{
   background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
@@ -397,7 +457,7 @@ img{display:block;max-width:100%}
 .timeline-svg-wrap{margin-top:18px;border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:16px;background:linear-gradient(180deg, rgba(9,15,23,.95), rgba(7,11,17,.92));overflow:auto}
 .timeline-svg{width:100%;height:auto;display:block;min-width:880px}
 @media (max-width: 1180px){
-  .private-strip,.panel-grid,.detail-layout,.detail-section-grid{grid-template-columns:1fr}
+  .private-strip,.panel-grid,.detail-layout,.detail-section-grid,.simulation-detail-layout{grid-template-columns:1fr}
 }
 @media (max-width: 960px){
   .private-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -408,7 +468,9 @@ img{display:block;max-width:100%}
   .shell{padding:0 16px 28px}
   .top,.private-header{flex-direction:column;align-items:flex-start}
   .nav,.nav-group{width:100%;justify-content:flex-start;gap:12px}
+  .simulation-warning{grid-template-columns:1fr}
   .nav a{padding:4px 0}
+  .nav.public-tabs a{padding:8px 10px}
   .brand-title,.private-title{font-size:1.9rem}
   .video-grid{grid-template-columns:1fr}
   .private-grid{grid-template-columns:1fr}
@@ -1444,6 +1506,94 @@ def find_summary(video_id: str) -> dict[str, Any] | None:
     return None
 
 
+def safe_public_identifier(value: Any, fallback: str) -> str:
+    candidate = re.sub(r'[^a-zA-Z0-9_-]+', '-', str(value or '').strip()).strip('-')
+    return candidate or fallback
+
+
+def derive_simulation_title(entry: dict[str, Any], simulation_id: str) -> str:
+    title = strip_html_tags(str(entry.get('title') or entry.get('name') or ''))
+    if title:
+        return title
+    summary = strip_html_tags(str(entry.get('summary') or entry.get('thesis') or entry.get('full_analysis') or ''))
+    if summary:
+        summary = re.sub(r'\s+', ' ', summary)
+        return summary[:86].rstrip(' ,.;:') + ('…' if len(summary) > 86 else '')
+    return f'Simulación Beecthor {simulation_id}'
+
+
+def normalize_simulation_sections(entry: dict[str, Any]) -> list[dict[str, str]]:
+    raw_sections = entry.get('sections') or []
+    if isinstance(raw_sections, dict):
+        raw_sections = [{'title': key, 'body': value} for key, value in raw_sections.items()]
+    if not isinstance(raw_sections, list):
+        return []
+    sections = []
+    for index, section in enumerate(raw_sections, start=1):
+        if isinstance(section, dict):
+            title = str(section.get('title') or section.get('name') or f'Bloque {index}').strip()
+            body = str(section.get('body') or section.get('content') or section.get('text') or '').strip()
+        else:
+            title = f'Bloque {index}'
+            body = str(section).strip()
+        if body:
+            sections.append({'title': title, 'body': body})
+    return sections
+
+
+def load_simulation_entries() -> list[dict[str, Any]]:
+    raw_payload = load_json(SIMULATED_SUMMARIES_PATH, [])
+    if isinstance(raw_payload, dict):
+        raw_entries = raw_payload.get('simulations') or raw_payload.get('items') or []
+    else:
+        raw_entries = raw_payload
+    if not isinstance(raw_entries, list):
+        return []
+
+    items = []
+    used_ids: set[str] = set()
+    for index, entry in enumerate(raw_entries, start=1):
+        if not isinstance(entry, dict):
+            continue
+        base_id = safe_public_identifier(
+            entry.get('id') or entry.get('simulation_id') or entry.get('slug'),
+            f'simulation-{index}',
+        )
+        simulation_id = base_id
+        suffix = 2
+        while simulation_id in used_ids:
+            simulation_id = f'{base_id}-{suffix}'
+            suffix += 1
+        used_ids.add(simulation_id)
+
+        summary = str(entry.get('summary') or entry.get('thesis') or '').strip()
+        full_analysis = str(entry.get('full_analysis') or entry.get('analysis') or entry.get('message') or '').strip()
+        excerpt_source = strip_html_tags(summary or full_analysis)
+        excerpt_source = re.sub(r'\s+', ' ', excerpt_source).strip()
+        excerpt = excerpt_source[:170].rstrip(' ,.;:') + ('…' if len(excerpt_source) > 170 else '')
+        items.append({
+            **entry,
+            'simulation_id': simulation_id,
+            'public_title': derive_simulation_title(entry, simulation_id),
+            'timestamp_local': timestamp_to_local(str(entry.get('timestamp') or entry.get('created_at') or '')),
+            'sort_timestamp': str(entry.get('timestamp') or entry.get('created_at') or ''),
+            'scenario': str(entry.get('scenario') or entry.get('market_context') or 'Hipótesis experimental').strip(),
+            'btc_price': str(entry.get('btc_price') or entry.get('price') or '').strip(),
+            'summary': summary,
+            'full_analysis': full_analysis,
+            'excerpt': excerpt or 'Simulación pendiente de contenido detallado.',
+            'sections': normalize_simulation_sections(entry),
+        })
+    return sorted(items, key=lambda item: item.get('sort_timestamp') or '', reverse=True)
+
+
+def find_simulation(simulation_id: str) -> dict[str, Any] | None:
+    for item in load_simulation_entries():
+        if item.get('simulation_id') == simulation_id:
+            return item
+    return None
+
+
 def classify_market_bucket(text: str) -> str:
     normalized = (text or '').lower()
     month = r'(january|february|march|april|may|june|july|august|september|october|november|december)'
@@ -1736,7 +1886,10 @@ def public_index():
           <h1 class="brand-title">Beecthor</h1>
           <div class="section-subtitle">Biblioteca pública de resúmenes, organizada como una videoteca del canal.</div>
         </div>
-        <div class="nav"></div>
+        <div class="nav public-tabs">
+          <a class="active" href="/">Vídeos reales</a>
+          <a href="{{ url_for('public_simulations') }}">Simulaciones</a>
+        </div>
       </div>
       <div class="video-grid">
         {% for item in items %}
@@ -1776,7 +1929,10 @@ def public_video_detail(video_id: str):
           <h1 class="brand-title">Beecthor</h1>
           <div class="section-subtitle">Resumen detallado del vídeo seleccionado.</div>
         </div>
-        <div class="nav"><a href="/">Vídeos</a></div>
+        <div class="nav public-tabs">
+          <a class="active" href="/">Vídeos reales</a>
+          <a href="{{ url_for('public_simulations') }}">Simulaciones</a>
+        </div>
       </div>
       <div class="detail-layout">
         <section class="detail-media">
@@ -1822,6 +1978,146 @@ def public_video_detail(video_id: str):
         analysis_sections=analysis_sections,
         fallback_analysis_html=fallback_analysis_html,
     )
+
+
+@app.route('/simulaciones')
+def public_simulations():
+    items = load_simulation_entries()
+    html = page_start('Simulaciones | Beecthor') + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Simulaciones Beecthor</h1>
+          <div class="section-subtitle">Laboratorio público para hipótesis y resúmenes simulados.</div>
+        </div>
+        <div class="nav public-tabs">
+          <a href="/">Vídeos reales</a>
+          <a class="active" href="{{ url_for('public_simulations') }}">Simulaciones</a>
+        </div>
+      </div>
+      <section class="simulation-warning">
+        <div class="simulation-warning-icon">⚠️</div>
+        <div>
+          <div class="simulation-warning-title">Experimento sin validez operativa</div>
+          <div class="simulation-warning-copy">
+            Estos resúmenes son simulaciones. No proceden necesariamente de un vídeo real de Beecthor, no alimentan el operador de Polymarket,
+            no se guardan en <code>analyses_log.json</code> y no deben usarse para tomar decisiones reales.
+          </div>
+        </div>
+      </section>
+      {% if items %}
+      <div class="simulation-grid">
+        {% for item in items %}
+        <article class="simulation-card">
+          <a class="simulation-link" href="{{ url_for('public_simulation_detail', simulation_id=item.simulation_id) }}">
+            <div class="simulation-card-top">
+              <span class="simulation-badge">Simulación</span>
+              {% if item.timestamp_local %}<span class="simulation-date">{{ item.timestamp_local }}</span>{% endif %}
+            </div>
+            <h2 class="simulation-title">{{ item.public_title }}</h2>
+            <div class="simulation-excerpt">{{ item.excerpt }}</div>
+            <div class="simulation-meta-row">
+              <span class="simulation-pill">{{ item.scenario }}</span>
+              {% if item.btc_price %}<span class="simulation-pill">BTC {{ item.btc_price }}</span>{% endif %}
+              {% if item.sections %}<span class="simulation-pill">{{ item.sections|length }} bloques</span>{% endif %}
+            </div>
+          </a>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <section class="empty-state">
+        <strong>No hay simulaciones guardadas todavía.</strong><br>
+        Cuando queramos publicar una hipótesis experimental, se añadirá como entrada aislada en
+        <code>doc/beecthor_simulations.json</code>. Esa fuente queda separada de los resúmenes reales y del ciclo operativo.
+      </section>
+      {% endif %}
+    </div>""" + PAGE_END
+    return render_template_string(html, items=items)
+
+
+@app.route('/simulaciones/<simulation_id>')
+def public_simulation_detail(simulation_id: str):
+    item = find_simulation(simulation_id)
+    if not item:
+        return ('Not found', 404)
+    html = page_start(f"{item.get('public_title', 'Simulación')} | Beecthor") + """
+    <div class="shell public-shell">
+      <div class="top">
+        <div>
+          <h1 class="brand-title">Simulación Beecthor</h1>
+          <div class="section-subtitle">Hipótesis experimental separada del flujo real.</div>
+        </div>
+        <div class="nav public-tabs">
+          <a href="/">Vídeos reales</a>
+          <a class="active" href="{{ url_for('public_simulations') }}">Simulaciones</a>
+        </div>
+      </div>
+      <section class="simulation-warning">
+        <div class="simulation-warning-icon">⚠️</div>
+        <div>
+          <div class="simulation-warning-title">No usar para operar</div>
+          <div class="simulation-warning-copy">
+            Esta página es una simulación de resumen. No representa una señal válida, no actualiza estado operativo y no debe condicionar compras, ventas, take-profit ni stop-loss.
+          </div>
+        </div>
+      </section>
+      <div class="simulation-detail-layout">
+        <section class="surface-card simulation-hero">
+          <span class="simulation-badge">Simulación</span>
+          <h1>{{ item.public_title }}</h1>
+          {% if item.summary %}
+          <div class="simulation-prose">{{ item.summary }}</div>
+          {% else %}
+          <div class="muted">Esta simulación no tiene resumen breve guardado.</div>
+          {% endif %}
+          <div class="detail-actions">
+            <a class="button-link secondary" href="{{ url_for('public_simulations') }}">Volver a simulaciones</a>
+          </div>
+        </section>
+        <aside class="simulation-side">
+          <div class="simulation-fact">
+            <div class="simulation-fact-label">Estado</div>
+            <div>Experimento · no operativo</div>
+          </div>
+          {% if item.timestamp_local %}
+          <div class="simulation-fact">
+            <div class="simulation-fact-label">Fecha</div>
+            <div>{{ item.timestamp_local }}</div>
+          </div>
+          {% endif %}
+          <div class="simulation-fact">
+            <div class="simulation-fact-label">Contexto</div>
+            <div>{{ item.scenario }}</div>
+          </div>
+          {% if item.btc_price %}
+          <div class="simulation-fact">
+            <div class="simulation-fact-label">BTC observado</div>
+            <div>{{ item.btc_price }}</div>
+          </div>
+          {% endif %}
+        </aside>
+      </div>
+      {% if item.sections %}
+      <section class="detail-section-grid">
+        {% for section in item.sections %}
+        <article class="detail-section-card">
+          <div class="detail-section-head">
+            <div class="detail-section-icon">🧪</div>
+            <div class="detail-section-title">{{ section.title }}</div>
+          </div>
+          <div class="detail-section-body" style="white-space:pre-wrap">{{ section.body }}</div>
+        </article>
+        {% endfor %}
+      </section>
+      {% elif item.full_analysis %}
+      <section class="surface-card detail-fallback">
+        <div class="detail-summary-label">Análisis simulado completo</div>
+        <div class="simulation-prose">{{ item.full_analysis }}</div>
+      </section>
+      {% endif %}
+    </div>""" + PAGE_END
+    return render_template_string(html, item=item)
 
 
 TRIGGER_LABELS = {
@@ -2623,6 +2919,19 @@ def api_public_summaries():
 @app.route('/api/public/summaries/<video_id>')
 def api_public_summary_detail(video_id: str):
     item = find_summary(video_id)
+    if not item:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(item)
+
+
+@app.route('/api/public/simulations')
+def api_public_simulations():
+    return jsonify(load_simulation_entries())
+
+
+@app.route('/api/public/simulations/<simulation_id>')
+def api_public_simulation_detail(simulation_id: str):
+    item = find_simulation(simulation_id)
     if not item:
         return jsonify({'error': 'Not found'}), 404
     return jsonify(item)
