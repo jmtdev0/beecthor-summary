@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-07T10:01:26Z",
-  "run_id": "2026-05-07T10-00-16Z",
+  "timestamp": "2026-05-07T12:01:48Z",
+  "run_id": "2026-05-07T12-00-01Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-07T10-00-16Z",
+    "run_id": "2026-05-07T12-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.88,
-    "summary": "NO_ACTION: hold the discarded weekly 84k reach; no take-profit trigger and no confirmed new daily edge.",
-    "rationale": "Reconciliation is ok and daily cooldown is inactive. The existing weekly 84k Yes is at 0.17, now discarded for slot purposes but below reduce/close take-profit thresholds, and stop-loss exits are disabled. Latest Beecthor context remains bearish below 86k and prefers shorts near resistance, but BTC at 80895 is still just above the 80725 local range low after a failed 82850 high. Bearish daily DIP entries need a clean support loss, failed reclaim, or stronger downside expansion under the range and bearish-bias correction gates; the nearest 80k DIP is only 0.355 and still requires a fresh break. Bullish REACH lacks continuation. No valid edge.",
+    "confidence": 0.86,
+    "summary": "NO_ACTION: hold the discarded weekly 84k reach; no take-profit trigger and no confirmed daily edge.",
+    "rationale": "Reconciliation is ok and daily cooldown is inactive. The existing weekly 84k Yes is discarded at 0.14 but stop-loss exits are disabled and it is far below reduce/close profit thresholds. Latest Beecthor context remains bearish below 86k after rejection from the 81k-83k resistance zone, but he also warns not to chase price down. Binance is bearish short term at 80860 after a failed 24h high, yet price is still only marginally below the recent range low and has not shown a clean failed reclaim or downside expansion. The nearest 80k daily DIP is only 0.42 and still needs another leg; bullish REACH markets lack continuation. No valid edge.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 80957.68,
+  "binance_spot_price": 80875.62,
   "positions_before": 1,
   "positions_after": 1
 }
