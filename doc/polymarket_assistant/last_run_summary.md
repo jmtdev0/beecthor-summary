@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-07T18:01:06Z
+- Timestamp: 2026-05-07T20:01:17Z
 - Dry run: False
-- BTC price: 80149.62
+- BTC price: 80160.54
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: daily cooldown is active after today's successful 80k DIP take-profit; hold the discarded weekly 84k reach.
+- Decision summary: NO_ACTION: hold the discarded weekly 84k reach and do not open new daily exposure while the post-win daily cooldown is active.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
