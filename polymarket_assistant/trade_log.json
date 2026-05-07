@@ -15379,5 +15379,23 @@
     "status": "open",
     "source": "phone_executor",
     "notes": "Recorded after a successful phone-side BUY execution."
+  },
+  {
+    "timestamp": "2026-05-07T14:37:19Z",
+    "type": "trade_reduced",
+    "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
+    "market_title": "Will Bitcoin dip to $80,000 on May 7?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "partial_take_profit",
+    "shares": 0.7143,
+    "fraction": 0.5,
+    "avg_entry_price": 0.7,
+    "exit_price": 0.84,
+    "entry_cost_usd": 0.5,
+    "exit_proceeds_usd": 0.6,
+    "pnl_usd": 0.1,
+    "pnl_pct": 20.0,
+    "source": "monitor_executor"
   }
 ]
