@@ -15415,5 +15415,57 @@
     "pnl_usd": 0.2148,
     "pnl_pct": 42.7,
     "source": "monitor_executor"
+  },
+  {
+    "timestamp": "2026-05-07T18:01:06Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-07T18-00-02Z",
+    "dry_run": false,
+    "decision": {
+      "run_id": "2026-05-07T18-00-02Z",
+      "action": "NO_ACTION",
+      "confidence": 0.94,
+      "summary": "NO_ACTION: daily cooldown is active after today's successful 80k DIP take-profit; hold the discarded weekly 84k reach.",
+      "rationale": "Reconciliation is ok, but the daily success cooldown is active until 2026-05-08T00:00:00Z after the May 7 80k DIP was closed via take-profit. That hard-gates any new BTC daily reach/dip entry. Latest Beecthor context remains bearish below 86k and Binance confirms short-term weakness at about 80087, down 1.67% on the UTC day, but no new daily exposure is allowed. The only open position is the legacy weekly 84k reach Yes at 0.075, discarded for slot purposes and far below take-profit or partial-reduction thresholds; stop-loss exits are disabled.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      }
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 80149.62,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]

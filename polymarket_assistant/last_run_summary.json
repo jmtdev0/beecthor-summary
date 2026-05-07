@@ -1,33 +1,15 @@
 {
-  "timestamp": "2026-05-07T14:01:51Z",
-  "run_id": "2026-05-07T14-00-16Z",
+  "timestamp": "2026-05-07T18:01:06Z",
+  "run_id": "2026-05-07T18-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-07T14-00-16Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.76,
-    "summary": "OPEN_POSITION: daily thesis 80k DIP Yes with $1 stake.",
-    "rationale": "Reconciliation is ok, daily cooldown is inactive, and the only open position is a discarded weekly 84k reach at 0.135 with no take-profit trigger. Latest Beecthor context remains bearish below 86k after the 81k-83k resistance reaction, and Binance now confirms downside pressure: BTC is 80515, down 1.14% on the UTC day, near the 24h low, below the prior local range low, and short-term bias is bearish. The nearest clean bearish daily strike is 80k DIP at 0.62, within the allowed probability band with about 10h left, so expiry validity is acceptable.",
+    "run_id": "2026-05-07T18-00-02Z",
+    "action": "NO_ACTION",
+    "confidence": 0.94,
+    "summary": "NO_ACTION: daily cooldown is active after today's successful 80k DIP take-profit; hold the discarded weekly 84k reach.",
+    "rationale": "Reconciliation is ok, but the daily success cooldown is active until 2026-05-08T00:00:00Z after the May 7 80k DIP was closed via take-profit. That hard-gates any new BTC daily reach/dip entry. Latest Beecthor context remains bearish below 86k and Binance confirms short-term weakness at about 80087, down 1.67% on the UTC day, but no new daily exposure is allowed. The only open position is the legacy weekly 84k reach Yes at 0.075, discarded for slot purposes and far below take-profit or partial-reduction thresholds; stop-loss exits are disabled.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "acceptable",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-7",
-        "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 80000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.9
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -36,21 +18,14 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-7",
-      "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 80000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.9,
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "acceptable",
-      "floor_level": 0
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0
     },
     "new_floor_position": {
       "should_open": false,
@@ -67,28 +42,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-07T14:01:51.108021Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "69989031898726925045021364304075667649309570938461947163712893068389659054248",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.9,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "acceptable",
-        "market": "Will Bitcoin dip to $80,000 on May 7?",
-        "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 80510.0,
+  "binance_spot_price": 80149.62,
   "positions_before": 1,
   "positions_after": 1
 }

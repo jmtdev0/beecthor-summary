@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-07T14:01:51Z
+- Timestamp: 2026-05-07T18:01:06Z
 - Dry run: False
-- BTC price: 80510.0
-- Decision action: OPEN_POSITION
-- Decision summary: OPEN_POSITION: daily thesis 80k DIP Yes with $1 stake.
+- BTC price: 80149.62
+- Decision action: NO_ACTION
+- Decision summary: NO_ACTION: daily cooldown is active after today's successful 80k DIP take-profit; hold the discarded weekly 84k reach.
 - Validation: True (ok)
 - Open positions before: 1
 - Open positions after: 1
@@ -13,25 +13,7 @@
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-05-07T14:01:51.108021Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "69989031898726925045021364304075667649309570938461947163712893068389659054248",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.9,
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "acceptable",
-      "market": "Will Bitcoin dip to $80,000 on May 7?",
-      "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-      "outcome": "Yes"
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```
