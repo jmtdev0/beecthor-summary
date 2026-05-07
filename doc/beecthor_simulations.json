@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "id": "btc-lateral-80k-2026-05-07",
+    "timestamp": "2026-05-07T18:09:51Z",
+    "title": "BTC lateral en 80k: rechazo en 82.8k y soporte en 79.5k",
+    "scenario": "Simulación Beecthor · lectura de las últimas 72h",
+    "btc_price": "$80,149",
+    "source": "Binance BTCUSDT spot",
+    "summary": "EXPERIMENTO SIN VALIDEZ OPERATIVA. Lectura tipo Beecthor: BTC no está mostrando una expansión limpia, sino un lateral amplio entre 79.5k y 82.85k. El rechazo desde 82.85k deja pinta de distribución/corrección, pero mientras 79.5k aguante no hay ruptura bajista clara. El escenario principal sería barrido o test de la zona 79.5k-79.0k antes de decidir dirección; el alternativo alcista exige recuperar 81.7k-82.0k con intención y volver a atacar 82.85k.",
+    "sections": [
+      {
+        "title": "Conteo actual",
+        "body": "La estructura de las últimas 72h encaja mejor con una corrección lateral que con una tendencia limpia. Hay un impulso hasta 82.85k que no consigue continuidad y después el precio vuelve al eje 80k. En lenguaje Beecthoriano: el mercado ha hecho el amago, ha dejado liquidez arriba y ahora está decidiendo si falta una pata bajista para completar la corrección."
+      },
+      {
+        "title": "Escenario principal",
+        "body": "Mientras BTC no recupere con fuerza 81.7k-82.0k, el escenario principal es que siga pesado y busque de nuevo la zona 79.5k-79.0k. Esa zona es importante porque ahí está el soporte reciente y un barrido podría limpiar stops antes de un rebote. No sería un short de persecución, sino esperar reacción en soporte o confirmación de pérdida real."
+      },
+      {
+        "title": "Escenario alternativo",
+        "body": "Si el precio recupera 81.7k-82.0k y se sostiene encima, la lectura bajista inmediata pierde fuerza. En ese caso, el mercado podría volver a atacar 82.85k y extender hacia 83.5k-84.0k. Para que este escenario sea creíble, no basta una mecha: haría falta aceptación arriba y velas con cuerpo."
+      },
+      {
+        "title": "Fibonacci y niveles",
+        "body": "El eje psicológico de 80k actúa como punto medio del rango. Por arriba, 81.7k-82.0k es la primera resistencia útil y 82.85k la invalidación clara del rechazo previo. Por abajo, 79.5k es el soporte que el mercado ya defendió; si se pierde con claridad, 78.8k-78.5k sería la siguiente zona razonable de reacción."
+      },
+      {
+        "title": "Liquidaciones y trampa",
+        "body": "La subida a 82.85k pudo dejar compradores tardíos atrapados. Si el precio vuelve a 79.5k, también puede buscar liquidez de largos antes de rebotar. El peligro del rango es que ambas direcciones parecen buenas tarde: arriba te hacen comprar resistencia y abajo te hacen vender soporte."
+      },
+      {
+        "title": "Conclusión experimental",
+        "body": "La lectura prudente no invita a forzar operación. En un mercado así, la ventaja está en esperar ruptura confirmada o barrido claro. Si esto fuera un resumen real, el mensaje operativo sería: manos quietas en mitad del rango; atención a 79.5k por reacción y a 82.0k por recuperación."
+      }
+    ]
+  }
+]
