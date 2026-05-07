@@ -15397,5 +15397,23 @@
     "pnl_usd": 0.1,
     "pnl_pct": 20.0,
     "source": "monitor_executor"
+  },
+  {
+    "timestamp": "2026-05-07T15:24:19Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
+    "market_title": "Will Bitcoin dip to $80,000 on May 7?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 0.7185,
+    "fraction": 1.0,
+    "avg_entry_price": 0.7,
+    "exit_price": 0.999,
+    "entry_cost_usd": 0.503,
+    "exit_proceeds_usd": 0.7178,
+    "pnl_usd": 0.2148,
+    "pnl_pct": 42.7,
+    "source": "monitor_executor"
   }
 ]
