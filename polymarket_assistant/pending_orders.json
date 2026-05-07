@@ -1,50 +1,19 @@
 [
   {
-    "order_id": "2026-05-06T10:04:19.359100Z",
-    "status": "executed",
+    "order_id": "2026-05-07T14:01:51.108021Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "103149700553245011215872765760275305407021000867344882145240154485674191037822",
+    "token_id": "69989031898726925045021364304075667649309570938461947163712893068389659054248",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.5,
+    "max_entry_probability": 0.9,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
     "momentum_confirmed": true,
     "expiry_validity": "acceptable",
-    "market": "Will Bitcoin reach $83,000 on May 6?",
-    "market_slug": "will-bitcoin-reach-83k-on-may-6",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-05-06T10:05:04Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-83k-on-may-6",
-      "price": 0.46,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xbe83396a0dd99636f367c236db269c8388b954141a98805783f4a282ad20420e\",\"takingAmount\":\"2.173912\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x64b0e5162f894686f673f4de0d8ff1f8f4f0755734d9b12ea185a37c5a275d76\"],\"success\":true}"
-    }
-  },
-  {
-    "order_id": "2026-05-06T12:02:24.462155Z",
-    "status": "executed",
-    "type": "OPEN_POSITION",
-    "token_id": "1460891191647133112215339536059885176203204530819746770817790272561842810790",
-    "side": "BUY",
-    "stake_usd": 1.0,
-    "max_entry_probability": 0.65,
-    "market_type": "weekly",
-    "slot_name": "weekly_thesis",
-    "beecthor_aligned": true,
-    "momentum_confirmed": true,
-    "expiry_validity": "acceptable",
-    "market": "Will Bitcoin reach $84,000 May 4-10?",
-    "market_slug": "will-bitcoin-reach-84k-may-4-10",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-05-06T12:05:05Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-84k-may-4-10",
-      "price": 0.61,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x360ac1a7016f1858a6d8f86a0591b9cfbbb0a66c07944fcca2e35036c8a91850\",\"takingAmount\":\"1.639343\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0xb183a1dd4675c624106c2f84e436c8a9498228879a38d5cb15f00e15c9b80645\"],\"success\":true}"
-    }
+    "market": "Will Bitcoin dip to $80,000 on May 7?",
+    "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
+    "outcome": "Yes"
   }
 ]
