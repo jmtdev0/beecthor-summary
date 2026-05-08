@@ -1,9 +1,9 @@
 [
   {
-    "order_id": "2026-05-07T14:01:51.108021Z",
-    "status": "executed",
+    "order_id": "2026-05-08T06:02:45.944402Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "69989031898726925045021364304075667649309570938461947163712893068389659054248",
+    "token_id": "23356914593797458772273670100569766820568200093743551200328976946874622289306",
     "side": "BUY",
     "stake_usd": 1.0,
     "max_entry_probability": 0.9,
@@ -12,15 +12,8 @@
     "beecthor_aligned": true,
     "momentum_confirmed": true,
     "expiry_validity": "acceptable",
-    "market": "Will Bitcoin dip to $80,000 on May 7?",
-    "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-05-07T14:05:04Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-80k-on-may-7",
-      "price": 0.7,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x49021deb9a67ba51fee10ce4470c8837766a711de82077fc4b9285b720d077bd\",\"takingAmount\":\"1.42857\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x88c278e1dd8f9922caf7449de23aab42b3f803a5e77f1da1afa854a4e311ccc9\"],\"success\":true}"
-    }
+    "market": "Will Bitcoin dip to $79,000 on May 8?",
+    "market_slug": "will-bitcoin-dip-to-79k-on-may-8",
+    "outcome": "Yes"
   }
 ]
