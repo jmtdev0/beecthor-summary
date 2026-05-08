@@ -1,5 +1,8 @@
 # Changelog
 
+### 08/05/2026
+* Añadida segunda simulación pública de resumen Beecthor: BTC defendiendo 79k pero aún atrapado bajo 80.5k, marcada como experimento sin validez operativa.
+
 ### 07/05/2026
 * `Bitcoin al día` cambia a una galería pública de tarjetas clicables, equivalente a la videoteca Beecthor, con detalle por vídeo en ruta propia.
 * Añadida sección pública `Bitcoin al día` en Flask para mostrar resúmenes y extractos de las tres transcripciones recientes, con datos versionados bajo `data/`.

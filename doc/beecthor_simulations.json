@@ -1,5 +1,40 @@
 [
   {
+    "id": "btc-soporte-79k-rango-2026-05-08",
+    "timestamp": "2026-05-08T14:19:36Z",
+    "title": "BTC defiende 79k pero sigue atrapado bajo 80.5k",
+    "scenario": "Simulación Beecthor · seguimiento del rango tras el rechazo en 82.85k",
+    "btc_price": "$80,276",
+    "source": "Binance BTCUSDT spot",
+    "summary": "EXPERIMENTO SIN VALIDEZ OPERATIVA. Lectura tipo Beecthor: BTC sigue en una estructura de rango tras el rechazo en 82.85k. La zona 79.2k-79.5k ha vuelto a actuar como soporte, pero el rebote todavía no demuestra fuerza suficiente porque el precio sigue chocando con 80.5k y necesitaría recuperar 81.7k-82.0k para cambiar el sesgo. El escenario principal es consolidación con posible nuevo test de 79.5k; el alternativo alcista aparece solo si acepta por encima de 80.5k y convierte esa zona en soporte.",
+    "sections": [
+      {
+        "title": "Conteo actual",
+        "body": "Después del máximo en 82.85k, el precio no ha construido continuación alcista limpia. Ha corregido hacia 79.18k-79.5k, ha defendido esa zona y ha vuelto al eje de 80k. En clave Beecthor, esto sigue pareciendo una onda correctiva/lateral: el mercado ha barrido arriba, ha probado abajo y todavía no ha decidido si acumula para romper o distribuye antes de otra pata bajista."
+      },
+      {
+        "title": "Escenario principal",
+        "body": "El escenario más prudente es rango y paciencia. Mientras BTC no recupere 80.5k con claridad, la subida actual puede ser solo rebote técnico desde soporte. Si vuelve a perder 79.8k, sería normal ver otro intento de barrer 79.5k e incluso 79.2k. Esa zona sigue siendo el punto clave: si aguanta, puede haber reacción; si cede con cuerpo, el rango se debilita."
+      },
+      {
+        "title": "Escenario alternativo",
+        "body": "El escenario alcista exige que 80.5k deje de ser techo intradía y pase a actuar como soporte. Por encima de ahí, la siguiente confirmación está en 81.7k-82.0k. Si el precio recupera esa franja con aceptación, el rechazo de 82.85k pierde peso y el mercado podría intentar de nuevo 83k-84k."
+      },
+      {
+        "title": "Fibonacci y niveles",
+        "body": "El rango útil queda muy marcado: 79.18k-79.5k como soporte/barrido inferior, 80.5k como resistencia inmediata, 81.7k-82.0k como zona de confirmación alcista y 82.85k como máximo que invalida definitivamente la lectura de rechazo. Por abajo, si 79.18k se pierde sin reacción, las siguientes zonas razonables serían 78.8k y 78.5k."
+      },
+      {
+        "title": "Liquidaciones y trampa",
+        "body": "El mercado está jugando el clásico partido de rango: arriba atrae compras tardías y abajo activa miedo. La caída a 79.18k pudo limpiar parte de largos, pero el rebote a 80k todavía puede ser una trampa si no hay aceptación. La señal importante no es tocar un nivel, sino sostenerlo."
+      },
+      {
+        "title": "Conclusión experimental",
+        "body": "La conclusión simulada sería no perseguir ni largos ni cortos en mitad del rango. Si esto fuera un resumen operativo real, la idea sería esperar: reacción clara en 79.5k para posible rebote, o recuperación de 80.5k-81.7k para validar fuerza. En 80k pelado, el precio sigue demasiado neutral para una apuesta limpia."
+      }
+    ]
+  },
+  {
     "id": "btc-lateral-80k-2026-05-07",
     "timestamp": "2026-05-07T18:09:51Z",
     "title": "BTC lateral en 80k: rechazo en 82.8k y soporte en 79.5k",
