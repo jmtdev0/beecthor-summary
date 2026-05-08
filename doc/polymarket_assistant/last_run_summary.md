@@ -1,10 +1,10 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-08T18:01:11Z
+- Timestamp: 2026-05-08T20:01:41Z
 - Dry run: False
-- BTC price: 80155.38
+- BTC price: 80155.72
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: hold the two discarded positions; no take-profit trigger and no clean daily setup.
+- Decision summary: NO_ACTION: hold the two discarded positions; no take-profit trigger and no valid late-session daily entry.
 - Validation: True (ok)
 - Open positions before: 2
 - Open positions after: 2
