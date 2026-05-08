@@ -15614,5 +15614,23 @@
     "binance_spot_price": 79499.99,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-08T06:02:45Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-dip-to-79k-on-may-8",
+    "market_title": "Will Bitcoin dip to $79,000 on May 8?",
+    "position_side": "Yes",
+    "token_id": "23356914593797458772273670100569766820568200093743551200328976946874622289306",
+    "entry_cost_usd": 1.0,
+    "market_type": "daily",
+    "slot_name": "daily_thesis",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "acceptable",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
