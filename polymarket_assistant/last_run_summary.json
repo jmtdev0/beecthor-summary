@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-09T06:01:03Z",
-  "run_id": "2026-05-09T06-00-16Z",
+  "timestamp": "2026-05-09T08:01:27Z",
+  "run_id": "2026-05-09T08-00-00Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-09T06-00-16Z",
+    "run_id": "2026-05-09T08-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "NO_ACTION: reconciliation is broken, the only live position is a discarded weekly 84k reach, and BTC remains neutral/ranging.",
-    "rationale": "New entries are blocked by the hard reconciliation gate due to the missing closure record for will-bitcoin-dip-to-79k-on-may-8:Yes. The remaining weekly 84k reach is discarded at 0.0395 with no take-profit trigger and stop-loss exits disabled. Latest Beecthor context remains bearish below 86k, but Binance is neutral around 80379 with only +0.23% UTC-day movement inside a 24h range, and weekend TIP guidance favors avoiding overtrading lateral conditions.",
+    "confidence": 0.94,
+    "summary": "NO_ACTION: hold the discarded weekly 84k reach; no take-profit trigger and no clean daily entry in the weekend range.",
+    "rationale": "Reconciliation is ok and daily cooldown is inactive, but the only open position is the legacy weekly 84k reach at about 0.0345, which is discarded and far below reduce/close thresholds with stop-loss exits disabled. Latest Beecthor context from 2026-05-08 remains bearish below 86k, but Binance is neutral/ranging around 80229 with 12h -0.05%, UTC day +0.04%, and a 79549-80667 24h range. Weekend TIP guidance favors avoiding overtrading lateral conditions; there is no clean breakdown for a bearish DIP and no clear breakout/continuation for an 81k REACH momentum trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 80381.79,
+  "binance_spot_price": 80251.1,
   "positions_before": 1,
   "positions_after": 1
 }
