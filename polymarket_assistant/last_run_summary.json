@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-09T12:01:37Z",
-  "run_id": "2026-05-09T12-00-00Z",
+  "timestamp": "2026-05-09T14:01:03Z",
+  "run_id": "2026-05-09T14-00-02Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-09T12-00-00Z",
+    "run_id": "2026-05-09T14-00-02Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
+    "confidence": 0.95,
     "summary": "NO_ACTION: hold the discarded weekly 84k reach; no take-profit trigger and no clean daily entry in the weekend range.",
-    "rationale": "Reconciliation is ok and daily cooldown is inactive, but the only open position is the legacy 84k weekly reach at 0.024, discarded and far below any reduce/close threshold with stop-loss exits disabled. Latest Beecthor context from 2026-05-08 remains bearish below 86k, but Binance is neutral around 80345 with only +0.19% UTC-day movement, 12h +0.02%, and price still inside the 79549-80667 24h range. Weekend TIP guidance favors avoiding overtrading lateral conditions. The nearest bearish daily 80k DIP is not supported by a clean breakdown/rejection, while upside reach markets lack clear breakout momentum, so expiry validity is not strong enough for a new position.",
+    "rationale": "Reconciliation is ok and daily cooldown is inactive, but the only open position is the legacy weekly 84k reach at 0.0225, discarded and far below reduce/close thresholds with stop-loss exits disabled. Latest Beecthor context from 2026-05-08 remains bearish below 86k with downside levels, but Binance is neutral around 80398, only +0.26% on the UTC day and still inside the 79625-80667 24h range. Weekend TIP guidance favors avoiding overtrading lateral conditions; the 80k DIP lacks a clean breakdown/rejection, while 81k REACH or REACH/NO alternatives lack clear breakout or same-day momentum confirmation.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 80342.01,
+  "binance_spot_price": 80385.69,
   "positions_before": 1,
   "positions_after": 1
 }
