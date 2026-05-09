@@ -1,8 +1,8 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-09T08:01:27Z
+- Timestamp: 2026-05-09T10:01:39Z
 - Dry run: False
-- BTC price: 80251.1
+- BTC price: 80242.54
 - Decision action: NO_ACTION
 - Decision summary: NO_ACTION: hold the discarded weekly 84k reach; no take-profit trigger and no clean daily entry in the weekend range.
 - Validation: True (ok)
