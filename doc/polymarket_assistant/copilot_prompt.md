@@ -26,6 +26,7 @@ Strategy mode:
 - Read `context.strategy_state.active_strategy` before deciding.
 - If active strategy is `beecthor`, use the normal Beecthor/playbook flow below.
 - If active strategy is `far_dip_radar`, ignore Beecthor thesis for new entries and use only `context.strategy_context.far_dip_radar.candidates`.
+- If active strategy is `far_dip_radar`, use `doc/polymarket_assistant/PLAYBOOK_FBR.md` and `context.strategy_playbooks.far_dip_radar` as non-binding qualitative review guidance. It can make you reject a candidate, but it cannot authorize a candidate that the script did not generate.
 - In `far_dip_radar`, the only valid actions are `NO_ACTION` or `OPEN_POSITION`.
 - In `far_dip_radar`, an `OPEN_POSITION` must copy exactly one generated candidate's `new_position`, including `strategy`, `strategy_candidate_id`, and `strategy_reason`.
 - In `far_dip_radar`, explicitly analyze the last week of BTC movement and `context.binance.trend.weekly_volatility` before confirming an entry.

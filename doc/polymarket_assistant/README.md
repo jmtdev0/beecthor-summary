@@ -18,7 +18,8 @@ The assistant should:
 
 ## Files
 
-- `doc/polymarket_assistant/PLAYBOOK.md` — operating rules and hard constraints
+- `doc/polymarket_assistant/PLAYBOOK.md` — operating rules and hard constraints for the Beecthor strategy
+- `doc/polymarket_assistant/PLAYBOOK_FBR.md` — soft qualitative review checklist for Far Barrier Radar style strategies
 - `account_state.json` — bankroll, cash, open positions, realized PnL
 - `trade_log.json` — daily decisions, entries, exits, and no-bet days
 - `context_helper.py` — optional helper script for quick context snapshots

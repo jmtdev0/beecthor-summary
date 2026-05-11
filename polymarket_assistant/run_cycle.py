@@ -24,6 +24,7 @@ ASSISTANT_DOCS_DIR = DOCS_DIR / 'polymarket_assistant'
 TRANSCRIPTS_DIR = REPO_ROOT / 'transcripts'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
 PLAYBOOK_PATH = ASSISTANT_DOCS_DIR / 'PLAYBOOK.md'
+PLAYBOOK_FBR_PATH = ASSISTANT_DOCS_DIR / 'PLAYBOOK_FBR.md'
 PROMPT_TEMPLATE_PATH = ASSISTANT_DOCS_DIR / 'copilot_prompt.md'
 ACCOUNT_STATE_PATH = ASSISTANT_DIR / 'account_state.json'
 TRADE_LOG_PATH = ASSISTANT_DIR / 'trade_log.json'
@@ -1273,6 +1274,9 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'strategy_state': strategy_state,
         'strategy_context': strategy_context,
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
+        'strategy_playbooks': {
+            FAR_DIP_RADAR: PLAYBOOK_FBR_PATH.read_text(encoding='utf-8') if PLAYBOOK_FBR_PATH.exists() else '',
+        },
         'recent_transcripts': read_recent_transcripts(),
         'recent_summaries': recent_summaries,
         'account_state': account_state,
