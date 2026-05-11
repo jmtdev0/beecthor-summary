@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-10T20:01:31Z",
-  "run_id": "2026-05-10T20-00-02Z",
+  "timestamp": "2026-05-11T06:01:14Z",
+  "run_id": "2026-05-11T06-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-10T20-00-02Z",
+    "run_id": "2026-05-11T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "NO_ACTION: hold the discarded 84k reach; no take-profit trigger and no valid late-session daily entry.",
-    "rationale": "Reconciliation is ok and daily cooldown is inactive. The only open position is the May 4-10 84k reach at 0.0145, discarded and far below reduce/close thresholds, while stop-loss exits are disabled. Latest Beecthor remains bearish below 86k and marks 82.1k as resistance, but Binance is mildly bullish around 81438 without a confirmed 82k breakout or a bearish rejection. With about 4h to daily close and weekend TIP caution on laterality, bearish DIP entries lack required rejection evidence, the 82k reach Yes at 0.335 is low-probability late momentum, and the 82k reach No at 0.665 is not momentum-confirmed.",
+    "confidence": 0.97,
+    "summary": "NO_ACTION: reconciliation is broken, there are no open positions to manage, and new entries are blocked.",
+    "rationale": "The hard reconciliation gate is not satisfied because the context reports a missing closure record for will-bitcoin-reach-84k-may-4-10:Yes, so opening a new daily position is invalid regardless of market setup. Daily cooldown is inactive and there are no open positions for take-profit or reduction. Latest Beecthor remains bearish below 86k, but Binance is still broadly lateral over 24-72h with BTC around 80832 after rejecting the 82k area; that context does not override the reconciliation block.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81433.74,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 80825.98,
+  "positions_before": 0,
+  "positions_after": 0
 }
