@@ -29,7 +29,11 @@ PROMPT_TEMPLATE_PATH = ASSISTANT_DOCS_DIR / 'copilot_prompt.md'
 ACCOUNT_STATE_PATH = ASSISTANT_DIR / 'account_state.json'
 TRADE_LOG_PATH = ASSISTANT_DIR / 'trade_log.json'
 LAST_RUN_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.json'
-STRATEGY_STATE_PATH = ASSISTANT_DIR / 'strategy_state.json'
+VERSIONED_STRATEGY_STATE_PATH = ASSISTANT_DIR / 'strategy_state.json'
+STRATEGY_STATE_PATH = Path(
+    os.environ.get('POLYMARKET_STRATEGY_STATE_PATH')
+    or (REPO_ROOT / 'server_runtime_logs' / 'strategy_state.json')
+)
 WORKFLOW_SUMMARY_PATH = ASSISTANT_DOCS_DIR / 'last_run_summary.md'
 NOTIFIED_CLAIMS_PATH = ASSISTANT_DIR / 'notified_claims.json'
 PENDING_ORDERS_PATH = ASSISTANT_DIR / 'pending_orders.json'
@@ -164,7 +168,14 @@ def normalize_strategy_state(raw: Any) -> dict[str, Any]:
 
 
 def load_strategy_state() -> dict[str, Any]:
-    return normalize_strategy_state(load_json(STRATEGY_STATE_PATH, default_strategy_state()))
+    state = default_strategy_state()
+    for path in (VERSIONED_STRATEGY_STATE_PATH, STRATEGY_STATE_PATH):
+        raw = load_json(path, {})
+        if isinstance(raw, dict):
+            state.update(raw)
+    state = normalize_strategy_state(state)
+    state['path'] = str(STRATEGY_STATE_PATH)
+    return state
 
 
 def strategy_window_skip_reason(strategy_state: dict[str, Any], now: datetime | None = None) -> str:

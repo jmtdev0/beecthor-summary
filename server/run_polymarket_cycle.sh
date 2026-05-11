@@ -288,13 +288,21 @@ git pull --ff-only origin main 2>/dev/null || true
 
 ACTIVE_STRATEGY=$(python3 - <<'PY'
 import json
+import os
 from pathlib import Path
 
-path = Path('polymarket_assistant/strategy_state.json')
-try:
-    state = json.loads(path.read_text(encoding='utf-8'))
-except Exception:
-    state = {}
+paths = [
+    Path(os.environ.get('POLYMARKET_STRATEGY_STATE_PATH') or 'server_runtime_logs/strategy_state.json'),
+    Path('polymarket_assistant/strategy_state.json'),
+]
+state = {}
+for path in reversed(paths):
+    try:
+        raw = json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        raw = {}
+    if isinstance(raw, dict):
+        state.update(raw)
 print(state.get('active_strategy') or 'beecthor')
 PY
 )
@@ -403,8 +411,7 @@ git add \
   polymarket_assistant/trade_log.json \
   polymarket_assistant/last_run_summary.json \
   doc/polymarket_assistant/last_run_summary.md \
-  polymarket_assistant/pending_orders.json \
-  polymarket_assistant/strategy_state.json 2>/dev/null || true
+  polymarket_assistant/pending_orders.json 2>/dev/null || true
 if ! git diff --staged --quiet 2>/dev/null; then
   git config user.name "polymarket-operator[bot]"
   git config user.email "polymarket-operator[bot]@users.noreply.github.com"

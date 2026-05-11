@@ -44,7 +44,11 @@ TIP_PATH = REPO_ROOT / 'TIP.md'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
 PENDING_ORDERS_PATH = REPO_ROOT / 'polymarket_assistant' / 'pending_orders.json'
-STRATEGY_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'strategy_state.json'
+VERSIONED_STRATEGY_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'strategy_state.json'
+STRATEGY_STATE_PATH = Path(
+    os.environ.get('POLYMARKET_STRATEGY_STATE_PATH')
+    or (REPO_ROOT / 'server_runtime_logs' / 'strategy_state.json')
+)
 MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
 MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
 OPERATOR_TIMER_UNIT = 'polymarket-operator.timer'
@@ -554,11 +558,13 @@ def default_strategy_state() -> dict[str, Any]:
 
 def load_strategy_state() -> dict[str, Any]:
     state = default_strategy_state()
-    raw = load_json(STRATEGY_STATE_PATH, {})
-    if isinstance(raw, dict):
-        state.update(raw)
+    for path in (VERSIONED_STRATEGY_STATE_PATH, STRATEGY_STATE_PATH):
+        raw = load_json(path, {})
+        if isinstance(raw, dict):
+            state.update(raw)
     if state.get('active_strategy') not in STRATEGY_OPTIONS:
         state['active_strategy'] = 'beecthor'
+    state['path'] = str(STRATEGY_STATE_PATH)
     active_meta = STRATEGY_OPTIONS[state['active_strategy']]
     state['label'] = active_meta['label']
     state['mode'] = active_meta['mode']
@@ -2719,6 +2725,7 @@ def private_polymarket():
             <div class="muted">Selecciona qué motor usará el siguiente ciclo automático del servidor.</div>
             <div style="margin-top:10px;font-weight:800;color:#fff">{{ strategy_state.label }} · <span class="muted">{{ strategy_state.mode }}</span></div>
             <div class="muted" style="margin-top:4px">{{ strategy_state.description }}</div>
+            <div class="muted" style="margin-top:4px;font-size:.82rem">Estado local: {{ strategy_state.path }}</div>
             {% if strategy_state.updated_at %}
             <div class="muted" style="margin-top:4px;font-size:.82rem">Actualizada: {{ strategy_state.updated_at }} · {{ strategy_state.updated_by }}</div>
             {% endif %}
