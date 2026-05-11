@@ -47,6 +47,7 @@ PENDING_ORDERS_PATH = REPO_ROOT / 'polymarket_assistant' / 'pending_orders.json'
 STRATEGY_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'strategy_state.json'
 MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
 MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
+OPERATOR_TIMER_UNIT = 'polymarket-operator.timer'
 
 load_dotenv(ENV_FILE)
 
@@ -936,6 +937,97 @@ def build_manual_sell_feedback(status: str, market_slug: str, outcome: str, frac
             'bg': 'rgba(245,158,11,.12)',
             'border': 'rgba(245,158,11,.24)',
             'color': '#fbbf24',
+        },
+    }
+    return palette.get(status)
+
+
+def parse_systemctl_show(output: str) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for line in output.splitlines():
+        if '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        values[key] = value.strip()
+    return values
+
+
+def read_operator_timer_status() -> dict[str, Any]:
+    props = [
+        'ActiveState',
+        'SubState',
+        'UnitFileState',
+        'NextElapseUSecRealtime',
+        'LastTriggerUSec',
+        'Result',
+    ]
+    command = ['systemctl', 'show', OPERATOR_TIMER_UNIT, '--no-pager']
+    for prop in props:
+        command.extend(['-p', prop])
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+    except Exception as exc:
+        return {
+            'available': False,
+            'state_label': 'Error',
+            'tone': 'bad',
+            'active_state': 'unknown',
+            'sub_state': 'unknown',
+            'next_trigger': 'No disponible',
+            'last_trigger': 'No disponible',
+            'unit_file_state': 'unknown',
+            'button_action': 'resume',
+            'button_label': 'Reanudar ciclos',
+            'detail': f'No se pudo leer {OPERATOR_TIMER_UNIT}: {exc}',
+        }
+
+    values = parse_systemctl_show(result.stdout)
+    active_state = values.get('ActiveState', 'unknown')
+    sub_state = values.get('SubState', 'unknown')
+    unit_file_state = values.get('UnitFileState', 'unknown')
+    is_active = result.returncode == 0 and active_state == 'active'
+    next_trigger = values.get('NextElapseUSecRealtime') or ''
+    last_trigger = values.get('LastTriggerUSec') or ''
+    return {
+        'available': result.returncode == 0,
+        'state_label': 'Activo' if is_active else 'Pausado',
+        'tone': 'good' if is_active else 'warn',
+        'active_state': active_state,
+        'sub_state': sub_state,
+        'unit_file_state': unit_file_state,
+        'next_trigger': next_trigger if next_trigger and next_trigger != 'n/a' else 'Sin próximo ciclo',
+        'last_trigger': last_trigger if last_trigger and last_trigger != 'n/a' else 'Sin disparo reciente',
+        'button_action': 'pause' if is_active else 'resume',
+        'button_label': 'Pausar ciclos' if is_active else 'Reanudar ciclos',
+        'detail': (
+            'El monitor de take-profit sigue funcionando por separado.'
+            if is_active
+            else 'Los ciclos de decisión no se lanzarán automáticamente hasta reanudarlos.'
+        ),
+    }
+
+
+def build_operator_timer_feedback(status: str) -> dict[str, str] | None:
+    if not status:
+        return None
+    palette = {
+        'paused': {
+            'text': '✓ Ciclos de decisión pausados. El monitor de take-profit sigue activo.',
+            'bg': 'rgba(245,158,11,.12)',
+            'border': 'rgba(245,158,11,.24)',
+            'color': '#fbbf24',
+        },
+        'resumed': {
+            'text': '✓ Ciclos de decisión reanudados.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        },
+        'error': {
+            'text': '✗ No se pudo cambiar el estado de los ciclos. Revisa los logs de la app.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
         },
     }
     return palette.get(status)
@@ -2313,6 +2405,65 @@ PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@loc
 PHONE_REPO_CMD = "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true && python3 {script}'"
 
 
+@app.route('/private/operator-cycle-timer', methods=['POST'])
+@require_private
+def toggle_operator_cycle_timer():
+    action = request.form.get('action', '').strip()
+    if action == 'pause':
+        command = ['systemctl', 'disable', '--now', OPERATOR_TIMER_UNIT]
+        success_status = 'paused'
+    elif action == 'resume':
+        command = ['systemctl', 'enable', '--now', OPERATOR_TIMER_UNIT]
+        success_status = 'resumed'
+    else:
+        append_jsonl_event(
+            'app.polymarket',
+            'operator_timer_toggle_invalid',
+            'warning',
+            'Invalid operator timer toggle action',
+            {'action': action},
+        )
+        return redirect(url_for('private_polymarket', operator_timer='error'))
+
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+    except Exception as exc:
+        append_jsonl_event(
+            'app.polymarket',
+            'operator_timer_toggle_error',
+            'error',
+            f'Operator timer toggle failed: {exc}',
+            {'action': action, 'unit': OPERATOR_TIMER_UNIT},
+        )
+        return redirect(url_for('private_polymarket', operator_timer='error'))
+
+    payload = {
+        'action': action,
+        'unit': OPERATOR_TIMER_UNIT,
+        'exit_code': result.returncode,
+        'stdout': (result.stdout or '').strip()[:500],
+        'stderr': (result.stderr or '').strip()[:500],
+    }
+    if result.returncode == 0:
+        append_jsonl_event(
+            'app.polymarket',
+            f'operator_timer_{success_status}',
+            'info',
+            f'Operator decision timer {success_status}',
+            payload,
+        )
+        return redirect(url_for('private_polymarket', operator_timer=success_status))
+
+    append_jsonl_event(
+        'app.polymarket',
+        'operator_timer_toggle_failed',
+        'error',
+        'Systemd refused to change operator decision timer state',
+        payload,
+    )
+    return redirect(url_for('private_polymarket', operator_timer='error'))
+
+
 @app.route('/private/trigger/<process>', methods=['POST'])
 @require_private
 def trigger_process(process: str):
@@ -2397,6 +2548,8 @@ def private_root():
 def private_polymarket():
     snapshot = build_polymarket_snapshot()
     trace_lanes = build_private_trace_lanes()
+    operator_timer = read_operator_timer_status()
+    operator_timer_feedback = build_operator_timer_feedback(request.args.get('operator_timer', '').strip())
     tip_text = load_text(TIP_PATH, '')
     tip_saved = request.args.get('tip_saved', '').strip()
     tip_feedback = None
@@ -2524,6 +2677,41 @@ def private_polymarket():
         {{ strategy_feedback.text }}
       </div>
       {% endif %}
+      {% if operator_timer_feedback %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ operator_timer_feedback.bg }};border:1px solid {{ operator_timer_feedback.border }};color:{{ operator_timer_feedback.color }};font-weight:600;font-size:.93rem">
+        {{ operator_timer_feedback.text }}
+      </div>
+      {% endif %}
+      <section class="surface-card" style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <h2 class="section-title" style="margin:0 0 8px">Ciclos de decisión</h2>
+            <div class="muted">Switch específico para `{{ operator_timer_unit }}`. No toca el monitor de take-profit.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <span class="{{ operator_timer.tone }}" style="font-weight:800">{{ operator_timer.state_label }}</span>
+            <form method="POST" action="/private/operator-cycle-timer" onsubmit="return confirm('Confirmar: {{ operator_timer.button_label }}?')">
+              <input type="hidden" name="action" value="{{ operator_timer.button_action }}">
+              <button type="submit" style="width:auto;background:{% if operator_timer.button_action == 'pause' %}#7c2d12{% else %}#166534{% endif %};padding:10px 18px">{{ operator_timer.button_label }}</button>
+            </form>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
+            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Próximo ciclo</div>
+            <div style="font-weight:700;margin-top:6px">{{ operator_timer.next_trigger }}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
+            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Último disparo</div>
+            <div style="font-weight:700;margin-top:6px">{{ operator_timer.last_trigger }}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
+            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Systemd</div>
+            <div style="font-weight:700;margin-top:6px">{{ operator_timer.active_state }} / {{ operator_timer.sub_state }} · {{ operator_timer.unit_file_state }}</div>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:12px">{{ operator_timer.detail }}</div>
+      </section>
       <section class="surface-card" style="margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
           <div>
