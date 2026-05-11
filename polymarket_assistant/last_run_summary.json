@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-11T06:01:14Z",
-  "run_id": "2026-05-11T06-00-16Z",
+  "timestamp": "2026-05-11T08:02:39Z",
+  "run_id": "2026-05-11T08-00-16Z",
   "dry_run": false,
   "decision": {
-    "run_id": "2026-05-11T06-00-16Z",
+    "run_id": "2026-05-11T08-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "NO_ACTION: reconciliation is broken, there are no open positions to manage, and new entries are blocked.",
-    "rationale": "The hard reconciliation gate is not satisfied because the context reports a missing closure record for will-bitcoin-reach-84k-may-4-10:Yes, so opening a new daily position is invalid regardless of market setup. Daily cooldown is inactive and there are no open positions for take-profit or reduction. Latest Beecthor remains bearish below 86k, but Binance is still broadly lateral over 24-72h with BTC around 80832 after rejecting the 82k area; that context does not override the reconciliation block.",
+    "confidence": 0.94,
+    "summary": "NO_ACTION: no positions to manage and no new daily setup passes the hard gates.",
+    "rationale": "Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. Latest Beecthor remains bearish below 86k with 82.1k as resistance, but Binance is neutral/lateral over 24-72h around 80734. The closest thesis-aligned 80k DIP Yes is only 0.53 and blocked by the account-equity low-conviction gate, while bearish reach-No alternatives still lack Binance confirmation under the active bearish-bias correction. No valid daily edge remains.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -45,7 +45,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 80825.98,
+  "binance_spot_price": 80734.01,
   "positions_before": 0,
   "positions_after": 0
 }
