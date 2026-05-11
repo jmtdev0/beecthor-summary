@@ -286,6 +286,53 @@ PY
 cd "$REPO_ROOT"
 git pull --ff-only origin main 2>/dev/null || true
 
+ACTIVE_STRATEGY=$(python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path('polymarket_assistant/strategy_state.json')
+try:
+    state = json.loads(path.read_text(encoding='utf-8'))
+except Exception:
+    state = {}
+print(state.get('active_strategy') or 'beecthor')
+PY
+)
+CURRENT_UTC_HOUR=$(date -u +%H)
+if [ "$ACTIVE_STRATEGY" = "far_dip_radar" ] && [ "$CURRENT_UTC_HOUR" != "06" ] && [ "$CURRENT_UTC_HOUR" != "08" ]; then
+  SKIP_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  echo "[cycle] strategy_window_skipped active_strategy=${ACTIVE_STRATEGY} utc_hour=${CURRENT_UTC_HOUR}"
+  python3 - "$LOG_DIR/strategy.jsonl" "$REPO_ROOT/server_runtime_logs/strategy.jsonl" "$SKIP_TS" "$ACTIVE_STRATEGY" "$CURRENT_UTC_HOUR" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+paths = [Path(sys.argv[1]), Path(sys.argv[2])]
+event = {
+    'timestamp': sys.argv[3],
+    'source': 'server.operator',
+    'event_type': 'strategy_window_skipped',
+    'level': 'info',
+    'message': 'Skipped Polymarket cycle because the active strategy is outside its UTC window.',
+    'payload': {
+        'active_strategy': sys.argv[4],
+        'utc_hour': int(sys.argv[5]),
+        'allowed_utc_hours': [6, 8],
+    },
+}
+seen = set()
+for path in paths:
+    resolved = path.resolve()
+    if resolved in seen:
+        continue
+    seen.add(resolved)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('a', encoding='utf-8') as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + '\n')
+PY
+  exit 0
+fi
+
 RUN_ID=$(date -u +%Y-%m-%dT%H-%M-%SZ)
 CONTEXT_FILE="${RUNTIME_DIR}/context_${RUN_ID}.json"
 PROMPT_FILE="${RUNTIME_DIR}/prompt_${RUN_ID}.txt"
@@ -356,7 +403,8 @@ git add \
   polymarket_assistant/trade_log.json \
   polymarket_assistant/last_run_summary.json \
   doc/polymarket_assistant/last_run_summary.md \
-  polymarket_assistant/pending_orders.json 2>/dev/null || true
+  polymarket_assistant/pending_orders.json \
+  polymarket_assistant/strategy_state.json 2>/dev/null || true
 if ! git diff --staged --quiet 2>/dev/null; then
   git config user.name "polymarket-operator[bot]"
   git config user.email "polymarket-operator[bot]@users.noreply.github.com"

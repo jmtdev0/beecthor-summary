@@ -44,6 +44,7 @@ TIP_PATH = REPO_ROOT / 'TIP.md'
 ACCOUNT_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'account_state.json'
 TRADE_LOG_PATH = REPO_ROOT / 'polymarket_assistant' / 'trade_log.json'
 PENDING_ORDERS_PATH = REPO_ROOT / 'polymarket_assistant' / 'pending_orders.json'
+STRATEGY_STATE_PATH = REPO_ROOT / 'polymarket_assistant' / 'strategy_state.json'
 MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
 MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
 
@@ -65,6 +66,18 @@ CHAIN_ID = 137
 LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (REPO_ROOT / 'server_runtime_logs'))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRACE_LANE_LIMIT = 5
+STRATEGY_OPTIONS = {
+    'beecthor': {
+        'label': 'Beecthor',
+        'mode': 'LLM thesis',
+        'description': 'Decisión completa con Beecthor, Binance, playbook y Codex.',
+    },
+    'far_dip_radar': {
+        'label': 'Dip Lejano Radar',
+        'mode': 'Hybrid',
+        'description': 'Candidatos objetivos de NO a dip lejano; Codex confirma según volatilidad semanal.',
+    },
+}
 PRIVATE_CHAT_VSCODE_DISPLAY = os.environ.get('PRIVATE_CHAT_VSCODE_DISPLAY', ':10')
 PRIVATE_CHAT_VSCODE_XAUTHORITY = os.environ.get(
     'PRIVATE_CHAT_VSCODE_XAUTHORITY',
@@ -527,6 +540,46 @@ def load_json(path: Path, default: Any) -> Any:
 def save_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+
+
+def default_strategy_state() -> dict[str, Any]:
+    return {
+        'active_strategy': 'beecthor',
+        'updated_at': '',
+        'updated_by': 'default',
+        'notes': '',
+    }
+
+
+def load_strategy_state() -> dict[str, Any]:
+    state = default_strategy_state()
+    raw = load_json(STRATEGY_STATE_PATH, {})
+    if isinstance(raw, dict):
+        state.update(raw)
+    if state.get('active_strategy') not in STRATEGY_OPTIONS:
+        state['active_strategy'] = 'beecthor'
+    active_meta = STRATEGY_OPTIONS[state['active_strategy']]
+    state['label'] = active_meta['label']
+    state['mode'] = active_meta['mode']
+    state['description'] = active_meta['description']
+    state['available_strategies'] = [
+        {'id': key, **value, 'active': key == state['active_strategy']}
+        for key, value in STRATEGY_OPTIONS.items()
+    ]
+    return state
+
+
+def save_strategy_state(active_strategy: str, notes: str = '') -> dict[str, Any]:
+    if active_strategy not in STRATEGY_OPTIONS:
+        raise ValueError(f'Unsupported strategy: {active_strategy}')
+    state = {
+        'active_strategy': active_strategy,
+        'updated_at': datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'updated_by': 'flask_private_dashboard',
+        'notes': notes.strip(),
+    }
+    save_json(STRATEGY_STATE_PATH, state)
+    return load_strategy_state()
 
 
 def save_history(history: list[dict[str, Any]]) -> None:
@@ -1790,6 +1843,7 @@ def normalize_live_position(position: dict[str, Any]) -> dict[str, Any]:
 
 def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
+    strategy_state = load_strategy_state()
     trade_log = load_json(TRADE_LOG_PATH, [])
     pending_orders = load_json(PENDING_ORDERS_PATH, [])
     active_pending_orders = [item for item in pending_orders if item.get('status') == 'pending_phone_execution']
@@ -1851,12 +1905,13 @@ def build_polymarket_snapshot() -> dict[str, Any]:
         details_list = raw_details if isinstance(raw_details, list) else ([raw_details] if raw_details else [])
         if entry.get('type') == 'trade_opened':
             market_slug = entry.get('market_slug', '')
-            recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': 'trade_opened', 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(entry)), 'status': entry.get('status', '')})
+            recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': 'trade_opened', 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(entry)), 'status': entry.get('status', ''), 'strategy': entry.get('strategy', '')})
         elif details_list:
             for details in details_list:
                 market_slug = details.get('market_slug', '')
-                recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(details)), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped')})
+                recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(details)), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped'), 'strategy': details.get('strategy') or entry.get('active_strategy', '')})
     return {
+        'strategy_state': strategy_state,
         'metrics': metrics,
         'positions': positions,
         'recent_operations': recent_operations[:12],
@@ -2359,6 +2414,22 @@ def private_polymarket():
             'border': 'rgba(239,68,68,.24)',
             'color': '#f87171',
         }
+    strategy_saved = request.args.get('strategy_saved', '').strip()
+    strategy_feedback = None
+    if strategy_saved == 'ok':
+        strategy_feedback = {
+            'text': '✓ Estrategia activa actualizada.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        }
+    elif strategy_saved == 'error':
+        strategy_feedback = {
+            'text': '✗ No se pudo actualizar la estrategia activa.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
+        }
     manual_sell = request.args.get('manual_sell', '').strip()
     manual_sell_market = request.args.get('manual_sell_market', '').strip()
     manual_sell_outcome = request.args.get('manual_sell_outcome', '').strip()
@@ -2448,6 +2519,39 @@ def private_polymarket():
         {{ tip_feedback.text }}
       </div>
       {% endif %}
+      {% if strategy_feedback %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ strategy_feedback.bg }};border:1px solid {{ strategy_feedback.border }};color:{{ strategy_feedback.color }};font-weight:600;font-size:.93rem">
+        {{ strategy_feedback.text }}
+      </div>
+      {% endif %}
+      <section class="surface-card" style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <h2 class="section-title" style="margin:0 0 8px">Estrategia activa</h2>
+            <div class="muted">Selecciona qué motor usará el siguiente ciclo automático del servidor.</div>
+            <div style="margin-top:10px;font-weight:800;color:#fff">{{ strategy_state.label }} · <span class="muted">{{ strategy_state.mode }}</span></div>
+            <div class="muted" style="margin-top:4px">{{ strategy_state.description }}</div>
+            {% if strategy_state.updated_at %}
+            <div class="muted" style="margin-top:4px;font-size:.82rem">Actualizada: {{ strategy_state.updated_at }} · {{ strategy_state.updated_by }}</div>
+            {% endif %}
+          </div>
+          <form method="POST" action="/private/strategy" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Strategy
+              <select name="active_strategy" style="min-width:220px">
+                {% for item in strategy_state.available_strategies %}
+                <option value="{{ item.id }}" {% if item.active %}selected{% endif %}>{{ item.label }} — {{ item.mode }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Nota
+              <input name="notes" value="{{ strategy_state.notes }}" placeholder="optional note" style="min-width:260px">
+            </label>
+            <button type="submit" style="width:auto;padding:10px 18px">Guardar estrategia</button>
+          </form>
+        </div>
+      </section>
       <section class="surface-card" style="margin-bottom:18px">
         <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
           <div>
@@ -2669,11 +2773,38 @@ def private_polymarket():
         triggered=triggered,
         triggered_label=triggered_label,
         tip_feedback=tip_feedback,
+        strategy_feedback=strategy_feedback,
         tip_path=str(TIP_PATH),
         tip_text=tip_text,
         manual_sell_feedback=manual_sell_feedback,
         **snapshot,
     )
+
+
+@app.route('/private/strategy', methods=['POST'])
+@require_private
+def private_strategy_save():
+    active_strategy = request.form.get('active_strategy', '').strip()
+    notes = request.form.get('notes', '').strip()
+    try:
+        state = save_strategy_state(active_strategy, notes)
+        append_jsonl_event(
+            'app.strategy',
+            'strategy_updated',
+            'info',
+            'Active Polymarket strategy updated from private dashboard',
+            {'active_strategy': state['active_strategy'], 'notes': notes},
+        )
+        return redirect(url_for('private_polymarket', strategy_saved='ok'))
+    except Exception as exc:
+        append_jsonl_event(
+            'app.strategy',
+            'strategy_update_failed',
+            'error',
+            f'Failed to update active strategy: {exc}',
+            {'active_strategy': active_strategy},
+        )
+        return redirect(url_for('private_polymarket', strategy_saved='error'))
 
 
 @app.route('/private/tip', methods=['POST'])

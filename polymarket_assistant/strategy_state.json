@@ -1,0 +1,6 @@
+{
+  "active_strategy": "beecthor",
+  "updated_at": "",
+  "updated_by": "default",
+  "notes": "Active Polymarket decision strategy. Supported values: beecthor, far_dip_radar."
+}

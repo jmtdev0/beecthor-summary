@@ -92,6 +92,17 @@ def main() -> None:
         base.force_bet(config, event_date, int(strike_str), outcome, float(stake_str))
         return
 
+    initial_strategy_state = base.load_strategy_state()
+    skip_reason = base.strategy_window_skip_reason(initial_strategy_state)
+    if skip_reason:
+        print(json.dumps({
+            'timestamp': base.now_utc(),
+            'active_strategy': initial_strategy_state.get('active_strategy', base.DEFAULT_STRATEGY),
+            'skipped': True,
+            'reason': skip_reason,
+        }, ensure_ascii=False, indent=2))
+        return
+
     context = base.build_context_snapshot(config)
     base.notify_claimable_positions(context['polymarket']['positions'], config)
     prompt = base.render_prompt(context)
@@ -101,6 +112,11 @@ def main() -> None:
     else:
         decision = run_copilot(prompt, args.model)
     decision = normalize_decision(decision)
+    strategy_state = context.get('strategy_state') or base.load_strategy_state()
+    strategy_context = context.get('strategy_context') or {}
+    decision['active_strategy'] = strategy_state.get('active_strategy', base.DEFAULT_STRATEGY)
+    if base.selected_strategy_candidate_id(decision):
+        decision['selected_strategy_candidate_id'] = base.selected_strategy_candidate_id(decision)
 
     ok, message = base.validate_decision(decision, context)
     execution: dict[str, Any] = {'performed': False, 'details': None}
@@ -151,6 +167,10 @@ def main() -> None:
         'type': 'cycle_run',
         'run_id': decision.get('run_id', ''),
         'dry_run': args.dry_run,
+        'active_strategy': strategy_state.get('active_strategy', base.DEFAULT_STRATEGY),
+        'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        'strategy_candidates': (strategy_context.get(base.FAR_DIP_RADAR, {}) or {}).get('candidates', []),
+        'selected_strategy_candidate_id': base.selected_strategy_candidate_id(decision),
         'decision': decision,
         'validation': {'ok': ok, 'message': message},
         'execution': execution,
@@ -164,6 +184,10 @@ def main() -> None:
         'timestamp': log_entry['timestamp'],
         'run_id': decision.get('run_id', ''),
         'dry_run': args.dry_run,
+        'active_strategy': log_entry['active_strategy'],
+        'strategy_mode': log_entry['strategy_mode'],
+        'strategy_candidates': log_entry['strategy_candidates'],
+        'selected_strategy_candidate_id': log_entry['selected_strategy_candidate_id'],
         'decision': decision,
         'validation': {'ok': ok, 'message': message},
         'execution': execution,

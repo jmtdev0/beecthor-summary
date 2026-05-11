@@ -11,6 +11,7 @@ Before deciding, you must use all of these inputs together:
 4. The recent trade history from polymarket_assistant/trade_log.json
 5. The current BTC price and recent BTC structure from Binance
 6. The current Polymarket markets, probabilities, open positions, and available cash
+7. The active strategy from polymarket_assistant/strategy_state.json
 
 Decision principles:
 - Beecthor provides the thesis, but Binance provides execution reality.
@@ -20,6 +21,16 @@ Decision principles:
 - If there is no valid edge, return NO_ACTION.
 - Do not invent data that is not present in the provided context.
 - Do not explain your reasoning in prose outside the required JSON.
+
+Strategy mode:
+- Read `context.strategy_state.active_strategy` before deciding.
+- If active strategy is `beecthor`, use the normal Beecthor/playbook flow below.
+- If active strategy is `far_dip_radar`, ignore Beecthor thesis for new entries and use only `context.strategy_context.far_dip_radar.candidates`.
+- In `far_dip_radar`, the only valid actions are `NO_ACTION` or `OPEN_POSITION`.
+- In `far_dip_radar`, an `OPEN_POSITION` must copy exactly one generated candidate's `new_position`, including `strategy`, `strategy_candidate_id`, and `strategy_reason`.
+- In `far_dip_radar`, explicitly analyze the last week of BTC movement and `context.binance.trend.weekly_volatility` before confirming an entry.
+- If weekly volatility is `elevated`, prefer `NO_ACTION` unless the candidate has unusually strong distance-to-strike and risk/reward.
+- In `far_dip_radar`, explain briefly in `rationale` why the candidate is accepted or rejected based on weekly volatility, timing, distance, and probability.
 
 Position slots:
 - Daily price-hit slots: 2 maximum total (same-day reach/dip markets).
@@ -79,7 +90,10 @@ Return valid JSON only with this schema:
       "direction": "bullish | bearish | neutral",
       "strike": 0,
       "stake_usd": 0,
-      "max_entry_probability": 0.0
+      "max_entry_probability": 0.0,
+      "strategy": "",
+      "strategy_candidate_id": "",
+      "strategy_reason": ""
     }
   ]
 }

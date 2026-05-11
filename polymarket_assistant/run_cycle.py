@@ -28,6 +28,7 @@ PROMPT_TEMPLATE_PATH = ASSISTANT_DOCS_DIR / 'copilot_prompt.md'
 ACCOUNT_STATE_PATH = ASSISTANT_DIR / 'account_state.json'
 TRADE_LOG_PATH = ASSISTANT_DIR / 'trade_log.json'
 LAST_RUN_SUMMARY_PATH = ASSISTANT_DIR / 'last_run_summary.json'
+STRATEGY_STATE_PATH = ASSISTANT_DIR / 'strategy_state.json'
 WORKFLOW_SUMMARY_PATH = ASSISTANT_DOCS_DIR / 'last_run_summary.md'
 NOTIFIED_CLAIMS_PATH = ASSISTANT_DIR / 'notified_claims.json'
 PENDING_ORDERS_PATH = ASSISTANT_DIR / 'pending_orders.json'
@@ -50,6 +51,13 @@ MAX_ENTRY_PROBABILITY = 0.90
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
+DEFAULT_STRATEGY = 'beecthor'
+FAR_DIP_RADAR = 'far_dip_radar'
+SUPPORTED_STRATEGIES = {DEFAULT_STRATEGY, FAR_DIP_RADAR}
+FAR_DIP_RADAR_ALLOWED_UTC_HOURS = {6, 8}
+FAR_DIP_MIN_DISTANCE_USD = 1500.0
+FAR_DIP_MIN_NO_PROBABILITY = 0.25
+FAR_DIP_MAX_NO_PROBABILITY = 0.714
 DEFAULT_NEW_POSITION = {
     'should_open': False,
     'event_slug': '',
@@ -59,6 +67,9 @@ DEFAULT_NEW_POSITION = {
     'strike': 0,
     'stake_usd': 0,
     'max_entry_probability': 0.0,
+    'strategy': '',
+    'strategy_candidate_id': '',
+    'strategy_reason': '',
 }
 DEFAULT_NEW_FLOOR_POSITION = {
     'should_open': False,
@@ -129,6 +140,43 @@ def save_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
+def default_strategy_state() -> dict[str, Any]:
+    return {
+        'active_strategy': DEFAULT_STRATEGY,
+        'updated_at': '',
+        'updated_by': 'default',
+        'notes': '',
+    }
+
+
+def normalize_strategy_state(raw: Any) -> dict[str, Any]:
+    state = default_strategy_state()
+    if isinstance(raw, dict):
+        state.update(raw)
+    active = str(state.get('active_strategy') or '').strip()
+    if active not in SUPPORTED_STRATEGIES:
+        active = DEFAULT_STRATEGY
+    state['active_strategy'] = active
+    state['strategy_mode'] = 'hybrid' if active == FAR_DIP_RADAR else 'llm'
+    state['available_strategies'] = sorted(SUPPORTED_STRATEGIES)
+    return state
+
+
+def load_strategy_state() -> dict[str, Any]:
+    return normalize_strategy_state(load_json(STRATEGY_STATE_PATH, default_strategy_state()))
+
+
+def strategy_window_skip_reason(strategy_state: dict[str, Any], now: datetime | None = None) -> str:
+    active_strategy = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+    current = now or datetime.now(UTC)
+    if active_strategy == FAR_DIP_RADAR and current.hour not in FAR_DIP_RADAR_ALLOWED_UTC_HOURS:
+        return (
+            f'{FAR_DIP_RADAR} is active but UTC hour {current.hour:02d} is outside '
+            f'allowed hours {sorted(FAR_DIP_RADAR_ALLOWED_UTC_HOURS)}'
+        )
+    return ''
+
+
 def safe_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
@@ -169,11 +217,15 @@ def build_cycle_telegram_message(decision: dict[str, Any], btc_price: Any) -> st
     btc_line = f'BTC ${btc:,.0f}' if btc else 'BTC n/a'
     summary_text = compact_telegram_text(decision.get('summary'), 220)
     rationale_text = compact_telegram_text(decision.get('rationale'), 340)
+    strategy = decision.get('active_strategy') or decision.get('strategy') or ''
+    strategy_text = f'Estrategia: {strategy}' if strategy else ''
 
     if summary_text and rationale_text.lower() == summary_text.lower():
         rationale_text = ''
 
     parts = [f'{action_emoji} {action}', btc_line]
+    if strategy_text:
+        parts.extend(['', strategy_text])
     if summary_text:
         parts.extend(['', summary_text])
     if rationale_text:
@@ -466,7 +518,7 @@ def fetch_binance_kline_trends() -> dict[str, Any]:
     try:
         response = requests.get(
             BINANCE_KLINES_URL,
-            params={'symbol': 'BTCUSDT', 'interval': '1h', 'limit': 96},
+            params={'symbol': 'BTCUSDT', 'interval': '1h', 'limit': 336},
             timeout=20,
         )
         response.raise_for_status()
@@ -494,7 +546,36 @@ def fetch_binance_kline_trends() -> dict[str, Any]:
             'change_pct': change_pct,
             'high': round(max(highs[-hours:]), 2),
             'low': round(min(lows[-hours:]), 2),
+            'range_usd': round(max(highs[-hours:]) - min(lows[-hours:]), 2),
         }
+
+    def average_abs_hourly_return_pct(values: list[float]) -> float:
+        if len(values) < 2:
+            return 0.0
+        returns = [
+            abs((values[idx] / values[idx - 1] - 1) * 100)
+            for idx in range(1, len(values))
+            if values[idx - 1]
+        ]
+        return round(sum(returns) / len(returns), 4) if returns else 0.0
+
+    current_7d_closes = closes[-168:] if len(closes) >= 168 else closes
+    previous_7d_closes = closes[-336:-168] if len(closes) >= 336 else []
+    current_7d_abs_return = average_abs_hourly_return_pct(current_7d_closes)
+    previous_7d_abs_return = average_abs_hourly_return_pct(previous_7d_closes)
+    volatility_ratio = (
+        round(current_7d_abs_return / previous_7d_abs_return, 2)
+        if previous_7d_abs_return
+        else None
+    )
+    volatility_regime = 'unknown'
+    if volatility_ratio is not None:
+        if volatility_ratio >= 1.35:
+            volatility_regime = 'elevated'
+        elif volatility_ratio <= 0.75:
+            volatility_regime = 'compressed'
+        else:
+            volatility_regime = 'normal'
 
     windows = {
         '12h': window_stats(12),
@@ -502,6 +583,7 @@ def fetch_binance_kline_trends() -> dict[str, Any]:
         '48h': window_stats(48),
         '72h': window_stats(72),
         '96h': window_stats(96),
+        '7d': window_stats(168),
     }
     last_12 = windows.get('12h') or {}
     last_24 = windows.get('24h') or {}
@@ -510,7 +592,17 @@ def fetch_binance_kline_trends() -> dict[str, Any]:
         bias = 'bullish_short_term'
     elif safe_float(last_12.get('change_pct')) < -0.35 and safe_float(last_24.get('change_pct')) <= 0:
         bias = 'bearish_short_term'
-    return {'windows': windows, 'short_term_bias': bias}
+    return {
+        'windows': windows,
+        'short_term_bias': bias,
+        'weekly_volatility': {
+            'current_7d_avg_abs_hourly_return_pct': current_7d_abs_return,
+            'previous_7d_avg_abs_hourly_return_pct': previous_7d_abs_return,
+            'current_vs_previous_ratio': volatility_ratio,
+            'regime': volatility_regime,
+            'note': 'Used by far_dip_radar to avoid shorting dip risk during unusually volatile weeks.',
+        },
+    }
 
 
 def fetch_utc_day_open() -> float | None:
@@ -797,6 +889,113 @@ def fetch_active_btc_markets(limit: int = MAX_MARKETS) -> list[dict[str, Any]]:
     return all_markets[:limit]
 
 
+def far_dip_candidate_id(market_slug: str, outcome: str = 'No') -> str:
+    return f'{FAR_DIP_RADAR}:{market_slug}:{outcome}'
+
+
+def build_far_dip_radar_candidates(
+    markets: list[dict[str, Any]],
+    binance: dict[str, Any],
+) -> list[dict[str, Any]]:
+    spot_price = safe_float(binance.get('spot_price'))
+    candidates: list[dict[str, Any]] = []
+    for market in markets:
+        if market.get('market_type') != 'daily' or market.get('family') != 'dip':
+            continue
+        if market.get('closed') or not market.get('accepting_orders'):
+            continue
+        strike = safe_float(market.get('strike'))
+        if not strike or not spot_price:
+            continue
+        distance = round(spot_price - strike, 2)
+        if distance < FAR_DIP_MIN_DISTANCE_USD:
+            continue
+        no_probability = outcome_probability(market, 'No')
+        if not (FAR_DIP_MIN_NO_PROBABILITY <= no_probability <= FAR_DIP_MAX_NO_PROBABILITY):
+            continue
+        if no_probability > MAX_ENTRY_PROBABILITY:
+            continue
+        candidate_id = far_dip_candidate_id(market['market_slug'], 'No')
+        candidates.append({
+            'candidate_id': candidate_id,
+            'strategy': FAR_DIP_RADAR,
+            'event_slug': market.get('event_slug', ''),
+            'market_slug': market.get('market_slug', ''),
+            'question': market.get('question', ''),
+            'outcome': 'No',
+            'direction': 'bullish',
+            'strike': strike,
+            'spot_price': spot_price,
+            'distance_above_strike_usd': distance,
+            'no_probability': round(no_probability, 4),
+            'yes_probability': round(outcome_probability(market, 'Yes'), 4),
+            'max_entry_probability': round(min(MAX_ENTRY_PROBABILITY, FAR_DIP_MAX_NO_PROBABILITY), 4),
+            'market_type': 'daily',
+            'position_kind': 'price_hit',
+            'slot_name': FAR_DIP_RADAR,
+            'stake_usd': 1.0,
+            'expiry_validity': 'acceptable',
+            'reason': (
+                f'BTC spot is ${distance:,.0f} above a daily dip strike and the NO side is priced '
+                f'at {no_probability:.1%}.'
+            ),
+            'new_position': {
+                'position_kind': 'price_hit',
+                'market_type': 'daily',
+                'slot_name': FAR_DIP_RADAR,
+                'beecthor_aligned': False,
+                'momentum_confirmed': True,
+                'expiry_validity': 'acceptable',
+                'event_slug': market.get('event_slug', ''),
+                'market_slug': market.get('market_slug', ''),
+                'outcome': 'No',
+                'direction': 'bullish',
+                'strike': strike,
+                'stake_usd': 1.0,
+                'max_entry_probability': round(min(MAX_ENTRY_PROBABILITY, FAR_DIP_MAX_NO_PROBABILITY), 4),
+                'strategy': FAR_DIP_RADAR,
+                'strategy_candidate_id': candidate_id,
+                'strategy_reason': 'far_dip_radar objective candidate',
+            },
+        })
+    candidates.sort(key=lambda item: (item['no_probability'], -item['distance_above_strike_usd']))
+    return candidates
+
+
+def build_strategy_context(
+    strategy_state: dict[str, Any],
+    markets: list[dict[str, Any]],
+    binance: dict[str, Any],
+    market_time_context: dict[str, Any],
+) -> dict[str, Any]:
+    active_strategy = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+    utc_hour = int(market_time_context.get('utc_hour', datetime.now(UTC).hour))
+    far_dip_window_open = utc_hour in FAR_DIP_RADAR_ALLOWED_UTC_HOURS
+    far_dip_candidates = (
+        build_far_dip_radar_candidates(markets, binance)
+        if active_strategy == FAR_DIP_RADAR and far_dip_window_open
+        else []
+    )
+    return {
+        'active_strategy': active_strategy,
+        'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        FAR_DIP_RADAR: {
+            'enabled': active_strategy == FAR_DIP_RADAR,
+            'allowed_utc_hours': sorted(FAR_DIP_RADAR_ALLOWED_UTC_HOURS),
+            'window_open': far_dip_window_open,
+            'candidate_rules': {
+                'family': 'daily dip',
+                'outcome': 'No',
+                'min_distance_above_strike_usd': FAR_DIP_MIN_DISTANCE_USD,
+                'min_no_probability': FAR_DIP_MIN_NO_PROBABILITY,
+                'max_no_probability': FAR_DIP_MAX_NO_PROBABILITY,
+            },
+            'weekly_volatility': (binance.get('trend') or {}).get('weekly_volatility', {}),
+            'candidates': far_dip_candidates,
+        },
+    }
+
+
 def fetch_positions(config: dict[str, str]) -> list[dict[str, Any]]:
     user = config.get('POLY_FUNDER') or config.get('POLY_SIGNER_ADDRESS')
     if not user:
@@ -1043,6 +1242,7 @@ def compute_performance_snapshot(trade_log: list[dict[str, Any]]) -> dict[str, A
 
 def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     client = build_private_client(config)
+    strategy_state = load_strategy_state()
     raw_account_state = load_json(ACCOUNT_STATE_PATH, {})
     trade_log = load_json(TRADE_LOG_PATH, [])
     positions = fetch_positions(config)  # already filtered by endDate
@@ -1058,6 +1258,9 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     binance = fetch_binance_snapshot()
     strategy_pressure = summarize_strategy_pressure(account_state, positions, binance, recent_summaries)
     daily_success_cooldown = build_daily_success_cooldown(config)
+    market_time_context = build_market_time_context()
+    active_btc_markets = fetch_active_btc_markets()
+    strategy_context = build_strategy_context(strategy_state, active_btc_markets, binance, market_time_context)
     save_json(PERFORMANCE_SNAPSHOT_PATH, {'timestamp': now_utc(), **strategy_pressure})
     reconciliation = build_reconciliation_status(
         raw_account_state,
@@ -1067,6 +1270,8 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
     )
 
     return {
+        'strategy_state': strategy_state,
+        'strategy_context': strategy_context,
         'playbook': PLAYBOOK_PATH.read_text(encoding='utf-8'),
         'recent_transcripts': read_recent_transcripts(),
         'recent_summaries': recent_summaries,
@@ -1076,7 +1281,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         'strategy_pressure': strategy_pressure,
         'daily_success_cooldown': daily_success_cooldown,
         'reconciliation': reconciliation,
-        'market_time_context': build_market_time_context(),
+        'market_time_context': market_time_context,
         'binance': binance,
         'polymarket': {
             'cash_balance_usdc': safe_float(balance.get('balance')) / 1_000_000,
@@ -1092,7 +1297,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
                 p for p in positions
                 if infer_position_market_type(p) in {'daily', 'weekly'} and is_slot_discarded(p, account_state)
             ],
-            'active_btc_markets': fetch_active_btc_markets(),
+            'active_btc_markets': active_btc_markets,
             'active_floor_markets': [],
             'open_floor_positions': [],
         },
@@ -1203,6 +1408,29 @@ def direction_from_market_outcome(market_slug: str, outcome: str) -> str:
     if '-reach-' in slug:
         return 'bullish' if normalized_outcome == 'yes' else 'bearish'
     return 'neutral'
+
+
+def selected_strategy_candidate_id(decision: dict[str, Any]) -> str:
+    for target in iter_requested_open_targets(decision):
+        candidate_id = str(target.get('strategy_candidate_id') or '').strip()
+        if candidate_id:
+            return candidate_id
+    explicit = str(decision.get('selected_strategy_candidate_id') or '').strip()
+    if explicit:
+        return explicit
+    return ''
+
+
+def find_strategy_candidate(context: dict[str, Any], candidate_id: str) -> dict[str, Any] | None:
+    candidates = (
+        (context.get('strategy_context') or {})
+        .get(FAR_DIP_RADAR, {})
+        .get('candidates', [])
+    )
+    for candidate in candidates:
+        if candidate.get('candidate_id') == candidate_id:
+            return candidate
+    return None
 
 
 def summarize_strategy_pressure(
@@ -1349,6 +1577,11 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
     market_time = context.get('market_time_context') or {}
     strategy_pressure = context.get('strategy_pressure') or {}
     daily_success_cooldown = context.get('daily_success_cooldown') or {}
+    strategy_state = context.get('strategy_state') or load_strategy_state()
+    active_strategy = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+
+    if active_strategy == FAR_DIP_RADAR and action in {'CLOSE_POSITION', 'REDUCE_POSITION'}:
+        return False, 'far_dip_radar cycles may only open one generated candidate or return NO_ACTION'
 
     if action == 'OPEN_POSITION':
         reconciliation = context.get('reconciliation') or {}
@@ -1359,6 +1592,18 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
         open_targets = iter_requested_open_targets(decision)
         if not open_targets:
             return False, 'OPEN_POSITION requires at least one requested position'
+        if active_strategy == FAR_DIP_RADAR:
+            candidate_id = selected_strategy_candidate_id(decision)
+            candidate = find_strategy_candidate(context, candidate_id)
+            if not candidate:
+                return False, 'far_dip_radar opening must select one generated strategy candidate'
+            if len(open_targets) != 1:
+                return False, 'far_dip_radar may open at most one generated candidate'
+            target = open_targets[0]
+            if target.get('market_slug') != candidate.get('market_slug') or target.get('outcome') != candidate.get('outcome'):
+                return False, 'far_dip_radar selected position does not match the generated candidate'
+            if target.get('strategy') != FAR_DIP_RADAR:
+                return False, 'far_dip_radar opening must include strategy metadata'
 
         cash_available = polymarket['cash_balance_usdc']
         portfolio_value = cash_available + safe_float(account_state.get('open_exposure'))
@@ -1550,6 +1795,8 @@ def prepare_open_order_via_phone(
         f'{market["question"]}\n'
         f'Stake: ${new_pos["stake_usd"]} | BTC ${btc_price:,.0f}'
     )
+    if new_pos.get('strategy'):
+        message = f'{message}\nStrategy: {new_pos["strategy"]}'
     requests.post(
         f'https://api.telegram.org/bot{telegram_token}/sendMessage',
         json={'chat_id': telegram_chat_id, 'text': message},
@@ -1568,6 +1815,9 @@ def prepare_open_order_via_phone(
         'beecthor_aligned': new_pos.get('beecthor_aligned'),
         'momentum_confirmed': new_pos.get('momentum_confirmed'),
         'expiry_validity': new_pos.get('expiry_validity', ''),
+        'strategy': new_pos.get('strategy', ''),
+        'strategy_candidate_id': new_pos.get('strategy_candidate_id', ''),
+        'strategy_reason': new_pos.get('strategy_reason', ''),
         'market': market['question'],
         'market_slug': new_pos['market_slug'],
         'outcome': new_pos['outcome'],
@@ -1861,6 +2111,8 @@ def write_summary_markdown(summary: dict[str, Any]) -> None:
         '',
         f"- Timestamp: {summary['timestamp']}",
         f"- Dry run: {summary['dry_run']}",
+        f"- Active strategy: {summary.get('active_strategy', '')}",
+        f"- Strategy mode: {summary.get('strategy_mode', '')}",
         f"- BTC price: {summary['binance_spot_price']}",
         f"- Decision action: {summary['decision'].get('action')}",
         f"- Decision summary: {summary['decision'].get('summary')}",
@@ -1908,6 +2160,17 @@ def main() -> None:
         force_bet(config, event_date, int(strike_str), outcome, float(stake_str))
         return
 
+    initial_strategy_state = load_strategy_state()
+    skip_reason = strategy_window_skip_reason(initial_strategy_state)
+    if skip_reason:
+        print(json.dumps({
+            'timestamp': now_utc(),
+            'active_strategy': initial_strategy_state.get('active_strategy', DEFAULT_STRATEGY),
+            'skipped': True,
+            'reason': skip_reason,
+        }, ensure_ascii=False, indent=2))
+        return
+
     context = build_context_snapshot(config)
     notify_claimable_positions(context['polymarket']['positions'], config)
     prompt = render_prompt(context)
@@ -1917,6 +2180,11 @@ def main() -> None:
     else:
         decision = run_copilot(prompt, args.model)
     decision = normalize_decision(decision)
+    strategy_state = context.get('strategy_state') or load_strategy_state()
+    strategy_context = context.get('strategy_context') or {}
+    decision['active_strategy'] = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+    if selected_strategy_candidate_id(decision):
+        decision['selected_strategy_candidate_id'] = selected_strategy_candidate_id(decision)
 
     ok, message = validate_decision(decision, context)
     execution: dict[str, Any] = {'performed': False, 'details': None}
@@ -1966,6 +2234,10 @@ def main() -> None:
         'timestamp': now_utc(),
         'type': 'cycle_run',
         'dry_run': args.dry_run,
+        'active_strategy': strategy_state.get('active_strategy', DEFAULT_STRATEGY),
+        'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        'strategy_candidates': (strategy_context.get(FAR_DIP_RADAR, {}) or {}).get('candidates', []),
+        'selected_strategy_candidate_id': selected_strategy_candidate_id(decision),
         'decision': decision,
         'validation': {'ok': ok, 'message': message},
         'execution': execution,
@@ -1978,6 +2250,10 @@ def main() -> None:
     run_summary = {
         'timestamp': log_entry['timestamp'],
         'dry_run': args.dry_run,
+        'active_strategy': log_entry['active_strategy'],
+        'strategy_mode': log_entry['strategy_mode'],
+        'strategy_candidates': log_entry['strategy_candidates'],
+        'selected_strategy_candidate_id': log_entry['selected_strategy_candidate_id'],
         'decision': decision,
         'validation': {'ok': ok, 'message': message},
         'execution': execution,

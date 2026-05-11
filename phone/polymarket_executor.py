@@ -384,6 +384,9 @@ def build_trade_opened_entry(
         'max_profit_usd': round(max_profit, 4) if max_profit > 0.0 else None,
         'market_type': pending.get('market_type'),
         'slot_name': pending.get('slot_name'),
+        'strategy': pending.get('strategy'),
+        'strategy_candidate_id': pending.get('strategy_candidate_id'),
+        'strategy_reason': pending.get('strategy_reason'),
         'beecthor_aligned': pending.get('beecthor_aligned'),
         'momentum_confirmed': pending.get('momentum_confirmed'),
         'expiry_validity': pending.get('expiry_validity'),
@@ -464,10 +467,15 @@ def build_buy_success_message(
         '✅ Orden ejecutada desde el móvil:',
         f'{order_type} {outcome}',
         market,
+    ]
+    strategy = trade_entry.get('strategy')
+    if strategy:
+        lines.append(f'Estrategia: {strategy}')
+    lines.extend([
         f'Coste: {format_money(entry_cost)}',
         f'Shares: {format_shares(shares)}',
         f'TO WIN: {format_money(to_win)}',
-    ]
+    ])
     if avg_price > 0.0:
         lines.append(f'Precio medio: {avg_price:.0%}')
     if max_profit > 0.0:
