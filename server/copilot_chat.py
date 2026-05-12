@@ -311,6 +311,21 @@ img{display:block;max-width:100%}
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px
 }
 .trace-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:18px}
+.control-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.control-card{display:flex;flex-direction:column;gap:14px;min-height:100%;padding:20px}
+.control-card .section-title{margin:0}
+.control-copy{color:#98a7bb;font-size:.92rem;line-height:1.45}
+.control-current{font-weight:800;color:#fff;line-height:1.35}
+.control-path{color:#98a7bb;font-size:.78rem;line-height:1.35;word-break:break-word}
+.control-form{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.control-form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd}
+.control-form input,.control-form select,.control-form textarea{width:100%;min-width:0}
+.control-form button{width:100%;padding:10px 16px}
+.control-mini-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.control-stat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px}
+.control-stat-label{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#95a3b8}
+.control-stat-value{font-weight:700;margin-top:6px;line-height:1.35}
+.control-textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .trace-lane{
   background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
   border:1px solid rgba(255,255,255,.08);
@@ -500,6 +515,7 @@ img{display:block;max-width:100%}
 }
 @media (max-width: 960px){
   .private-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .trace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .timeline-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -513,6 +529,7 @@ img{display:block;max-width:100%}
   .brand-title,.private-title{font-size:1.9rem}
   .video-grid{grid-template-columns:1fr}
   .private-grid{grid-template-columns:1fr}
+  .control-grid{grid-template-columns:1fr}
   .trace-grid{grid-template-columns:1fr}
     .timeline-meta-grid{grid-template-columns:1fr}
   .metric-value{font-size:2.35rem}
@@ -2786,79 +2803,84 @@ def private_polymarket():
         {{ operator_timer_feedback.text }}
       </div>
       {% endif %}
-      <section class="surface-card" style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h2 class="section-title" style="margin:0 0 8px">Ciclos de decisión</h2>
-            <div class="muted">Switch específico para `{{ operator_timer_unit }}`. No toca el monitor de take-profit.</div>
+      <div class="control-grid">
+        <section class="surface-card control-card">
+          <h2 class="section-title">TIP.md</h2>
+          <div class="control-copy">Notas situacionales para los ciclos automáticos. Se leen junto con el playbook y se guardan solo en el servidor.</div>
+          <div class="control-path">{{ tip_path }}</div>
+          <form class="control-form" method="POST" action="/private/tip">
+            <textarea
+              class="control-textarea"
+              name="content"
+              spellcheck="false"
+              placeholder="Write situational trading notes for the next cycles..."
+            >{{ tip_text }}</textarea>
+            <button type="submit">Guardar TIP.md</button>
+          </form>
+        </section>
+
+        <section class="surface-card control-card">
+          <h2 class="section-title">Pause / Resume</h2>
+          <div class="control-copy">Switch específico para `{{ operator_timer_unit }}`. No toca el monitor de take-profit.</div>
+          <div class="control-current"><span class="{{ operator_timer.tone }}">{{ operator_timer.state_label }}</span></div>
+          <div class="control-mini-grid">
+            <div class="control-stat">
+              <div class="control-stat-label">Próximo ciclo</div>
+              <div class="control-stat-value">{{ operator_timer.next_trigger }}</div>
+            </div>
+            <div class="control-stat">
+              <div class="control-stat-label">Último disparo</div>
+              <div class="control-stat-value">{{ operator_timer.last_trigger }}</div>
+            </div>
+            <div class="control-stat">
+              <div class="control-stat-label">Systemd</div>
+              <div class="control-stat-value">{{ operator_timer.active_state }} / {{ operator_timer.sub_state }} · {{ operator_timer.unit_file_state }}</div>
+            </div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-            <span class="{{ operator_timer.tone }}" style="font-weight:800">{{ operator_timer.state_label }}</span>
-            <form method="POST" action="/private/operator-cycle-timer" onsubmit="return confirm('Confirmar: {{ operator_timer.button_label }}?')">
-              <input type="hidden" name="action" value="{{ operator_timer.button_action }}">
-              <button type="submit" style="width:auto;background:{% if operator_timer.button_action == 'pause' %}#7c2d12{% else %}#166534{% endif %};padding:10px 18px">{{ operator_timer.button_label }}</button>
-            </form>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
-            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Próximo ciclo</div>
-            <div style="font-weight:700;margin-top:6px">{{ operator_timer.next_trigger }}</div>
-          </div>
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
-            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Último disparo</div>
-            <div style="font-weight:700;margin-top:6px">{{ operator_timer.last_trigger }}</div>
-          </div>
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:12px">
-            <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Systemd</div>
-            <div style="font-weight:700;margin-top:6px">{{ operator_timer.active_state }} / {{ operator_timer.sub_state }} · {{ operator_timer.unit_file_state }}</div>
-          </div>
-        </div>
-        <div class="muted" style="margin-top:12px">{{ operator_timer.detail }}</div>
-      </section>
-      <section class="surface-card" style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h2 class="section-title" style="margin:0 0 8px">Estrategia activa</h2>
-            <div class="muted">Selecciona qué motor usará el siguiente ciclo automático del servidor.</div>
-            <div style="margin-top:10px;font-weight:800;color:#fff">{{ strategy_state.label }} · <span class="muted">{{ strategy_state.mode }}</span></div>
-            <div class="muted" style="margin-top:4px">{{ strategy_state.description }}</div>
-            <div class="muted" style="margin-top:4px;font-size:.82rem">Estado local: {{ strategy_state.path }}</div>
-            {% if strategy_state.updated_at %}
-            <div class="muted" style="margin-top:4px;font-size:.82rem">Actualizada: {{ strategy_state.updated_at }} · {{ strategy_state.updated_by }}</div>
-            {% endif %}
-          </div>
-          <form method="POST" action="/private/strategy" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+          <div class="control-copy">{{ operator_timer.detail }}</div>
+          <form class="control-form" method="POST" action="/private/operator-cycle-timer" onsubmit="return confirm('Confirmar: {{ operator_timer.button_label }}?')">
+            <input type="hidden" name="action" value="{{ operator_timer.button_action }}">
+            <button type="submit" style="background:{% if operator_timer.button_action == 'pause' %}#7c2d12{% else %}#166534{% endif %}">{{ operator_timer.button_label }}</button>
+          </form>
+        </section>
+
+        <section class="surface-card control-card">
+          <h2 class="section-title">Estrategia activa</h2>
+          <div class="control-copy">Selecciona qué motor usará el siguiente ciclo automático del servidor.</div>
+          <div class="control-current">{{ strategy_state.label }} · <span class="muted">{{ strategy_state.mode }}</span></div>
+          <div class="control-copy">{{ strategy_state.description }}</div>
+          <div class="control-path">Estado local: {{ strategy_state.path }}</div>
+          {% if strategy_state.updated_at %}
+          <div class="control-path">Actualizada: {{ strategy_state.updated_at }} · {{ strategy_state.updated_by }}</div>
+          {% endif %}
+          <form class="control-form" method="POST" action="/private/strategy">
+            <label>
               Strategy
-              <select name="active_strategy" style="min-width:220px">
+              <select name="active_strategy">
                 {% for item in strategy_state.available_strategies %}
                 <option value="{{ item.id }}" {% if item.active %}selected{% endif %}>{{ item.label }} — {{ item.mode }}</option>
                 {% endfor %}
               </select>
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Nota
-              <input name="notes" value="{{ strategy_state.notes }}" placeholder="optional note" style="min-width:260px">
+              <input name="notes" value="{{ strategy_state.notes }}" placeholder="optional note">
             </label>
-            <button type="submit" style="width:auto;padding:10px 18px">Guardar estrategia</button>
+            <button type="submit">Guardar estrategia</button>
           </form>
-        </div>
-      </section>
-      <section class="surface-card" style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h2 class="section-title" style="margin:0 0 8px">Proveedor LLM</h2>
-            <div class="muted">Selecciona qué CLI genera el JSON de decisión. Ambos pasan por el mismo validador y executor.</div>
-            <div style="margin-top:10px;font-weight:800;color:#fff">{{ llm_provider_state.label }} · <span class="muted">{{ llm_provider_state.auth }}</span></div>
-            <div class="muted" style="margin-top:4px">{{ llm_provider_state.description }}</div>
-            <div class="muted" style="margin-top:4px;font-size:.82rem">Estado local: {{ llm_provider_state.path }}</div>
-            {% if llm_provider_state.updated_at %}
-            <div class="muted" style="margin-top:4px;font-size:.82rem">Actualizado: {{ llm_provider_state.updated_at }} · {{ llm_provider_state.updated_by }}</div>
-            {% endif %}
-          </div>
-          <form method="POST" action="/private/llm-provider" style="display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:10px;align-items:end;max-width:720px">
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+        </section>
+
+        <section class="surface-card control-card">
+          <h2 class="section-title">Proveedor LLM</h2>
+          <div class="control-copy">Selecciona qué CLI genera el JSON de decisión. Ambos pasan por el mismo validador y executor.</div>
+          <div class="control-current">{{ llm_provider_state.label }} · <span class="muted">{{ llm_provider_state.auth }}</span></div>
+          <div class="control-copy">{{ llm_provider_state.description }}</div>
+          <div class="control-path">Estado local: {{ llm_provider_state.path }}</div>
+          {% if llm_provider_state.updated_at %}
+          <div class="control-path">Actualizado: {{ llm_provider_state.updated_at }} · {{ llm_provider_state.updated_by }}</div>
+          {% endif %}
+          <form class="control-form" method="POST" action="/private/llm-provider">
+            <label>
               Provider
               <select name="active_provider">
                 {% for item in llm_provider_state.available_providers %}
@@ -2866,50 +2888,30 @@ def private_polymarket():
                 {% endfor %}
               </select>
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Codex model
               <input name="codex_model" value="{{ llm_provider_state.settings.codex_model }}">
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Codex effort
               <input name="codex_reasoning_effort" value="{{ llm_provider_state.settings.codex_reasoning_effort }}">
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Copilot model
               <input name="copilot_model" value="{{ llm_provider_state.settings.copilot_model }}">
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Copilot effort
               <input name="copilot_effort" value="{{ llm_provider_state.settings.copilot_effort }}">
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+            <label>
               Nota
               <input name="notes" value="{{ llm_provider_state.notes }}" placeholder="optional note">
             </label>
-            <button type="submit" style="width:auto;padding:10px 18px;grid-column:1/-1">Guardar proveedor LLM</button>
+            <button type="submit">Guardar proveedor LLM</button>
           </form>
-        </div>
-      </section>
-      <section class="surface-card" style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
-          <div>
-            <h2 class="section-title" style="margin:0 0 8px">TIP.md</h2>
-            <div class="muted">Notas situacionales para los ciclos automáticos. Se leen junto con el playbook. Este fichero se guarda solo en el servidor.</div>
-            <div class="muted" style="margin-top:6px;font-size:.82rem">{{ tip_path }}</div>
-          </div>
-        </div>
-        <form method="POST" action="/private/tip" style="margin-top:14px">
-          <textarea
-            name="content"
-            spellcheck="false"
-            placeholder="Write situational trading notes for the next cycles..."
-            style="width:100%;min-height:240px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"
-          >{{ tip_text }}</textarea>
-          <div style="display:flex;justify-content:flex-end;margin-top:12px">
-            <button type="submit" style="width:auto;padding:10px 18px">Guardar TIP.md</button>
-          </div>
-        </form>
-      </section>
+        </section>
+      </div>
       <div class="trace-grid">
         {% for lane in trace_lanes %}
         <section class="trace-lane">
