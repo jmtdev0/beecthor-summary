@@ -16680,5 +16680,65 @@
     "binance_spot_price": 81207.82,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-12T08:02:17Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-12T08-00-16Z",
+    "dry_run": false,
+    "active_strategy": "far_dip_radar",
+    "strategy_mode": "hybrid",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-12T08-00-16Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "NO_ACTION: far_dip_radar produced no generated candidates and there are no open positions to manage.",
+      "rationale": "Active strategy is far_dip_radar, where an OPEN_POSITION must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. No open positions meet take-profit or reduction checks. Weekly BTC volatility is normal (0.196 vs 0.2298, ratio 0.85); BTC is nearly flat over 48h/7d and down about 1.13% since the UTC day open around 80825, but without a generated candidate there is no valid tradable edge.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "far_dip_radar"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 80879.72,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]

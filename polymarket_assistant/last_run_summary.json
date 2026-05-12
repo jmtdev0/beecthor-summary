@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-05-12T06:01:17Z",
-  "run_id": "2026-05-12T06-00-01Z",
+  "timestamp": "2026-05-12T08:02:17Z",
+  "run_id": "2026-05-12T08-00-16Z",
   "dry_run": false,
   "active_strategy": "far_dip_radar",
   "strategy_mode": "hybrid",
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-12T06-00-01Z",
+    "run_id": "2026-05-12T08-00-16Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "NO_ACTION: far_dip_radar has no generated candidates and there are no open positions to manage.",
-    "rationale": "Active strategy is far_dip_radar, where new entries must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. Reconciliation is ok, daily cooldown is inactive, and account/open Polymarket positions are empty, so there is no take-profit or reduction action. Weekly BTC volatility is normal (0.1951 vs 0.2308, ratio 0.85), while BTC is broadly range-bound over 7d (+0.44%) and 24-72h; without a generated far-dip candidate there is no valid edge.",
+    "summary": "NO_ACTION: far_dip_radar produced no generated candidates and there are no open positions to manage.",
+    "rationale": "Active strategy is far_dip_radar, where an OPEN_POSITION must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. No open positions meet take-profit or reduction checks. Weekly BTC volatility is normal (0.196 vs 0.2298, ratio 0.85); BTC is nearly flat over 48h/7d and down about 1.13% since the UTC day open around 80825, but without a generated candidate there is no valid tradable edge.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -53,7 +53,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81207.82,
+  "binance_spot_price": 80879.72,
   "positions_before": 0,
   "positions_after": 0
 }
