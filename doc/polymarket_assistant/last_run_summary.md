@@ -1,10 +1,12 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-11T18:01:48Z
+- Timestamp: 2026-05-12T06:01:17Z
 - Dry run: False
-- BTC price: 81930.0
+- Active strategy: far_dip_radar
+- Strategy mode: hybrid
+- BTC price: 81207.82
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: no open positions to manage and no fresh daily BTC setup has clean confirmation.
+- Decision summary: NO_ACTION: far_dip_radar has no generated candidates and there are no open positions to manage.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0

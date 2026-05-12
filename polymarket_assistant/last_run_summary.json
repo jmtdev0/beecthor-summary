@@ -1,13 +1,17 @@
 {
-  "timestamp": "2026-05-11T18:01:48Z",
-  "run_id": "2026-05-11T18-00-06Z",
+  "timestamp": "2026-05-12T06:01:17Z",
+  "run_id": "2026-05-12T06-00-01Z",
   "dry_run": false,
+  "active_strategy": "far_dip_radar",
+  "strategy_mode": "hybrid",
+  "strategy_candidates": [],
+  "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-11T18-00-06Z",
+    "run_id": "2026-05-12T06-00-01Z",
     "action": "NO_ACTION",
-    "confidence": 0.9,
-    "summary": "NO_ACTION: no open positions to manage and no fresh daily BTC setup has clean confirmation.",
-    "rationale": "Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. Latest Beecthor remains bearish below 86k but explicitly allows/awaits a possible upper liquidity clean toward 83k/83.6k/85.5k before the lower liquidation sweep, so an 83k Reach No is not clean enough while Binance is short-term bullish around 81930, 12h +1.47%, 24-72h net higher, and still near the 82479 range high without a confirmed rejection or downside break. The 80k DIP Yes at 0.045 has weak same-day expiry validity, 83k Reach Yes at 0.1875 is low-probability and not thesis-aligned enough, and farther conservative No markets are above the 90% entry cap.",
+    "confidence": 0.99,
+    "summary": "NO_ACTION: far_dip_radar has no generated candidates and there are no open positions to manage.",
+    "rationale": "Active strategy is far_dip_radar, where new entries must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. Reconciliation is ok, daily cooldown is inactive, and account/open Polymarket positions are empty, so there is no take-profit or reduction action. Weekly BTC volatility is normal (0.1951 vs 0.2308, ratio 0.85), while BTC is broadly range-bound over 7d (+0.44%) and 24-72h; without a generated far-dip candidate there is no valid edge.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -25,7 +29,10 @@
       "direction": "neutral",
       "strike": 0,
       "stake_usd": 0,
-      "max_entry_probability": 0.0
+      "max_entry_probability": 0.0,
+      "strategy": "",
+      "strategy_candidate_id": "",
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -35,7 +42,8 @@
       "floor_level": 0,
       "stake_usd": 0,
       "max_entry_probability": 0.0
-    }
+    },
+    "active_strategy": "far_dip_radar"
   },
   "validation": {
     "ok": true,
@@ -45,7 +53,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81930.0,
+  "binance_spot_price": 81207.82,
   "positions_before": 0,
   "positions_after": 0
 }
