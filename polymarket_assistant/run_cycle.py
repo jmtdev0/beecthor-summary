@@ -231,6 +231,8 @@ def build_cycle_telegram_message(decision: dict[str, Any], btc_price: Any) -> st
     rationale_text = compact_telegram_text(decision.get('rationale'), 340)
     strategy = decision.get('active_strategy') or decision.get('strategy') or ''
     strategy_text = f'Estrategia: {strategy}' if strategy else ''
+    llm_provider = decision.get('llm_provider') or ''
+    llm_text = f'LLM: {llm_provider}' if llm_provider else ''
 
     if summary_text and rationale_text.lower() == summary_text.lower():
         rationale_text = ''
@@ -238,6 +240,8 @@ def build_cycle_telegram_message(decision: dict[str, Any], btc_price: Any) -> st
     parts = [f'{action_emoji} {action}', btc_line]
     if strategy_text:
         parts.extend(['', strategy_text])
+    if llm_text:
+        parts.append(llm_text)
     if summary_text:
         parts.extend(['', summary_text])
     if rationale_text:
@@ -2128,6 +2132,9 @@ def write_summary_markdown(summary: dict[str, Any]) -> None:
         f"- Dry run: {summary['dry_run']}",
         f"- Active strategy: {summary.get('active_strategy', '')}",
         f"- Strategy mode: {summary.get('strategy_mode', '')}",
+        f"- LLM provider: {summary.get('llm_provider', '')}",
+        f"- LLM model: {summary.get('llm_provider_model', '')}",
+        f"- LLM effort: {summary.get('llm_provider_effort', '')}",
         f"- BTC price: {summary['binance_spot_price']}",
         f"- Decision action: {summary['decision'].get('action')}",
         f"- Decision summary: {summary['decision'].get('summary')}",
@@ -2197,7 +2204,11 @@ def main() -> None:
     decision = normalize_decision(decision)
     strategy_state = context.get('strategy_state') or load_strategy_state()
     strategy_context = context.get('strategy_context') or {}
+    llm_provider = os.environ.get('POLYMARKET_LLM_PROVIDER', 'external_decision_file' if args.decision_file else 'copilot')
+    llm_provider_model = os.environ.get('POLYMARKET_LLM_PROVIDER_MODEL', args.model)
+    llm_provider_effort = os.environ.get('POLYMARKET_LLM_PROVIDER_EFFORT', '')
     decision['active_strategy'] = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+    decision['llm_provider'] = llm_provider
     if selected_strategy_candidate_id(decision):
         decision['selected_strategy_candidate_id'] = selected_strategy_candidate_id(decision)
 
@@ -2251,6 +2262,9 @@ def main() -> None:
         'dry_run': args.dry_run,
         'active_strategy': strategy_state.get('active_strategy', DEFAULT_STRATEGY),
         'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        'llm_provider': llm_provider,
+        'llm_provider_model': llm_provider_model,
+        'llm_provider_effort': llm_provider_effort,
         'strategy_candidates': (strategy_context.get(FAR_DIP_RADAR, {}) or {}).get('candidates', []),
         'selected_strategy_candidate_id': selected_strategy_candidate_id(decision),
         'decision': decision,
@@ -2267,6 +2281,9 @@ def main() -> None:
         'dry_run': args.dry_run,
         'active_strategy': log_entry['active_strategy'],
         'strategy_mode': log_entry['strategy_mode'],
+        'llm_provider': log_entry['llm_provider'],
+        'llm_provider_model': log_entry['llm_provider_model'],
+        'llm_provider_effort': log_entry['llm_provider_effort'],
         'strategy_candidates': log_entry['strategy_candidates'],
         'selected_strategy_candidate_id': log_entry['selected_strategy_candidate_id'],
         'decision': decision,

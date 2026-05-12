@@ -49,6 +49,10 @@ STRATEGY_STATE_PATH = Path(
     os.environ.get('POLYMARKET_STRATEGY_STATE_PATH')
     or (REPO_ROOT / 'server_runtime_logs' / 'strategy_state.json')
 )
+LLM_PROVIDER_STATE_PATH = Path(
+    os.environ.get('POLYMARKET_LLM_PROVIDER_STATE_PATH')
+    or (REPO_ROOT / 'server_runtime_logs' / 'llm_provider_state.json')
+)
 MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
 MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
 OPERATOR_TIMER_UNIT = 'polymarket-operator.timer'
@@ -81,6 +85,22 @@ STRATEGY_OPTIONS = {
         'label': 'Dip Lejano Radar',
         'mode': 'Hybrid',
         'description': 'Candidatos objetivos de NO a dip lejano; Codex confirma según volatilidad semanal.',
+    },
+}
+LLM_PROVIDER_OPTIONS = {
+    'codex': {
+        'label': 'Codex CLI',
+        'auth': 'device login on server',
+        'description': 'Runs Codex CLI with the configured model and reasoning effort.',
+        'default_model': 'gpt-5.5',
+        'default_effort': 'xhigh',
+    },
+    'copilot': {
+        'label': 'GitHub Copilot CLI',
+        'auth': 'GitHub token or gh auth on server',
+        'description': 'Runs GitHub Copilot CLI and normalizes the response into the same decision file.',
+        'default_model': 'gpt-5.4',
+        'default_effort': 'high',
     },
 }
 PRIVATE_CHAT_VSCODE_DISPLAY = os.environ.get('PRIVATE_CHAT_VSCODE_DISPLAY', ':10')
@@ -587,6 +607,61 @@ def save_strategy_state(active_strategy: str, notes: str = '') -> dict[str, Any]
     }
     save_json(STRATEGY_STATE_PATH, state)
     return load_strategy_state()
+
+
+def default_llm_provider_state() -> dict[str, Any]:
+    return {
+        'active_provider': 'codex',
+        'updated_at': '',
+        'updated_by': 'default',
+        'notes': '',
+        'settings': {
+            'codex_model': LLM_PROVIDER_OPTIONS['codex']['default_model'],
+            'codex_reasoning_effort': LLM_PROVIDER_OPTIONS['codex']['default_effort'],
+            'copilot_model': LLM_PROVIDER_OPTIONS['copilot']['default_model'],
+            'copilot_effort': LLM_PROVIDER_OPTIONS['copilot']['default_effort'],
+        },
+    }
+
+
+def load_llm_provider_state() -> dict[str, Any]:
+    state = default_llm_provider_state()
+    raw = load_json(LLM_PROVIDER_STATE_PATH, {})
+    if isinstance(raw, dict):
+        state.update(raw)
+        if isinstance(raw.get('settings'), dict):
+            state['settings'].update(raw['settings'])
+    if state.get('active_provider') not in LLM_PROVIDER_OPTIONS:
+        state['active_provider'] = 'codex'
+    state['path'] = str(LLM_PROVIDER_STATE_PATH)
+    active_meta = LLM_PROVIDER_OPTIONS[state['active_provider']]
+    state['label'] = active_meta['label']
+    state['auth'] = active_meta['auth']
+    state['description'] = active_meta['description']
+    state['available_providers'] = [
+        {'id': key, **value, 'active': key == state['active_provider']}
+        for key, value in LLM_PROVIDER_OPTIONS.items()
+    ]
+    return state
+
+
+def save_llm_provider_state(active_provider: str, notes: str = '', settings: dict[str, str] | None = None) -> dict[str, Any]:
+    if active_provider not in LLM_PROVIDER_OPTIONS:
+        raise ValueError(f'Unsupported LLM provider: {active_provider}')
+    current = load_llm_provider_state()
+    merged_settings = dict(current.get('settings') or {})
+    for key, value in (settings or {}).items():
+        if value:
+            merged_settings[key] = value.strip()
+    state = {
+        'active_provider': active_provider,
+        'updated_at': datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'updated_by': 'flask_private_dashboard',
+        'notes': notes.strip(),
+        'settings': merged_settings,
+    }
+    save_json(LLM_PROVIDER_STATE_PATH, state)
+    return load_llm_provider_state()
 
 
 def save_history(history: list[dict[str, Any]]) -> None:
@@ -1942,6 +2017,7 @@ def normalize_live_position(position: dict[str, Any]) -> dict[str, Any]:
 def build_polymarket_snapshot() -> dict[str, Any]:
     account_state = load_json(ACCOUNT_STATE_PATH, {})
     strategy_state = load_strategy_state()
+    llm_provider_state = load_llm_provider_state()
     trade_log = load_json(TRADE_LOG_PATH, [])
     pending_orders = load_json(PENDING_ORDERS_PATH, [])
     active_pending_orders = [item for item in pending_orders if item.get('status') == 'pending_phone_execution']
@@ -2010,6 +2086,7 @@ def build_polymarket_snapshot() -> dict[str, Any]:
                 recent_operations.append({'timestamp': entry.get('timestamp', ''), 'type': details.get('type', entry.get('type', 'cycle_run')), 'market_slug': market_slug, 'category': classify_market_bucket(market_bucket_text(details)), 'status': details.get('status', 'performed' if execution.get('performed') else 'skipped'), 'strategy': details.get('strategy') or entry.get('active_strategy', '')})
     return {
         'strategy_state': strategy_state,
+        'llm_provider_state': llm_provider_state,
         'metrics': metrics,
         'positions': positions,
         'recent_operations': recent_operations[:12],
@@ -2589,6 +2666,22 @@ def private_polymarket():
             'border': 'rgba(239,68,68,.24)',
             'color': '#f87171',
         }
+    llm_provider_saved = request.args.get('llm_provider_saved', '').strip()
+    llm_provider_feedback = None
+    if llm_provider_saved == 'ok':
+        llm_provider_feedback = {
+            'text': '✓ Proveedor LLM actualizado.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        }
+    elif llm_provider_saved == 'error':
+        llm_provider_feedback = {
+            'text': '✗ No se pudo actualizar el proveedor LLM.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
+        }
     manual_sell = request.args.get('manual_sell', '').strip()
     manual_sell_market = request.args.get('manual_sell_market', '').strip()
     manual_sell_outcome = request.args.get('manual_sell_outcome', '').strip()
@@ -2683,6 +2776,11 @@ def private_polymarket():
         {{ strategy_feedback.text }}
       </div>
       {% endif %}
+      {% if llm_provider_feedback %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ llm_provider_feedback.bg }};border:1px solid {{ llm_provider_feedback.border }};color:{{ llm_provider_feedback.color }};font-weight:600;font-size:.93rem">
+        {{ llm_provider_feedback.text }}
+      </div>
+      {% endif %}
       {% if operator_timer_feedback %}
       <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ operator_timer_feedback.bg }};border:1px solid {{ operator_timer_feedback.border }};color:{{ operator_timer_feedback.color }};font-weight:600;font-size:.93rem">
         {{ operator_timer_feedback.text }}
@@ -2744,6 +2842,51 @@ def private_polymarket():
               <input name="notes" value="{{ strategy_state.notes }}" placeholder="optional note" style="min-width:260px">
             </label>
             <button type="submit" style="width:auto;padding:10px 18px">Guardar estrategia</button>
+          </form>
+        </div>
+      </section>
+      <section class="surface-card" style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <h2 class="section-title" style="margin:0 0 8px">Proveedor LLM</h2>
+            <div class="muted">Selecciona qué CLI genera el JSON de decisión. Ambos pasan por el mismo validador y executor.</div>
+            <div style="margin-top:10px;font-weight:800;color:#fff">{{ llm_provider_state.label }} · <span class="muted">{{ llm_provider_state.auth }}</span></div>
+            <div class="muted" style="margin-top:4px">{{ llm_provider_state.description }}</div>
+            <div class="muted" style="margin-top:4px;font-size:.82rem">Estado local: {{ llm_provider_state.path }}</div>
+            {% if llm_provider_state.updated_at %}
+            <div class="muted" style="margin-top:4px;font-size:.82rem">Actualizado: {{ llm_provider_state.updated_at }} · {{ llm_provider_state.updated_by }}</div>
+            {% endif %}
+          </div>
+          <form method="POST" action="/private/llm-provider" style="display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:10px;align-items:end;max-width:720px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Provider
+              <select name="active_provider">
+                {% for item in llm_provider_state.available_providers %}
+                <option value="{{ item.id }}" {% if item.active %}selected{% endif %}>{{ item.label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Codex model
+              <input name="codex_model" value="{{ llm_provider_state.settings.codex_model }}">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Codex effort
+              <input name="codex_reasoning_effort" value="{{ llm_provider_state.settings.codex_reasoning_effort }}">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Copilot model
+              <input name="copilot_model" value="{{ llm_provider_state.settings.copilot_model }}">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Copilot effort
+              <input name="copilot_effort" value="{{ llm_provider_state.settings.copilot_effort }}">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.82rem;color:#b6c7dd">
+              Nota
+              <input name="notes" value="{{ llm_provider_state.notes }}" placeholder="optional note">
+            </label>
+            <button type="submit" style="width:auto;padding:10px 18px;grid-column:1/-1">Guardar proveedor LLM</button>
           </form>
         </div>
       </section>
@@ -2970,6 +3113,7 @@ def private_polymarket():
         operator_timer=operator_timer,
         operator_timer_feedback=operator_timer_feedback,
         operator_timer_unit=OPERATOR_TIMER_UNIT,
+        llm_provider_feedback=llm_provider_feedback,
         tip_feedback=tip_feedback,
         strategy_feedback=strategy_feedback,
         tip_path=str(TIP_PATH),
@@ -3003,6 +3147,42 @@ def private_strategy_save():
             {'active_strategy': active_strategy},
         )
         return redirect(url_for('private_polymarket', strategy_saved='error'))
+
+
+@app.route('/private/llm-provider', methods=['POST'])
+@require_private
+def private_llm_provider_save():
+    active_provider = request.form.get('active_provider', '').strip()
+    notes = request.form.get('notes', '').strip()
+    settings = {
+        'codex_model': request.form.get('codex_model', '').strip(),
+        'codex_reasoning_effort': request.form.get('codex_reasoning_effort', '').strip(),
+        'copilot_model': request.form.get('copilot_model', '').strip(),
+        'copilot_effort': request.form.get('copilot_effort', '').strip(),
+    }
+    try:
+        state = save_llm_provider_state(active_provider, notes, settings)
+        append_jsonl_event(
+            'app.llm_provider',
+            'llm_provider_updated',
+            'info',
+            'Active Polymarket LLM provider updated from private dashboard',
+            {
+                'active_provider': state['active_provider'],
+                'settings': state.get('settings', {}),
+                'notes': notes,
+            },
+        )
+        return redirect(url_for('private_polymarket', llm_provider_saved='ok'))
+    except Exception as exc:
+        append_jsonl_event(
+            'app.llm_provider',
+            'llm_provider_update_failed',
+            'error',
+            f'Failed to update active LLM provider: {exc}',
+            {'active_provider': active_provider},
+        )
+        return redirect(url_for('private_polymarket', llm_provider_saved='error'))
 
 
 @app.route('/private/tip', methods=['POST'])

@@ -23,6 +23,7 @@ The assistant should:
 - `account_state.json` — bankroll, cash, open positions, realized PnL
 - `trade_log.json` — daily decisions, entries, exits, and no-bet days
 - `server_runtime_logs/strategy_state.json` — server-local active strategy selected from Flask; ignored by Git
+- `server_runtime_logs/llm_provider_state.json` — server-local active LLM provider selected from Flask; ignored by Git
 - `context_helper.py` — optional helper script for quick context snapshots
 - `activity_summary.py` — public Polymarket activity/positions summary for any wallet
 

@@ -57,7 +57,13 @@ def is_automatic_fallback_decision(decision: dict[str, Any]) -> bool:
     rationale = (decision.get('rationale') or '').strip()
     return (
         summary.startswith('Automatic Codex cycle fallback:')
+        or summary.startswith('Automatic Copilot cycle fallback:')
+        or summary.startswith('Automatic LLM cycle fallback:')
         or rationale.startswith('Codex auto-cycle fallback:')
+        or rationale.startswith('Copilot auto-cycle fallback:')
+        or rationale.startswith('LLM auto-cycle fallback:')
+        or rationale.startswith('codex auto-cycle fallback:')
+        or rationale.startswith('copilot auto-cycle fallback:')
     )
 
 
@@ -114,7 +120,11 @@ def main() -> None:
     decision = normalize_decision(decision)
     strategy_state = context.get('strategy_state') or base.load_strategy_state()
     strategy_context = context.get('strategy_context') or {}
+    llm_provider = os.environ.get('POLYMARKET_LLM_PROVIDER', 'copilot' if not args.decision_file else 'external_decision_file')
+    llm_provider_model = os.environ.get('POLYMARKET_LLM_PROVIDER_MODEL', args.model)
+    llm_provider_effort = os.environ.get('POLYMARKET_LLM_PROVIDER_EFFORT', '')
     decision['active_strategy'] = strategy_state.get('active_strategy', base.DEFAULT_STRATEGY)
+    decision['llm_provider'] = llm_provider
     if base.selected_strategy_candidate_id(decision):
         decision['selected_strategy_candidate_id'] = base.selected_strategy_candidate_id(decision)
 
@@ -169,6 +179,9 @@ def main() -> None:
         'dry_run': args.dry_run,
         'active_strategy': strategy_state.get('active_strategy', base.DEFAULT_STRATEGY),
         'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        'llm_provider': llm_provider,
+        'llm_provider_model': llm_provider_model,
+        'llm_provider_effort': llm_provider_effort,
         'strategy_candidates': (strategy_context.get(base.FAR_DIP_RADAR, {}) or {}).get('candidates', []),
         'selected_strategy_candidate_id': base.selected_strategy_candidate_id(decision),
         'decision': decision,
@@ -186,6 +199,9 @@ def main() -> None:
         'dry_run': args.dry_run,
         'active_strategy': log_entry['active_strategy'],
         'strategy_mode': log_entry['strategy_mode'],
+        'llm_provider': log_entry['llm_provider'],
+        'llm_provider_model': log_entry['llm_provider_model'],
+        'llm_provider_effort': log_entry['llm_provider_effort'],
         'strategy_candidates': log_entry['strategy_candidates'],
         'selected_strategy_candidate_id': log_entry['selected_strategy_candidate_id'],
         'decision': decision,
