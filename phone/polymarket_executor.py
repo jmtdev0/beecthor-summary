@@ -598,14 +598,26 @@ def is_fill_or_kill_rejection(resp: requests.Response) -> bool:
     return resp.status_code == 400 and 'fully filled or killed' in resp.text.lower()
 
 
-def build_price_candidates(base_price: float, side: str, order_type: str) -> list[float]:
+def order_max_buy_price(pending: dict) -> float:
+    raw_limit = as_float(pending.get('max_entry_probability'))
+    if raw_limit <= 0.0:
+        return MAX_OPEN_POSITION_BUY_PRICE
+    return min(MAX_OPEN_POSITION_BUY_PRICE, raw_limit)
+
+
+def build_price_candidates(
+    base_price: float,
+    side: str,
+    order_type: str,
+    max_buy_price: float = MAX_OPEN_POSITION_BUY_PRICE,
+) -> list[float]:
     if side != 'BUY' or order_type != 'OPEN_POSITION':
         return [clamp_price(base_price)]
 
     candidates: list[float] = []
     for offset in BUY_FOK_REPRICE_OFFSETS:
         raw_price = base_price + offset
-        if raw_price > MAX_OPEN_POSITION_BUY_PRICE:
+        if raw_price > max_buy_price:
             continue
         price = clamp_price(raw_price)
         if price not in candidates:
@@ -661,6 +673,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
     market = pending.get('market') or pending.get('market_slug', '')
     outcome = pending.get('outcome', '')
     amount = float(pending.get('stake_usd') or pending.get('amount', 0))
+    max_buy_price = order_max_buy_price(pending)
 
     print(f'[executor] Order: {order_type} {side} {outcome} on "{market}" amount={amount}')
     send_server_log(
@@ -803,10 +816,10 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
         print(f'[executor] Attempt {attempt}/{max_attempts} — querying order book...')
         try:
             base_price = get_market_price(token_id, side, amount)
-            if side == 'BUY' and order_type == 'OPEN_POSITION' and base_price > MAX_OPEN_POSITION_BUY_PRICE:
+            if side == 'BUY' and order_type == 'OPEN_POSITION' and base_price > max_buy_price:
                 detail = (
                     'Live OPEN_POSITION price is above the phone execution cap '
-                    f'({base_price:.1%} > {MAX_OPEN_POSITION_BUY_PRICE:.0%})'
+                    f'({base_price:.1%} > {max_buy_price:.1%})'
                 )
                 print(f'[executor] Skipping high-probability order: {detail}')
                 send_server_log(
@@ -818,7 +831,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                         'market_slug': pending.get('market_slug'),
                         'reason': 'live_probability_too_high',
                         'live_probability': round(base_price, 4),
-                        'max_allowed_probability': MAX_OPEN_POSITION_BUY_PRICE,
+                        'max_allowed_probability': max_buy_price,
                     },
                 )
                 update_pending_order_status(
@@ -828,7 +841,7 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                     {
                         'market_slug': pending.get('market_slug'),
                         'live_probability': round(base_price, 4),
-                        'max_allowed_probability': MAX_OPEN_POSITION_BUY_PRICE,
+                        'max_allowed_probability': max_buy_price,
                     },
                 )
                 save_executed_order_id(order_id)
@@ -838,11 +851,11 @@ def execute_order(pending: dict, dry_run: bool = False) -> bool:
                         f'{market}\n'
                         f'{outcome}\n'
                         f'Precio vivo: {base_price:.0%}\n'
-                        f'Límite del móvil: {MAX_OPEN_POSITION_BUY_PRICE:.0%}\n'
+                        f'Límite del móvil: {max_buy_price:.1%}\n'
                         'Riesgo/recompensa demasiado pobre para abrir ahora.'
                     )
                 return True
-            price_candidates = build_price_candidates(base_price, side, order_type)
+            price_candidates = build_price_candidates(base_price, side, order_type, max_buy_price)
             print(f'[executor] Market price: {base_price} | candidates={price_candidates}')
         except MarketResolvedException as exc:
             print(f'[executor] Skipping stale order because market is already resolved: {exc}')

@@ -1,5 +1,10 @@
 # Changelog
 
+### 13/05/2026
+* Añadido `phone/far_dip_radar_executor.py`: barrido mecánico sin LLM para la estrategia `far_dip_radar`, limitado a 06:00-08:00 UTC, con máximo una compra por ventana y validación de precio vivo antes de ejecutar.
+* El executor móvil de Polymarket respeta ahora `max_entry_probability` por orden, para que estrategias con límites más estrictos que el 90% no puedan repricing por encima de su máximo.
+* Flask expone `/api/mobile/strategy-state` protegido por `MOBILE_LOG_API_SECRET`, de modo que el móvil solo active el barrido si el switch del servidor sigue en `far_dip_radar`.
+
 ### 08/05/2026
 * Añadida segunda simulación pública de resumen Beecthor: BTC defendiendo 79k pero aún atrapado bajo 80.5k, marcada como experimento sin validez operativa.
 

@@ -3606,6 +3606,26 @@ def api_mobile_log():
     return jsonify({'ok': True, 'stored': stored})
 
 
+@app.route('/api/mobile/strategy-state', methods=['GET', 'POST'])
+def api_mobile_strategy_state():
+    data = request.get_json(silent=True) or {}
+    provided_secret = (
+        request.headers.get('X-Log-Secret', '').strip()
+        or request.args.get('secret', '').strip()
+        or str(data.get('secret') or '').strip()
+    )
+    if not MOBILE_LOG_API_SECRET or provided_secret != MOBILE_LOG_API_SECRET:
+        append_jsonl_event('api.mobile', 'strategy_state_rejected', 'warning', 'Rejected strategy state request due to invalid secret')
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
+    state = load_strategy_state()
+    return jsonify({
+        'ok': True,
+        'active_strategy': state.get('active_strategy'),
+        'strategy_mode': state.get('mode'),
+        'strategy_state': state,
+    })
+
+
 if __name__ == '__main__':
     if not CHAT_PASSWORD:
         print('[dashboard] WARNING: COPILOT_CHAT_PASSWORD not set — private area is unsafe.')
