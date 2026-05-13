@@ -16740,5 +16740,69 @@
     "binance_spot_price": 80879.72,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-13T06:01:23Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-13T06-00-12Z",
+    "dry_run": false,
+    "active_strategy": "far_dip_radar",
+    "strategy_mode": "hybrid",
+    "llm_provider": "external_decision_file",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-13T06-00-12Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "NO_ACTION: far_dip_radar produced no valid generated candidate and there are no open positions to manage.",
+      "rationale": "Active strategy is far_dip_radar, where openings must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. Account reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. BTC is around 81019.99 with neutral short-term bias, 48h change +0.35%, and 7d change -0.42% inside a 79181.48-82850.00 range; weekly volatility is normal at 0.1964% average absolute hourly return versus 0.2331% previously, so volatility does not block by itself, but without a generated candidate there is no valid edge to execute.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "far_dip_radar",
+      "llm_provider": "external_decision_file"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 81023.51,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]

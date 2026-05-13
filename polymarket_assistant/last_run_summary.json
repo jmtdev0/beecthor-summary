@@ -1,17 +1,20 @@
 {
-  "timestamp": "2026-05-12T08:02:17Z",
-  "run_id": "2026-05-12T08-00-16Z",
+  "timestamp": "2026-05-13T06:01:23Z",
+  "run_id": "2026-05-13T06-00-12Z",
   "dry_run": false,
   "active_strategy": "far_dip_radar",
   "strategy_mode": "hybrid",
+  "llm_provider": "external_decision_file",
+  "llm_provider_model": "gpt-5.4",
+  "llm_provider_effort": "",
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-12T08-00-16Z",
+    "run_id": "2026-05-13T06-00-12Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "NO_ACTION: far_dip_radar produced no generated candidates and there are no open positions to manage.",
-    "rationale": "Active strategy is far_dip_radar, where an OPEN_POSITION must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. No open positions meet take-profit or reduction checks. Weekly BTC volatility is normal (0.196 vs 0.2298, ratio 0.85); BTC is nearly flat over 48h/7d and down about 1.13% since the UTC day open around 80825, but without a generated candidate there is no valid tradable edge.",
+    "summary": "NO_ACTION: far_dip_radar produced no valid generated candidate and there are no open positions to manage.",
+    "rationale": "Active strategy is far_dip_radar, where openings must copy exactly one generated candidate, but context.strategy_context.far_dip_radar.candidates is empty. Account reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. BTC is around 81019.99 with neutral short-term bias, 48h change +0.35%, and 7d change -0.42% inside a 79181.48-82850.00 range; weekly volatility is normal at 0.1964% average absolute hourly return versus 0.2331% previously, so volatility does not block by itself, but without a generated candidate there is no valid edge to execute.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -43,7 +46,8 @@
       "stake_usd": 0,
       "max_entry_probability": 0.0
     },
-    "active_strategy": "far_dip_radar"
+    "active_strategy": "far_dip_radar",
+    "llm_provider": "external_decision_file"
   },
   "validation": {
     "ok": true,
@@ -53,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 80879.72,
+  "binance_spot_price": 81023.51,
   "positions_before": 0,
   "positions_after": 0
 }
