@@ -16804,5 +16804,69 @@
     "binance_spot_price": 81023.51,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-13T08:01:58Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-13T08-00-15Z",
+    "dry_run": false,
+    "active_strategy": "far_dip_radar",
+    "strategy_mode": "hybrid",
+    "llm_provider": "external_decision_file",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-13T08-00-15Z",
+      "action": "NO_ACTION",
+      "confidence": 0.97,
+      "summary": "NO_ACTION: far_dip_radar is active but generated no valid candidates, and there are no open positions to manage.",
+      "rationale": "Active strategy is far_dip_radar, where openings must copy one generated candidate exactly; context.strategy_context.far_dip_radar.candidates is empty. Weekly BTC volatility is normal, BTC is roughly flat over 48h and down 1.17% over 7d, but without a generated candidate there is no authorized entry. Reconciliation is ok, daily cooldown is inactive, and Polymarket positions are empty, so no close or reduce action applies.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "far_dip_radar",
+      "llm_provider": "external_decision_file"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 81050.0,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
