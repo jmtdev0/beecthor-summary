@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-13T20:01:34Z",
-  "run_id": "2026-05-13T20-00-04Z",
+  "timestamp": "2026-05-14T06:02:32Z",
+  "run_id": "2026-05-14T06-00-06Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-13T20-00-04Z",
+    "run_id": "2026-05-14T06-00-06Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "NO_ACTION: no open positions to manage and no daily BTC entry has acceptable expiry/probability edge.",
-    "rationale": "Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. Latest Beecthor context remains bearish below about 86.5k but today's summary frames the near-term path as a possible sweep toward 77.8k followed by a rebound attempt, not a clean late-session breakdown. Binance is bearish short term around 79668 with 12h -2.0% and 24h -1.14%, but with only about 4h left the nearest thesis-aligned unresolved DIP at 78k is still far, priced only 0.0595, and would require another fresh downside leg after the earlier move. Conservative No outcomes are all above the 0.90 entry cap, and account equity is still below starting bankroll, so there is no valid edge.",
+    "confidence": 0.9,
+    "summary": "NO_ACTION: no open positions to manage and no daily BTC entry has a clean Beecthor/Binance/Polymarket edge.",
+    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. The latest Beecthor transcript and summaries remain macro bearish below 86.5k, but the current short-term map still allows a sweep near 77.8k followed by a rebound toward 82.6k-83k; BTC is around 79.8k after a 78.75k low, with neutral short-term Binance bias, 12h +0.23%, 24h -1.48%, balanced positioning, and no clean breakdown or reclaim failure. The thesis-aligned 78k DIP Yes is only 0.245 and would be blocked by low conviction/account-equity risk, while 81k/82k Reach Yes lacks momentum confirmation. The only under-cap conservative candidate, 82k Reach No at 0.79, conflicts with Beecthor's stated upside-cleanup risk and is not supported by a confirmed bearish Binance rejection. No valid edge remains.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 79665.05,
+  "binance_spot_price": 79828.01,
   "positions_before": 0,
   "positions_after": 0
 }
