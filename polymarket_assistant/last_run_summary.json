@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-14T18:01:58Z",
-  "run_id": "2026-05-14T18-00-04Z",
+  "timestamp": "2026-05-14T20:01:43Z",
+  "run_id": "2026-05-14T20-00-09Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-14T18-00-04Z",
+    "run_id": "2026-05-14T20-00-09Z",
     "action": "NO_ACTION",
-    "confidence": 0.91,
-    "summary": "NO_ACTION: no open positions to manage and no May 14 BTC daily market offers a clean edge.",
-    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily success cooldown is inactive, and there are no open positions or open orders. Latest Beecthor context remains macro bearish below roughly 86k, but the near-term map is mixed: the 78.7k/80.2k downside sweep has already played into a rebound, with possible liquidity targets around 81k-83k and extension risk toward 85.5k, while the 82.5k ratio is already effectively fulfilled. Binance is bullish short term at about 81671, up 2.7% over 24h and near the 24h high, but BTC has not cleanly accepted above the 82k-82.5k local resistance/range high. A 83k Reach Yes at 0.2245 would require chasing another late-session leg after a large daily move, so expiry validity is not strong enough. Bearish DIP Yes markets lack Binance rejection/breakdown confirmation, and conservative No outcomes either exceed the 90% entry cap or conflict with the current rebound/upside-liquidity risk.",
+    "confidence": 0.94,
+    "summary": "NO_ACTION: no open positions to manage and no May 14 BTC daily market has acceptable late-session expiry validity.",
+    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily cooldown is inactive, and there are no open positions or open orders. Latest Beecthor context remains macro bearish below roughly 86k, but today’s near-term map says the 80.2k/78.7k downside sweep has already rebounded toward 81k-83k, with the 82.5k ratio effectively fulfilled and only optional extension risk higher. Binance is bullish short term around 81449, up about 2.6% over 24h and near the 82048 high, but there is no clean acceptance above the 82k-82.5k resistance area. With only about 4h left, 83k Reach Yes at 0.0485 would be a low-probability chase requiring another fresh leg, while bearish DIP Yes markets lack rejection or breakdown confirmation and conservative No outcomes exceed the 90% entry cap.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81528.3,
+  "binance_spot_price": 81472.41,
   "positions_before": 0,
   "positions_after": 0
 }
