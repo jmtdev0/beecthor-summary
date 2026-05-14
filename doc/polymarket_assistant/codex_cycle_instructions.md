@@ -31,6 +31,7 @@ Important schema reminders:
 - Never use `expiry_validity: "weak"` for an opening. A correct level with poor expiry timing is still `NO_ACTION`.
 - Correct for Beecthor's persistent bearish bias: if recent summaries are bearish but BTC is flat or net higher, require Binance rejection evidence before opening a bearish DIP.
 - Treat discarded live positions as real account pain even when they no longer block slot availability.
+- Treat account liquidity/equity versus starting bankroll as informational only. Do not use low cash/equity as a reason to skip or lower confidence, except for hard stake funding and stake/slot caps.
 - Do not chase after a large 24h BTC move unless the live probability and expiry validity are both strong.
 - Read `context.strategy_state.active_strategy` from the context file before deciding.
 - If active strategy is `far_dip_radar`, only choose a generated candidate from `context.strategy_context.far_dip_radar.candidates` or return `NO_ACTION`.

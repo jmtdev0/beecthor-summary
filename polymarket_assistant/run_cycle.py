@@ -1507,8 +1507,8 @@ def summarize_strategy_pressure(
         'bearish_summary_count': bearish_mentions,
         'bearish_bias_correction_active': bearish_bias_correction_active,
         'binance_short_term_bias': short_term_bias,
+        'account_equity_informational_only': True,
         'risk_flags': {
-            'equity_below_starting_bankroll': bool(starting_bankroll and net_liquidation_value < starting_bankroll),
             'discarded_pain_budget_exceeded': discarded_loss_pct >= 15.0,
             'bearish_bias_needs_confirmation': bearish_bias_correction_active,
         },
@@ -1719,8 +1719,6 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                 and live_probability < 0.75
             ):
                 return False, 'Discarded-position pain budget blocks adding same-direction exposure'
-            if strategy_pressure.get('risk_flags', {}).get('equity_below_starting_bankroll') and live_probability < 0.65:
-                return False, 'Account-equity gate blocks low-conviction new exposure'
             change_24h = safe_float(binance.get('price_change_percent_24h'))
             chasing_up = trade_direction == 'bullish' and change_24h >= 3.0
             chasing_down = trade_direction == 'bearish' and change_24h <= -3.0
