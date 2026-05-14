@@ -173,18 +173,20 @@ Add:
 ```cron
 CRON_TZ=UTC
 
-# Polymarket executor — 5 min after each server cycle (cycles at 00/06/12/18 UTC)
-5 0 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
-5 6 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
-5 12 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
-5 18 * * * python ~/polymarket_executor.py >> ~/polymarket_executor.log 2>&1
+# Polymarket executor — no periodic cron.
+# The server triggers phone/polymarket_executor.py through the reverse SSH
+# tunnel immediately after pending_orders.json is committed and pushed.
 
 # Monitor executor — disabled as a periodic mobile cron.
 # Exit detection now runs every minute on the server and triggers the
 # phone on demand through the reverse SSH tunnel when a live TP/SL is detected.
 
-# Beecthor summarizer — daily at 19:45 UTC
-45 19 * * * source $HOME/.bashrc && python $HOME/beecthor_summarizer.py >> $HOME/beecthor_summarizer.log 2>&1
+# Beecthor summarizer — daily at the selected UTC time
+45 17 * * * source $HOME/.bashrc && python $HOME/beecthor_summarizer.py >> $HOME/beecthor_summarizer.log 2>&1
+
+# Reverse SSH tunnel watchdog — hourly self-heal and on Termux reboot
+1 * * * * /data/data/com.termux/files/usr/bin/bash -lc '~/ensure_reverse_tunnel.sh' >> ~/reverse_tunnel_watchdog.cron.log 2>&1
+@reboot /data/data/com.termux/files/usr/bin/bash -lc '~/ensure_reverse_tunnel.sh' >> ~/reverse_tunnel_watchdog.cron.log 2>&1
 ```
 
 > The executor reads from `pending_orders.json` in the repo and executes all queued orders. It deduplicates by order ID so running it multiple times is safe.

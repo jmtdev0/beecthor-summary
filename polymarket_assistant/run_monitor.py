@@ -2,7 +2,7 @@
 """
 Polymarket Position Monitor
 
-Runs every minute on the server via systemd timer.
+Runs every minute while the server systemd timer is active.
 No GPT/Copilot — hard-coded thresholds only:
   - Take-profit: cur_price >= 0.90
 
@@ -10,6 +10,10 @@ On trigger: stores a local snapshot of the candidate actions, then attempts to
 launch the phone monitor executor immediately through the reverse SSH tunnel.
 This keeps detection on the server while preserving residential-IP execution on
 the phone.
+
+The timer is intentionally on-demand: server cycles enable it after queueing a
+phone OPEN_POSITION order, and this monitor disables it again once no live
+position remains.
 """
 
 from __future__ import annotations
@@ -18,12 +22,15 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import requests
 
 from polymarket_assistant.run_cycle import (
     ASSISTANT_DIR,
+    PENDING_ORDERS_PATH,
     fetch_positions,
     load_env,
     load_json,
@@ -35,6 +42,7 @@ from polymarket_assistant.run_cycle import (
 MONITOR_ACTION_PATH = ASSISTANT_DIR / 'last_monitor_action.json'
 MONITOR_DISPATCH_STATE_PATH = ASSISTANT_DIR / 'monitor_dispatch_state.json'
 MONITOR_HISTORY_PATH = ASSISTANT_DIR / 'monitor_history.json'
+MONITOR_TIMER_NAME = os.environ.get('POLYMARKET_MONITOR_TIMER_NAME', 'polymarket-monitor.timer')
 
 PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
 TAKE_PROFIT_THRESHOLD = 0.90
@@ -42,6 +50,7 @@ ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 MAX_MONITOR_HISTORY_ENTRIES = 24
+PENDING_OPEN_ORDER_GRACE_SECONDS = 20 * 60
 SUCCESS_DISPATCH_COOLDOWN_SECONDS = 15 * 60
 FAILED_DISPATCH_RETRY_SECONDS = 2 * 60
 
@@ -167,6 +176,97 @@ def append_monitor_history(entry: dict[str, object]) -> None:
     save_json(MONITOR_HISTORY_PATH, history[-MAX_MONITOR_HISTORY_ENTRIES:])
 
 
+def parse_utc_timestamp(value: object) -> float:
+    if not value:
+        return 0.0
+    text = str(value).strip()
+    if not text:
+        return 0.0
+    if text.endswith('Z'):
+        text = f'{text[:-1]}+00:00'
+    try:
+        return datetime.fromisoformat(text).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def order_timestamp(order: dict[str, Any]) -> float:
+    for key in ('created_at', 'timestamp', 'order_id'):
+        parsed = parse_utc_timestamp(order.get(key))
+        if parsed:
+            return parsed
+    return 0.0
+
+
+def has_recent_pending_open_order() -> tuple[bool, dict[str, object]]:
+    queue = load_json(PENDING_ORDERS_PATH, [])
+    if not isinstance(queue, list):
+        return False, {'pending_open_order_count': 0}
+
+    now_ts = datetime.now(timezone.utc).timestamp()
+    pending_open_orders: list[dict[str, Any]] = []
+    for order in queue:
+        if not isinstance(order, dict):
+            continue
+        if order.get('type') != 'OPEN_POSITION':
+            continue
+        if order.get('status') != 'pending_phone_execution':
+            continue
+        pending_open_orders.append(order)
+
+    recent_orders = []
+    for order in pending_open_orders:
+        created_ts = order_timestamp(order)
+        age_seconds = max(0, int(now_ts - created_ts)) if created_ts else None
+        if age_seconds is None or age_seconds <= PENDING_OPEN_ORDER_GRACE_SECONDS:
+            recent_orders.append(
+                {
+                    'order_id': order.get('order_id', ''),
+                    'market_slug': order.get('market_slug', ''),
+                    'age_seconds': age_seconds,
+                }
+            )
+
+    return bool(recent_orders), {
+        'pending_open_order_count': len(pending_open_orders),
+        'recent_pending_open_order_count': len(recent_orders),
+        'recent_pending_open_orders': recent_orders[:3],
+        'grace_seconds': PENDING_OPEN_ORDER_GRACE_SECONDS,
+    }
+
+
+def systemd_available() -> bool:
+    if os.environ.get('POLYMARKET_MONITOR_SELF_MANAGE', '1') == '0':
+        return False
+    return os.name == 'posix' and Path('/run/systemd/system').exists()
+
+
+def deactivate_monitor_timer(reason: str) -> dict[str, object]:
+    if not systemd_available():
+        print(f'[monitor] Timer self-management skipped: {reason}')
+        return {'attempted': False, 'reason': reason}
+
+    result = subprocess.run(
+        ['systemctl', 'disable', '--now', MONITOR_TIMER_NAME],
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    detail = (result.stderr or result.stdout or '').strip()
+    if result.returncode == 0:
+        print(f'[monitor] Disabled {MONITOR_TIMER_NAME}: {reason}')
+        return {'attempted': True, 'success': True, 'timer': MONITOR_TIMER_NAME, 'reason': reason}
+
+    print(f'[monitor] WARN: failed to disable {MONITOR_TIMER_NAME}: {detail}')
+    return {
+        'attempted': True,
+        'success': False,
+        'timer': MONITOR_TIMER_NAME,
+        'reason': reason,
+        'detail': detail[:500],
+    }
+
+
 def main() -> None:
     print(f'[monitor] Starting at {now_utc()}')
 
@@ -194,7 +294,14 @@ def main() -> None:
     }
     if not positions:
         print('[monitor] No open positions.')
-        history_entry['status'] = 'no_open_positions'
+        has_recent_pending, pending_detail = has_recent_pending_open_order()
+        history_entry['pending_open_order_guard'] = pending_detail
+        if has_recent_pending:
+            history_entry['status'] = 'no_open_positions_pending_open_order'
+            print('[monitor] Recent pending OPEN_POSITION order found; keeping timer active.')
+        else:
+            history_entry['status'] = 'no_open_positions'
+            history_entry['timer_action'] = deactivate_monitor_timer('no_open_positions')
         save_json(MONITOR_ACTION_PATH, history_entry)
         append_monitor_history(history_entry)
         return

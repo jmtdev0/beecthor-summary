@@ -49,3 +49,4 @@ polymarket_monitor_executor.py
 server/copilot_chat_history.json
 polymarket_assistant/notified_claims.json
 doc/DIARY.md
+doc/polymarket_assistant/BTCUSDT-1m-2026-*/

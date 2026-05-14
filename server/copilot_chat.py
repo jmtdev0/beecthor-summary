@@ -2569,7 +2569,7 @@ def toggle_operator_cycle_timer():
 def trigger_process(process: str):
     if process == 'cycle':
         subprocess.Popen(
-            ['bash', '/root/run_polymarket_cycle.sh'],
+            ['bash', str(REPO_ROOT / 'server' / 'run_polymarket_cycle.sh')],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

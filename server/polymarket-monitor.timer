@@ -1,5 +1,5 @@
 [Unit]
-Description=Polymarket Position Monitor — minute-level take-profit detector on server
+Description=Polymarket Position Monitor — on-demand minute-level take-profit detector
 
 [Timer]
 OnCalendar=*-*-* *:*:00

@@ -13,6 +13,9 @@ CODEX_SANDBOX=${CODEX_SANDBOX:-read-only}
 COPILOT_CLI=${COPILOT_CLI:-copilot}
 COPILOT_MODEL=${COPILOT_MODEL:-gpt-5.4}
 COPILOT_EFFORT=${COPILOT_EFFORT:-high}
+PHONE_SSH_USER=${PHONE_SSH_USER:-u0_a647}
+PHONE_TUNNEL_PORT=${PHONE_TUNNEL_PORT:-2222}
+MONITOR_TIMER_NAME=${MONITOR_TIMER_NAME:-polymarket-monitor.timer}
 
 LOG_DIR=/var/log/polymarket-operator
 RUNTIME_DIR=/var/lib/polymarket-operator
@@ -342,6 +345,114 @@ decision_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), enco
 PY
 }
 
+trigger_phone_order_executor() {
+  local order_count="$1"
+  local phone_cmd
+  phone_cmd=(
+    ssh
+    -p "$PHONE_TUNNEL_PORT"
+    -o BatchMode=yes
+    -o StrictHostKeyChecking=no
+    -o ConnectTimeout=15
+    "${PHONE_SSH_USER}@localhost"
+    "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true; nohup python3 phone/polymarket_executor.py >> ~/polymarket_executor.log 2>&1 </dev/null &'"
+  )
+
+  echo "[cycle] Triggering phone order executor via tunnel for ${order_count} queued order(s)."
+  if "${phone_cmd[@]}"; then
+    echo "[cycle] Phone order executor started via tunnel."
+    return 0
+  fi
+
+  local rc=$?
+  echo "[cycle] WARN: phone order executor trigger failed with exit code ${rc}."
+  return "$rc"
+}
+
+activate_monitor_timer() {
+  if ! command -v systemctl >/dev/null 2>&1; then
+    echo "[cycle] WARN: systemctl not found; monitor timer not activated."
+    return 1
+  fi
+
+  if systemctl enable --now "$MONITOR_TIMER_NAME"; then
+    echo "[cycle] Monitor timer activated: ${MONITOR_TIMER_NAME}"
+    return 0
+  fi
+
+  echo "[cycle] WARN: failed to activate monitor timer: ${MONITOR_TIMER_NAME}"
+  return 1
+}
+
+summary_queued_order_count() {
+  python3 - "$SUMMARY_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+summary_path = Path(sys.argv[1])
+try:
+    summary = json.loads(summary_path.read_text(encoding='utf-8'))
+except Exception:
+    print(0)
+    raise SystemExit(0)
+
+execution = summary.get('execution') or {}
+if not execution.get('performed'):
+    print(0)
+    raise SystemExit(0)
+
+details = execution.get('details')
+if isinstance(details, list):
+    queued = [
+        item for item in details
+        if isinstance(item, dict) and item.get('status') == 'pending_phone_execution'
+    ]
+    print(len(queued))
+elif isinstance(details, dict) and details.get('status') == 'pending_phone_execution':
+    print(1)
+else:
+    print(0)
+PY
+}
+
+summary_queued_open_order_count() {
+  python3 - "$SUMMARY_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+summary_path = Path(sys.argv[1])
+try:
+    summary = json.loads(summary_path.read_text(encoding='utf-8'))
+except Exception:
+    print(0)
+    raise SystemExit(0)
+
+execution = summary.get('execution') or {}
+if not execution.get('performed'):
+    print(0)
+    raise SystemExit(0)
+
+details = execution.get('details')
+if isinstance(details, dict):
+    details = [details]
+if not isinstance(details, list):
+    details = []
+
+count = 0
+for item in details:
+    if not isinstance(item, dict):
+        continue
+    if item.get('status') != 'pending_phone_execution':
+        continue
+    if item.get('type') != 'OPEN_POSITION':
+        continue
+    count += 1
+print(count)
+PY
+}
+
 cd "$REPO_ROOT"
 git pull --ff-only origin main 2>/dev/null || true
 
@@ -564,11 +675,15 @@ source .venv/bin/activate
 python "$RUN_CYCLE" --decision-file "$DECISION_FILE" "${PASSTHROUGH_ARGS[@]}"
 
 SUMMARY_FILE="polymarket_assistant/last_run_summary.json"
+PHONE_ORDER_COUNT=0
+PHONE_OPEN_ORDER_COUNT=0
 if [ -f "$SUMMARY_FILE" ]; then
   ACTION=$(python3 -c "import json; d=json.load(open('$SUMMARY_FILE')); print(d['decision']['action'])" 2>/dev/null || echo "UNKNOWN")
   SUMMARY=$(python3 -c "import json; d=json.load(open('$SUMMARY_FILE')); print(d['decision']['summary'][:120])" 2>/dev/null || echo "")
   BTC=$(python3 -c "import json; d=json.load(open('$SUMMARY_FILE')); print(d['binance_spot_price'])" 2>/dev/null || echo "?")
   DRY=$(python3 -c "import json; d=json.load(open('$SUMMARY_FILE')); print('[DRY RUN] ' if d['dry_run'] else '')" 2>/dev/null || echo "")
+  PHONE_ORDER_COUNT=$(summary_queued_order_count)
+  PHONE_OPEN_ORDER_COUNT=$(summary_queued_open_order_count)
   COMMIT_MSG="${DRY}polymarket: ${ACTION} (BTC \$${BTC})\n\n${SUMMARY}"
 else
   COMMIT_MSG="polymarket: cycle $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -586,9 +701,19 @@ if ! git diff --staged --quiet 2>/dev/null; then
   git commit -m "$COMMIT_MSG"
   if git push origin main; then
     echo "[cycle] Committed and pushed: ${ACTION}"
+    if [ "${PHONE_ORDER_COUNT:-0}" -gt 0 ]; then
+      if trigger_phone_order_executor "$PHONE_ORDER_COUNT"; then
+        if [ "${PHONE_OPEN_ORDER_COUNT:-0}" -gt 0 ]; then
+          activate_monitor_timer || true
+        fi
+      fi
+    fi
   else
     echo "WARN: git push failed"
     echo "[cycle] Commit created locally only: ${ACTION}"
+    if [ "${PHONE_ORDER_COUNT:-0}" -gt 0 ]; then
+      echo "[cycle] Phone order executor not triggered because pending_orders.json was not pushed."
+    fi
   fi
 else
   echo "[cycle] No state changes to commit"
