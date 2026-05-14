@@ -1,15 +1,15 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-14T06:02:32Z
+- Timestamp: 2026-05-14T08:02:37Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
 - LLM provider: external_decision_file
 - LLM model: gpt-5.4
 - LLM effort: 
-- BTC price: 79828.01
+- BTC price: 79683.97
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: no open positions to manage and no daily BTC entry has a clean Beecthor/Binance/Polymarket edge.
+- Decision summary: NO_ACTION: no open positions to manage and no daily BTC market has a clean Beecthor/Binance/Polymarket edge.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
