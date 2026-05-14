@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-14T12:02:33Z",
-  "run_id": "2026-05-14T12-00-04Z",
+  "timestamp": "2026-05-14T14:02:47Z",
+  "run_id": "2026-05-14T14-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-14T12-00-04Z",
+    "run_id": "2026-05-14T14-00-16Z",
     "action": "NO_ACTION",
     "confidence": 0.91,
-    "summary": "NO_ACTION: no open positions to manage and no May 14 daily BTC market has a clean Beecthor/Binance edge.",
-    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. The latest Beecthor context is still macro bearish below about 86.5k, but the near-term map remains mixed: support sweep risk around 77.8k followed by possible rebound toward 82.6k-83k unless the 79k-77k area is lost decisively. Binance is bearish_short_term around 79242 with 24h -1.56%, but BTC remains inside the recent 78754-82137 range without a clean breakdown. The 78k DIP Yes at 0.355 is thesis-aligned but low probability and blocked by account-equity risk, 80k Reach Yes at 0.623 lacks bullish confirmation, and 81k Reach No at 0.76 is under the hard cap but conflicts with Beecthor's rebound-after-sweep risk. No valid edge remains.",
+    "summary": "NO_ACTION: no open positions to manage and no May 14 BTC daily market has a clean confirmed edge.",
+    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily success cooldown is inactive, and there are no open positions for take-profit or reduction. The latest Beecthor transcript remains macro bearish below about 86.5k, but the near-term map is mixed: support/sweep risk around 78k-77.8k followed by possible rebound toward 82k-83k unless support is lost decisively. Binance is around 79653 with only +0.08% over 24h and short-term bounce from 78754, still inside the local range and below a clean breakout. The 81k Reach Yes at 0.415 lacks confirmed breakout momentum, the 78k Dip Yes at 0.145 lacks downside confirmation, and the conservative No outcomes either exceed the 90% cap or conflict with Beecthor's support-sweep/upside-cleanup map. No valid edge remains.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 79294.64,
+  "binance_spot_price": 79806.9,
   "positions_before": 0,
   "positions_after": 0
 }
