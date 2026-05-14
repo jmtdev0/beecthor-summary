@@ -17124,5 +17124,69 @@
     "binance_spot_price": 79692.0,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-14T12:02:33Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-14T12-00-04Z",
+    "dry_run": false,
+    "active_strategy": "beecthor",
+    "strategy_mode": "llm",
+    "llm_provider": "external_decision_file",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-14T12-00-04Z",
+      "action": "NO_ACTION",
+      "confidence": 0.91,
+      "summary": "NO_ACTION: no open positions to manage and no May 14 daily BTC market has a clean Beecthor/Binance edge.",
+      "rationale": "Active strategy is beecthor. Reconciliation is ok, daily cooldown is inactive, and there are no open positions for take-profit or reduction. The latest Beecthor context is still macro bearish below about 86.5k, but the near-term map remains mixed: support sweep risk around 77.8k followed by possible rebound toward 82.6k-83k unless the 79k-77k area is lost decisively. Binance is bearish_short_term around 79242 with 24h -1.56%, but BTC remains inside the recent 78754-82137 range without a clean breakdown. The 78k DIP Yes at 0.355 is thesis-aligned but low probability and blocked by account-equity risk, 80k Reach Yes at 0.623 lacks bullish confirmation, and 81k Reach No at 0.76 is under the hard cap but conflicts with Beecthor's rebound-after-sweep risk. No valid edge remains.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "beecthor",
+      "llm_provider": "external_decision_file"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 79294.64,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
