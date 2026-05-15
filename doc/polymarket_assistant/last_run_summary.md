@@ -1,16 +1,16 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-15T08:01:42Z
+- Timestamp: 2026-05-15T10:01:57Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
 - LLM provider: copilot
 - LLM model: gpt-5.4
 - LLM effort: high
-- BTC price: 80743.51
-- Decision action: NO_ACTION
-- Decision summary: NO_ACTION: no open positions need management and no May 15 BTC daily price-hit setup has clean Beecthor/Binance alignment at 08:00 UTC.
-- Validation: True (ok)
+- BTC price: 80446.09
+- Decision action: OPEN_POSITION
+- Decision summary: OPEN_POSITION: daily thesis on 80k DIP Yes as the nearest bearish price-hit with strong expiry timing.
+- Validation: False (Beecthor bearish-bias correction: Binance has not confirmed bearish rejection)
 - Open positions before: 0
 - Open positions after: 0
 
@@ -19,6 +19,8 @@
 ```json
 {
   "performed": false,
-  "details": null
+  "details": {
+    "rejected": "Beecthor bearish-bias correction: Binance has not confirmed bearish rejection"
+  }
 }
 ```
