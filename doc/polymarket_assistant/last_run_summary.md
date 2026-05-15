@@ -1,15 +1,15 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-14T20:01:43Z
+- Timestamp: 2026-05-15T06:03:46Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
-- LLM provider: external_decision_file
+- LLM provider: copilot
 - LLM model: gpt-5.4
-- LLM effort: 
-- BTC price: 81472.41
+- LLM effort: high
+- BTC price: 80392.35
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: no open positions to manage and no May 14 BTC daily market has acceptable late-session expiry validity.
+- Decision summary: NO_ACTION: no open positions to manage and no May 15 BTC daily price-hit market has a clean Beecthor/Binance edge.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0

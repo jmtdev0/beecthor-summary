@@ -1,20 +1,20 @@
 {
-  "timestamp": "2026-05-14T20:01:43Z",
-  "run_id": "2026-05-14T20-00-09Z",
+  "timestamp": "2026-05-15T06:03:46Z",
+  "run_id": "2026-05-15T06-00-02Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
-  "llm_provider": "external_decision_file",
+  "llm_provider": "copilot",
   "llm_provider_model": "gpt-5.4",
-  "llm_provider_effort": "",
+  "llm_provider_effort": "high",
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-14T20-00-09Z",
+    "run_id": "2026-05-15T06-00-02Z",
     "action": "NO_ACTION",
-    "confidence": 0.94,
-    "summary": "NO_ACTION: no open positions to manage and no May 14 BTC daily market has acceptable late-session expiry validity.",
-    "rationale": "Active strategy is beecthor. Reconciliation is ok, daily cooldown is inactive, and there are no open positions or open orders. Latest Beecthor context remains macro bearish below roughly 86k, but today’s near-term map says the 80.2k/78.7k downside sweep has already rebounded toward 81k-83k, with the 82.5k ratio effectively fulfilled and only optional extension risk higher. Binance is bullish short term around 81449, up about 2.6% over 24h and near the 82048 high, but there is no clean acceptance above the 82k-82.5k resistance area. With only about 4h left, 83k Reach Yes at 0.0485 would be a low-probability chase requiring another fresh leg, while bearish DIP Yes markets lack rejection or breakdown confirmation and conservative No outcomes exceed the 90% entry cap.",
+    "confidence": 0.91,
+    "summary": "NO_ACTION: no open positions to manage and no May 15 BTC daily price-hit market has a clean Beecthor/Binance edge.",
+    "rationale": "Active strategy is beecthor. Local account state shows no open positions, so there is nothing to reduce or close. The latest Beecthor transcript and May 14 summary stay macro bearish below roughly 86k, but the short-term map is still mixed: he still allows a downside sweep around 80.2k and even 78.7k-78k/77k before a rebound toward 81k-83k and possibly 85.5k. At the 06:00 snapshot BTC is about 80358, still inside the recent range rather than in a confirmed breakdown or breakout, and the fresh May 15 daily board is still wide and noisy: 80k DIP Yes is around 0.575 with very loose spreads, 79k DIP Yes is weaker, 82k REACH No is under the cap but conflicts with Beecthor's rebound risk, and bullish reach bets lack continuation. With no clean Binance rejection or acceptance and no strong expiry-valid setup, the playbook-default action is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -47,7 +47,7 @@
       "max_entry_probability": 0.0
     },
     "active_strategy": "beecthor",
-    "llm_provider": "external_decision_file"
+    "llm_provider": "copilot"
   },
   "validation": {
     "ok": true,
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 81472.41,
+  "binance_spot_price": 80392.35,
   "positions_before": 0,
   "positions_after": 0
 }
