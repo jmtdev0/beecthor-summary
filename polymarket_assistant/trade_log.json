@@ -17797,5 +17797,23 @@
     "binance_spot_price": 80628.19,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-15T13:08:19Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-80k-on-may-15",
+    "market_title": "Will Bitcoin dip to $80,000 on May 15?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.4925,
+    "fraction": 1.0,
+    "avg_entry_price": 0.6699,
+    "exit_price": 0.92,
+    "entry_cost_usd": 0.9998,
+    "exit_proceeds_usd": 1.3731,
+    "pnl_usd": 0.3733,
+    "pnl_pct": 37.34,
+    "source": "monitor_executor"
   }
 ]
