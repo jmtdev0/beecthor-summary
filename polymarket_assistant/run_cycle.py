@@ -1568,19 +1568,12 @@ def build_reconciliation_status(
     }
 
 
-def binance_confirms_direction(binance: dict[str, Any], direction: str) -> bool:
-    if direction not in {'bullish', 'bearish'}:
-        return False
-    short_bias = (binance.get('trend') or {}).get('short_term_bias')
-    change_24h = safe_float(binance.get('price_change_percent_24h'))
-    pct_below_high = safe_float(binance.get('pct_below_24h_high'))
-    pct_above_low = safe_float(binance.get('pct_above_24h_low'))
-    if direction == 'bullish':
-        return short_bias == 'bullish_short_term' or change_24h >= 0.75 or pct_below_high <= 0.45
-    return short_bias == 'bearish_short_term' or change_24h <= -0.75 or pct_above_low <= 0.45
-
-
 def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tuple[bool, str]:
+    """Validate only mechanical execution constraints.
+
+    Strategic judgment belongs to the LLM decision. This validator must not add
+    a second interpretive layer that can veto a valid LLM opening after the fact.
+    """
     decision = normalize_decision(decision)
     action = decision.get('action')
     allowed_actions = {'NO_ACTION', 'OPEN_POSITION', 'CLOSE_POSITION', 'REDUCE_POSITION'}
@@ -1591,10 +1584,7 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
     account_state = context['account_state']
     markets = polymarket['active_btc_markets']
     positions = polymarket['positions']
-    binance = context['binance']
-    spot_price = binance['spot_price']
     market_time = context.get('market_time_context') or {}
-    strategy_pressure = context.get('strategy_pressure') or {}
     daily_success_cooldown = context.get('daily_success_cooldown') or {}
     strategy_state = context.get('strategy_state') or load_strategy_state()
     active_strategy = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
@@ -1683,14 +1673,7 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
             mtype = market.get('market_type', 'daily')
             if mtype == 'weekly':
                 return False, 'Weekly openings are disabled by the playbook'
-            trade_direction = direction_from_market_outcome(market['market_slug'], outcome)
-            hours_until_daily_close = safe_float(market_time.get('hours_until_daily_market_close'))
             hours_until_weekly_close = safe_float(market_time.get('hours_until_weekly_market_close'))
-            if mtype == 'daily' and hours_until_daily_close < 4:
-                strike_distance = abs(safe_float(market.get('strike')) - spot_price)
-                daily_range = max(1.0, safe_float(binance.get('daily_range_usd')))
-                if live_probability < 0.65 or strike_distance > max(450.0, daily_range * 0.30):
-                    return False, 'Late-session daily entry rejected: weak expiry validity'
             if mtype == 'daily':
                 if not daily_success_cooldown.get('activity_available', False):
                     return False, 'Daily entry rejected: could not verify same-day successful-exit cooldown'
@@ -1707,23 +1690,6 @@ def validate_decision(decision: dict[str, Any], context: dict[str, Any]) -> tupl
                     return False, 'Weekly entry rejected: probability below 25% without exceptional edge'
                 if expiry_validity != 'strong' and live_probability < 0.55:
                     return False, 'Weekly entry requires strong expiry validity unless live probability is already high'
-            if (
-                strategy_pressure.get('bearish_bias_correction_active')
-                and trade_direction == 'bearish'
-                and not binance_confirms_direction(binance, 'bearish')
-            ):
-                return False, 'Beecthor bearish-bias correction: Binance has not confirmed bearish rejection'
-            if (
-                strategy_pressure.get('dominant_discarded_direction') == trade_direction
-                and safe_float(strategy_pressure.get('discarded_loss_pct_of_bankroll')) >= 15.0
-                and live_probability < 0.75
-            ):
-                return False, 'Discarded-position pain budget blocks adding same-direction exposure'
-            change_24h = safe_float(binance.get('price_change_percent_24h'))
-            chasing_up = trade_direction == 'bullish' and change_24h >= 3.0
-            chasing_down = trade_direction == 'bearish' and change_24h <= -3.0
-            if (chasing_up or chasing_down) and live_probability < 0.65:
-                return False, 'Post-big-move cooling rule rejects chasing without strong probability'
             requested_type_counts[mtype] = requested_type_counts.get(mtype, 0) + 1
             if requested_type_counts[mtype] > 1:
                 return False, f'Max 1 requested {mtype} position per cycle'

@@ -33,6 +33,7 @@ Important schema reminders:
 - Treat discarded live positions as real account pain even when they no longer block slot availability.
 - Treat account liquidity/equity versus starting bankroll as informational only. Do not use low cash/equity as a reason to skip or lower confidence, except for hard stake funding and stake/slot caps.
 - Do not chase after a large 24h BTC move unless the live probability and expiry validity are both strong.
+- Your strategic decision is authoritative once emitted. The server validator should only enforce mechanical execution constraints, so do not rely on a later soft-validation pass to correct the decision.
 - Read `context.strategy_state.active_strategy` from the context file before deciding.
 - If active strategy is `far_dip_radar`, only choose a generated candidate from `context.strategy_context.far_dip_radar.candidates` or return `NO_ACTION`.
 - For `far_dip_radar`, treat `PLAYBOOK_FBR.md` as a soft review checklist, not as a hard rulebook.

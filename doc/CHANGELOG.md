@@ -1,5 +1,9 @@
 # Changelog
 
+### 15/05/2026
+* El validador del ciclo Polymarket queda limitado a guardarraíles mecánicos de ejecución: ya no puede tumbar una decisión válida del LLM por reglas interpretativas como sesgo Beecthor/Binance, late-session, pain budget de descartadas o cooling por movimiento fuerte.
+* Playbook e instrucciones del ciclo aclaran que esas reglas estratégicas son contexto para decidir, no vetos posteriores del servidor.
+
 ### 13/05/2026
 * Añadido `phone/far_dip_radar_executor.py`: barrido mecánico sin LLM para la estrategia `far_dip_radar`, limitado a 06:00-08:00 UTC, con máximo una compra por ventana y validación de precio vivo antes de ejecutar.
 * El executor móvil de Polymarket respeta ahora `max_entry_probability` por orden, para que estrategias con límites más estrictos que el 90% no puedan repricing por encima de su máximo.
