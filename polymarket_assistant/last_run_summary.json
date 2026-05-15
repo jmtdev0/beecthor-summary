@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-15T18:00:58Z",
-  "run_id": "2026-05-15T18-00-16Z",
+  "timestamp": "2026-05-15T20:00:49Z",
+  "run_id": "2026-05-15T20-00-13Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-15T18-00-16Z",
+    "run_id": "2026-05-15T20-00-13Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "NO_ACTION: no open positions remain, and the daily cooldown blocks any new BTC daily entry today.",
-    "rationale": "Active strategy is beecthor. Account state is now coherent and shows no open positions, so there is nothing to close or reduce. Trade log shows the only May 15 daily thesis position, `will-bitcoin-dip-to-80k-on-may-15` Yes, was fully closed at 13:08 UTC for `take_profit`. Under the playbook's hard post-win daily cooldown, once a BTC daily REACH/DIP position is exited via take-profit on the current UTC day, no additional BTC daily position may be opened until the next UTC day. That hard gate overrides any later-session market setup, so the correct decision is NO_ACTION.",
+    "summary": "NO_ACTION: no open positions remain, and the hard daily cooldown still blocks any new BTC daily entry today.",
+    "rationale": "Active strategy is beecthor. Account state is coherent and shows no open positions, so there is nothing to close or reduce. Trade log shows the May 15 daily thesis position `will-bitcoin-dip-to-80k-on-may-15` Yes was fully closed at 13:08 UTC for `take_profit`. Under the playbook's strict post-win daily cooldown, once any BTC daily REACH/DIP position resolves in our favor or is exited via take-profit on the current UTC day, no additional BTC daily position may be opened until the next UTC day. That hard gate remains in force at 20:00 UTC and overrides any later market setup.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 79483.75,
+  "binance_spot_price": 79200.0,
   "positions_before": 0,
   "positions_after": 0
 }
