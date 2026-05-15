@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-05-15T10:01:57Z",
+  "timestamp": "2026-05-15T10:24:03Z",
   "run_id": "2026-05-15T10-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
-  "llm_provider": "copilot",
+  "llm_provider": "external_decision_file",
   "llm_provider_model": "gpt-5.4",
-  "llm_provider_effort": "high",
+  "llm_provider_effort": "",
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
@@ -75,19 +75,38 @@
       "max_entry_probability": 0.0
     },
     "active_strategy": "beecthor",
-    "llm_provider": "copilot"
+    "llm_provider": "external_decision_file"
   },
   "validation": {
-    "ok": false,
-    "message": "Beecthor bearish-bias correction: Binance has not confirmed bearish rejection"
+    "ok": true,
+    "message": "ok"
   },
   "execution": {
-    "performed": false,
-    "details": {
-      "rejected": "Beecthor bearish-bias correction: Binance has not confirmed bearish rejection"
-    }
+    "performed": true,
+    "details": [
+      {
+        "order_id": "2026-05-15T10:24:03.525916Z",
+        "status": "pending_phone_execution",
+        "type": "OPEN_POSITION",
+        "token_id": "28768600158644153883378641484439740492137414538336685502291903454985480236475",
+        "side": "BUY",
+        "stake_usd": 1.0,
+        "max_entry_probability": 0.73,
+        "market_type": "daily",
+        "slot_name": "daily_thesis",
+        "beecthor_aligned": true,
+        "momentum_confirmed": true,
+        "expiry_validity": "strong",
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": "",
+        "market": "Will Bitcoin dip to $80,000 on May 15?",
+        "market_slug": "will-bitcoin-dip-to-80k-on-may-15",
+        "outcome": "Yes"
+      }
+    ]
   },
-  "binance_spot_price": 80446.09,
+  "binance_spot_price": 80542.9,
   "positions_before": 0,
   "positions_after": 0
 }
