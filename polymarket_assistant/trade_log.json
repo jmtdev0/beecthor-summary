@@ -18202,5 +18202,23 @@
     "status": "open",
     "source": "phone_executor",
     "notes": "Recorded after a successful phone-side BUY execution."
+  },
+  {
+    "timestamp": "2026-05-16T09:20:04Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-78k-on-may-16",
+    "market_title": "Will Bitcoin dip to $78,000 on May 16?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.4925,
+    "fraction": 1.0,
+    "avg_entry_price": 0.6699,
+    "exit_price": 0.999,
+    "entry_cost_usd": 0.9998,
+    "exit_proceeds_usd": 1.491,
+    "pnl_usd": 0.4912,
+    "pnl_pct": 49.13,
+    "source": "monitor_executor"
   }
 ]
