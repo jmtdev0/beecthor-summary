@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-16T20:00:40Z",
-  "run_id": "2026-05-16T20-00-06Z",
+  "timestamp": "2026-05-17T06:01:07Z",
+  "run_id": "2026-05-17T06-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-16T20-00-06Z",
+    "run_id": "2026-05-17T06-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.99,
-    "summary": "NO_ACTION: the morning BTC daily thesis trade already hit take profit, so the hard post-win daily cooldown still blocks any new daily entry at 20:00 UTC.",
-    "rationale": "Active strategy is beecthor. Account state is coherent and shows no open positions, so there is nothing to close or reduce. Trade history shows the `will-bitcoin-dip-to-78k-on-may-16` Yes position was fully closed at 09:20 UTC for `take_profit`, which triggers the playbook's strict post-win daily cooldown for the rest of the current UTC day. That hard gate overrides any fresh scouting at 20:00 UTC. The newer Beecthor summary still treats the 77k-78k zone as the decisive battlefield rather than authorizing a late chase, so no new BTC daily REACH/DIP may be opened until the next UTC day.",
+    "confidence": 0.9,
+    "summary": "NO_ACTION: BTC is still sitting in the decisive 77k-78k support zone without a confirmed rebound or breakdown, so there is no clean daily edge yet.",
+    "rationale": "Active strategy is beecthor. Account state is coherent and shows no open positions, so there is nothing to close or reduce and the daily slots are free again on the new UTC day. The latest Beecthor summary and transcript leave the market in a 50/50 state: 77k-78k is the key support zone, a hold could rebound toward 82k, and a confirmed loss would shift focus toward 68k. At 06:00 UTC Binance spot is about 78,129, still inside that support battlefield rather than clearly reclaiming higher levels or breaking down below it. The nearest downside candidate, `will-bitcoin-dip-to-77k-on-may-17` Yes, is only about 0.33 and lacks the required breakdown confirmation. The nearest upside candidate, `will-bitcoin-reach-79k-on-may-17` Yes, is about 0.45, but the latest Beecthor update explicitly says he does not want longs by inertia and would only consider them after a clearer bullish structure and recovery. With price still undecided inside the zone and neither side cleanly confirmed, the playbook favors no-trade over forcing a timed daily bet.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78275.81,
+  "binance_spot_price": 78147.16,
   "positions_before": 0,
   "positions_after": 0
 }
