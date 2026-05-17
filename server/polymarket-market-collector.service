@@ -8,6 +8,7 @@ Type=oneshot
 User=root
 WorkingDirectory=/root/beecthor-summary
 Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/root/beecthor-summary/.env
 ExecStart=/root/beecthor-summary/.venv/bin/python -m polymarket_assistant.market_price_collector
 StandardOutput=append:/var/log/polymarket-operator/market-collector.log
 StandardError=append:/var/log/polymarket-operator/market-collector.log

@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""Collect live Polymarket BTC market price snapshots.
-
-The collector is intentionally append-only. It writes one JSONL row per
-outcome/token so future strategy research can reconstruct executable prices
-from bid/ask/depth instead of relying on midpoint-only historical charts.
-"""
+"""Collect live Polymarket BTC market price snapshots."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -22,6 +18,7 @@ import requests
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_PATH = REPO_ROOT / 'server_runtime_logs' / 'polymarket_market_snapshots.jsonl'
+DEFAULT_ENV_PATH = REPO_ROOT / '.env'
 
 GAMMA_HOST = 'https://gamma-api.polymarket.com'
 CLOB_HOST = 'https://clob.polymarket.com'
@@ -29,6 +26,114 @@ BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT
 
 REQUEST_TIMEOUT_SECONDS = 20
 BOOK_BATCH_SIZE = 100
+
+SNAPSHOT_COLUMNS = [
+    'captured_at_utc',
+    'btc_spot',
+    'event_slug',
+    'event_title',
+    'event_id',
+    'market_id',
+    'market_slug',
+    'question',
+    'market_family',
+    'market_type',
+    'strike',
+    'range_low',
+    'range_high',
+    'window_start_utc',
+    'outcome',
+    'token_id',
+    'active',
+    'closed',
+    'accepting_orders',
+    'end_date',
+    'gamma_probability',
+    'gamma_best_bid',
+    'gamma_best_ask',
+    'gamma_last_trade_price',
+    'liquidity',
+    'volume',
+    'collector_error',
+    'book_best_bid',
+    'book_best_ask',
+    'book_mid',
+    'book_spread',
+    'book_last_trade_price',
+    'top_bid_size',
+    'top_ask_size',
+    'bid_depth_top5',
+    'ask_depth_top5',
+    'min_order_size',
+    'tick_size',
+    'book_hash',
+]
+
+SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS market_price_snapshots (
+    id BIGSERIAL PRIMARY KEY,
+    captured_at_utc TIMESTAMPTZ NOT NULL,
+    btc_spot DOUBLE PRECISION,
+    event_slug TEXT NOT NULL,
+    event_title TEXT,
+    event_id TEXT,
+    market_id TEXT,
+    market_slug TEXT NOT NULL,
+    question TEXT,
+    market_family TEXT,
+    market_type TEXT,
+    strike DOUBLE PRECISION,
+    range_low DOUBLE PRECISION,
+    range_high DOUBLE PRECISION,
+    window_start_utc TIMESTAMPTZ,
+    outcome TEXT NOT NULL,
+    token_id TEXT NOT NULL,
+    active BOOLEAN,
+    closed BOOLEAN,
+    accepting_orders BOOLEAN,
+    end_date TIMESTAMPTZ,
+    gamma_probability DOUBLE PRECISION,
+    gamma_best_bid DOUBLE PRECISION,
+    gamma_best_ask DOUBLE PRECISION,
+    gamma_last_trade_price DOUBLE PRECISION,
+    liquidity DOUBLE PRECISION,
+    volume DOUBLE PRECISION,
+    collector_error TEXT,
+    book_best_bid DOUBLE PRECISION,
+    book_best_ask DOUBLE PRECISION,
+    book_mid DOUBLE PRECISION,
+    book_spread DOUBLE PRECISION,
+    book_last_trade_price DOUBLE PRECISION,
+    top_bid_size DOUBLE PRECISION,
+    top_ask_size DOUBLE PRECISION,
+    bid_depth_top5 DOUBLE PRECISION,
+    ask_depth_top5 DOUBLE PRECISION,
+    min_order_size DOUBLE PRECISION,
+    tick_size DOUBLE PRECISION,
+    book_hash TEXT,
+    inserted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (captured_at_utc, token_id, market_slug, outcome)
+);
+
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_captured_at
+    ON market_price_snapshots (captured_at_utc);
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_market_slug
+    ON market_price_snapshots (market_slug);
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_token_id
+    ON market_price_snapshots (token_id);
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_market_type
+    ON market_price_snapshots (market_type);
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_market_family
+    ON market_price_snapshots (market_family);
+CREATE INDEX IF NOT EXISTS idx_market_price_snapshots_market_outcome_time
+    ON market_price_snapshots (market_slug, outcome, captured_at_utc);
+"""
+
+INSERT_SQL = f"""
+INSERT INTO market_price_snapshots ({', '.join(SNAPSHOT_COLUMNS)})
+VALUES ({', '.join(['%s'] * len(SNAPSHOT_COLUMNS))})
+ON CONFLICT (captured_at_utc, token_id, market_slug, outcome) DO NOTHING
+"""
 
 
 @dataclass(frozen=True)
@@ -61,6 +166,45 @@ class OutcomeToken:
 
 def now_utc() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def load_env_file(path: Path = DEFAULT_ENV_PATH) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def marketdata_dsn(explicit_dsn: str = '') -> str:
+    load_env_file()
+    dsn = explicit_dsn or os.environ.get('POLYMARKET_MARKETDATA_DSN', '')
+    if not dsn:
+        raise SystemExit('POLYMARKET_MARKETDATA_DSN must be set for PostgreSQL storage')
+    return dsn
+
+
+def parse_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith('Z'):
+        text = f'{text[:-1]}+00:00'
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def safe_float(value: Any) -> float | None:
@@ -422,6 +566,53 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(',', ':')) + '\n')
 
 
+def row_to_db_values(row: dict[str, Any]) -> tuple[Any, ...]:
+    normalized = dict(row)
+    normalized['captured_at_utc'] = parse_timestamp(row.get('captured_at_utc'))
+    normalized['window_start_utc'] = parse_timestamp(row.get('window_start_utc'))
+    normalized['end_date'] = parse_timestamp(row.get('end_date'))
+    if normalized['captured_at_utc'] is None:
+        raise ValueError('captured_at_utc is required')
+    return tuple(normalized.get(column) for column in SNAPSHOT_COLUMNS)
+
+
+def create_postgres_schema(conn: Any) -> None:
+    with conn.cursor() as cur:
+        cur.execute(SCHEMA_SQL)
+    conn.commit()
+
+
+def insert_postgres_rows(rows: list[dict[str, Any]], dsn: str, *, create_schema: bool = True) -> int:
+    if not rows:
+        return 0
+    try:
+        import psycopg
+    except ImportError as exc:
+        raise SystemExit('psycopg is required for PostgreSQL storage. Install requirements.txt first.') from exc
+
+    values = [row_to_db_values(row) for row in rows]
+    with psycopg.connect(dsn) as conn:
+        if create_schema:
+            create_postgres_schema(conn)
+        with conn.cursor() as cur:
+            cur.executemany(INSERT_SQL, values)
+            inserted = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+        conn.commit()
+        return inserted
+
+
+def count_postgres_snapshots(dsn: str) -> int:
+    try:
+        import psycopg
+    except ImportError as exc:
+        raise SystemExit('psycopg is required for PostgreSQL storage. Install requirements.txt first.') from exc
+    with psycopg.connect(dsn) as conn:
+        create_postgres_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute('SELECT COUNT(*) FROM market_price_snapshots')
+            return int(cur.fetchone()[0])
+
+
 def collect(args: argparse.Namespace) -> list[dict[str, Any]]:
     session = requests.Session()
     captured_at = now_utc()
@@ -445,9 +636,16 @@ def collect(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description='Collect live Polymarket BTC market snapshots as JSONL.')
+    parser = argparse.ArgumentParser(description='Collect live Polymarket BTC market snapshots.')
     parser.add_argument('--dry-run', action='store_true', help='Fetch and print a summary without writing JSONL.')
+    parser.add_argument(
+        '--storage',
+        choices=('postgres', 'jsonl'),
+        default='postgres',
+        help='Storage backend. Systemd uses postgres; jsonl is kept for manual debugging.',
+    )
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT_PATH, help='JSONL output path.')
+    parser.add_argument('--dsn', default='', help='PostgreSQL DSN. Defaults to POLYMARKET_MARKETDATA_DSN.')
     parser.add_argument('--max-markets', type=int, default=None, help='Limit market count for tests.')
     return parser
 
@@ -474,8 +672,16 @@ def main() -> None:
         )
         return
 
-    write_jsonl(args.output, rows)
-    print(f'[collector] wrote rows={len(rows)} markets={market_count} errors={error_count} output={args.output}')
+    if args.storage == 'jsonl':
+        write_jsonl(args.output, rows)
+        print(f'[collector] wrote rows={len(rows)} markets={market_count} errors={error_count} output={args.output}')
+        return
+
+    inserted = insert_postgres_rows(rows, marketdata_dsn(args.dsn))
+    print(
+        f'[collector] inserted rows={inserted}/{len(rows)} '
+        f'markets={market_count} errors={error_count} storage=postgres'
+    )
 
 
 if __name__ == '__main__':
