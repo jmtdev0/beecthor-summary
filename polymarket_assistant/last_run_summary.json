@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-17T10:00:57Z",
-  "run_id": "2026-05-17T10-00-16Z",
+  "timestamp": "2026-05-17T12:03:44Z",
+  "run_id": "2026-05-17T12-00-00Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-17T10-00-16Z",
+    "run_id": "2026-05-17T12-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.93,
-    "summary": "NO_ACTION: BTC is still hovering around the 77k-78k decision zone, and the 10:00 board still does not show a clean confirmed rebound or breakdown.",
-    "rationale": "Active strategy is beecthor. Account state is coherent and shows no open positions, so there is nothing to close or reduce and the daily slots remain free. The latest Beecthor summary still frames the market as 50/50 around the decisive 77k-78k support band: hold it and a rebound toward 82k remains possible; lose it and the bearish path toward 68k gains priority. At 10:00 UTC Binance spot is about 78,253, only slightly above the same battlefield and still without the clearer bullish recovery structure that Beecthor said he wants before considering longs. The bearish candidate `will-bitcoin-dip-to-77k-on-may-17` Yes remains only about 0.335 and still lacks confirmed breakdown evidence, while the nearest upside candidate `will-bitcoin-reach-79k-on-may-17` Yes is about 0.46 but has not gained enough confirmation or repricing to justify overriding the no-trade bias. With neither side resolved cleanly, the playbook still favors waiting.",
+    "confidence": 0.91,
+    "summary": "NO_ACTION: BTC has firmed above 78k, but the noon board still does not show the clear bullish structure Beecthor wanted before taking a long.",
+    "rationale": "Active strategy is beecthor. Account state and trade log remain coherent and flat, so there is nothing to close or reduce. The latest Beecthor transcript and summary still frame 77k-78k as the key battlefield: hold it and BTC can rebound toward 82k, lose it and the bearish path toward 68k reopens, but he explicitly does not want longs by inertia without a clearer recovery structure. The latest available pre-cycle snapshot at 2026-05-17T11:55:14Z shows BTC spot around 78386.41, with will-bitcoin-reach-79k-on-may-17 Yes repriced to about 0.585 and will-bitcoin-dip-to-77k-on-may-17 Yes down to about 0.235. That weakens the bearish daily candidate, but the upside move still looks like modest drift above support rather than a clean breakout and acceptance that overrides the playbook's range-lock bias. With no open positions to manage and no clearly confirmed same-day edge, waiting remains the better decision.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78249.03,
+  "binance_spot_price": 78402.85,
   "positions_before": 0,
   "positions_after": 0
 }
