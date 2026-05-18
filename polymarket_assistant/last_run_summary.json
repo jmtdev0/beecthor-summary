@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-17T20:00:41Z",
-  "run_id": "2026-05-17T20-00-02Z",
+  "timestamp": "2026-05-18T06:01:37Z",
+  "run_id": "2026-05-18T06-00-13Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-17T20-00-02Z",
+    "run_id": "2026-05-18T06-00-13Z",
     "action": "NO_ACTION",
-    "confidence": 0.95,
-    "summary": "NO_ACTION: the 20:00 cycle still lacks a fresh confirmed edge, and the latest usable local board remains too stale to justify a new daily BTC trade.",
-    "rationale": "Active strategy is beecthor. Account state and trade log remain coherent and flat, so there is nothing to close or reduce. The latest Beecthor transcript and summary still define the same 77k-78k battlefield: hold support and BTC can rebound toward 82k, lose it and the bearish path toward 68k reopens, but he explicitly does not want longs by inertia without clearer bullish structure. The context file is unreadable, no newer Beecthor transcript is present locally, and the latest available local Polymarket daily-board snapshot is still 2026-05-17T11:55:14Z, with BTC spot around 78386.41, will-bitcoin-reach-79k-on-may-17 Yes around 0.585, will-bitcoin-dip-to-77k-on-may-17 Yes around 0.235, will-bitcoin-reach-80k-on-may-17 Yes around 0.145, and will-bitcoin-reach-81k-on-may-17 Yes already far too low-probability. That keeps the bearish daily candidate weak and the nearest bullish candidate still looking like modest support-hold drift rather than a clearly confirmed breakout. With no open positions, no fresher local board, and less time left before expiry, the playbook still favors waiting.",
+    "confidence": 0.97,
+    "summary": "NO_ACTION: there is no validated May 18 daily board in the local data, and the latest Beecthor thesis available locally is already stale for a fresh opening.",
+    "rationale": "Active strategy is beecthor. Account state and trade log remain coherent and flat, so there is nothing to close or reduce. The latest local Beecthor transcript/summary available is still the May 16 thesis around the 77k-78k battlefield, which is now stale under the playbook for a new May 18 opening unless the edge is exceptionally clear and Binance confirms it. That exceptional clarity is not present: the unreadable context file removes the live activity snapshot, there are no local `what-price-will-bitcoin-hit-on-may-18` snapshots in `polymarket_market_snapshots.jsonl`, and there is no newer May 17 or May 18 Beecthor transcript locally to refresh the thesis. With no open positions, no validated May 18 daily markets in the local data, and a stale thesis, the playbook favors waiting rather than forcing a fresh daily BTC trade.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 78425.99,
+  "binance_spot_price": 76932.9,
   "positions_before": 0,
   "positions_after": 0
 }
