@@ -568,7 +568,18 @@ RAW_DECISION_FILE="${RUNTIME_DIR}/decision_raw_${RUN_ID}.txt"
 
 "$VENV_PYTHON" "$SNAPSHOT_HELPER" --run-id "$RUN_ID" --output "$CONTEXT_FILE"
 
-python3 - "$PROMPT_TEMPLATE" "$PROMPT_FILE" "$RUN_ID" "$CONTEXT_FILE" "$DECISION_FILE" <<'PY'
+LLM_CONTEXT_FILE="$CONTEXT_FILE"
+if [ "$ACTIVE_LLM_PROVIDER" = "copilot" ]; then
+  # Copilot CLI cannot reliably read /var/lib runtime files. Keep the canonical
+  # snapshot there, but give Copilot an ignored repo-local copy it can open.
+  COPILOT_CONTEXT_DIR="${REPO_ROOT}/server_runtime_logs/polymarket_operator_contexts"
+  mkdir -p "$COPILOT_CONTEXT_DIR"
+  COPILOT_CONTEXT_FILE="${COPILOT_CONTEXT_DIR}/context_${RUN_ID}.json"
+  cp "$CONTEXT_FILE" "$COPILOT_CONTEXT_FILE"
+  LLM_CONTEXT_FILE="$COPILOT_CONTEXT_FILE"
+fi
+
+python3 - "$PROMPT_TEMPLATE" "$PROMPT_FILE" "$RUN_ID" "$LLM_CONTEXT_FILE" "$DECISION_FILE" <<'PY'
 import sys
 from pathlib import Path
 
