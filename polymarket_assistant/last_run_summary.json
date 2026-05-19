@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-19T06:00:53Z",
-  "run_id": "2026-05-19T06-00-08Z",
+  "timestamp": "2026-05-19T08:00:20Z",
+  "run_id": "2026-05-19T08-00-03Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-19T06-00-08Z",
+    "run_id": "2026-05-19T08-00-03Z",
     "action": "NO_ACTION",
-    "confidence": 0.98,
-    "summary": "NO_ACTION: the May 18 Beecthor thesis is still current and bearish, but there is still no validated May 19 Polymarket daily board in local data, so no clean daily price-hit entry can be justified.",
-    "rationale": "Active strategy is beecthor. Account state and trade log remain coherent and flat, with no open positions to close or reduce. The latest transcript and summary are still current under the playbook (May 18, D-1) and they keep a bearish bias, preferring shorts on a corrective rebound toward 78k or higher rather than chasing longs. The latest locally recorded Binance spot in trade_log is around 77004.95 from the 20:00 UTC cycle, still broadly consistent with that bearish map. But the required context file is unreadable from this environment, and local Polymarket logs still show no `what-price-will-bitcoin-hit-on-may-19` snapshots, so the current daily board, live probabilities, cooldown context, and exact eligible market slugs cannot be validated. Without confirmed May 19 daily market data for this UTC session, the playbook favors waiting instead of forcing a fresh daily BTC position.",
+    "confidence": 0.0,
+    "summary": "Automatic LLM cycle fallback: NO_ACTION.",
+    "rationale": "copilot auto-cycle fallback: no valid decision file was produced.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76902.91,
+  "binance_spot_price": 77241.66,
   "positions_before": 0,
   "positions_after": 0
 }
