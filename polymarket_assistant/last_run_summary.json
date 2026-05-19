@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-19T10:02:33Z",
-  "run_id": "2026-05-19T10-00-06Z",
+  "timestamp": "2026-05-19T12:00:52Z",
+  "run_id": "2026-05-19T12-00-10Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-19T10-00-06Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.79,
-    "summary": "OPEN_POSITION: the bearish Beecthor thesis now has enough live Binance and Polymarket confirmation to express through the May 19 76k DIP daily market.",
-    "rationale": "Active strategy is beecthor. The context is readable, reconciliation is ok, daily_success_cooldown is inactive with activity_available true, and there are no open or discarded BTC price-hit positions to manage. Beecthor's latest transcript remains current and bearish, favoring continuation down after failed rebounds. Live Binance has weakened since the 08:12 cycle: spot is 76803.44, below the UTC day open, with 12h/24h/48h changes of -0.26%, -0.62%, and -2.06%, while price is sitting much closer to the recent downside than to the upside targets Beecthor wants to fade. The bearish-bias correction is not active, and Polymarket has clearly repriced in the bearish direction: 76k DIP Yes is now 0.51 while 78k REACH Yes has fallen to 0.295. That makes 76k the nearest clean downside expression, within the preferred probability band, with strong expiry validity given 14 hours remain and the strike is only about 1.05% below spot. 75k DIP is still more stretched at 0.165, and 77k REACH is already above the hard cap.",
+    "run_id": "2026-05-19T12-00-10Z",
+    "action": "NO_ACTION",
+    "confidence": 0.9,
+    "summary": "NO_ACTION: keep the existing 76k DIP position open; it is still aligned with Beecthor and not yet near any take-profit or reduction threshold.",
+    "rationale": "Active strategy is beecthor. The context is readable, reconciliation is ok, daily_success_cooldown is inactive, and there is already one active daily thesis position: `will-bitcoin-dip-to-76k-on-may-19` Yes, opened around 0.4799 and now marked around 0.52 for a modest unrealized gain. Beecthor's latest D-1 thesis remains bearish and still favors continuation down rather than chasing upside. Live Binance also remains broadly consistent with that view: spot is 76718.85, below the UTC day open, with negative 24h/48h performance and price still much closer to the downside than to the upside targets. On Polymarket, the same market is still active and non-discarded at roughly 0.525, which confirms the bearish setup but is far below the 80-85% partial take-profit zone and the 90-95% close zone. There is no basis for a stop-loss-style exit, and re-adding is not justified because the same-market cash already sits at the early-stage single-position cap. With the thesis still valid and no management trigger hit, the correct action is to hold.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-19",
-        "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 76000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.51,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-19",
-      "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 76000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.51,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-19T10:02:33.800192Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "69674814377009712861125949131773145156125119156037197967701902441733828591425",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.51,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP.",
-        "market": "Will Bitcoin dip to $76,000 on May 19?",
-        "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 76835.78,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 76703.04,
+  "positions_before": 1,
+  "positions_after": 1
 }
