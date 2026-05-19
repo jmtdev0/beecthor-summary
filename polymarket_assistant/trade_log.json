@@ -19805,5 +19805,25 @@
     "binance_spot_price": 76835.78,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-19T10:02:33Z",
+    "type": "trade_opened",
+    "review_window": "phone_executor",
+    "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
+    "market_title": "Will Bitcoin dip to $76,000 on May 19?",
+    "position_side": "Yes",
+    "token_id": "69674814377009712861125949131773145156125119156037197967701902441733828591425",
+    "entry_cost_usd": 1.0,
+    "market_type": "daily",
+    "slot_name": "daily_thesis",
+    "strategy": "beecthor",
+    "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP.",
+    "beecthor_aligned": true,
+    "momentum_confirmed": true,
+    "expiry_validity": "strong",
+    "status": "open",
+    "source": "phone_executor",
+    "notes": "Recorded after a successful phone-side BUY execution."
   }
 ]
