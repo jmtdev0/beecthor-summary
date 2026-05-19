@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-05-19T10:02:33.800192Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "69674814377009712861125949131773145156125119156037197967701902441733828591425",
     "side": "BUY",
@@ -17,6 +17,13 @@
     "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP.",
     "market": "Will Bitcoin dip to $76,000 on May 19?",
     "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-05-19T10:02:42Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
+      "price": 0.48,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x6a323d19efa420f25c1cf697732a14d3025e4a14b53040ecd38bfab5bcd319e6\",\"takingAmount\":\"2.083332\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x18b2288ef146bb7c0a99499117c539f7a5ccdd65051f67aa5d008ee762142249\"],\"success\":true}"
+    }
   }
 ]
