@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-20T18:01:19Z",
-  "run_id": "2026-05-20T18-00-16Z",
+  "timestamp": "2026-05-20T20:00:51Z",
+  "run_id": "2026-05-20T20-00-07Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-20T18-00-16Z",
+    "run_id": "2026-05-20T20-00-07Z",
     "action": "NO_ACTION",
     "confidence": 0.93,
-    "summary": "NO_ACTION: keep the remaining 78k REACH position after the earlier partial take-profit; no new management trigger or fresh daily edge is present.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in the provided context, and the only open BTC price-hit position is the reduced will-bitcoin-reach-78k-on-may-20 Yes daily_thesis position. The key management fact is that the one allowed partial take-profit has already been executed today: the context records a 50% reduction at 0.82 around 15:16 UTC, leaving 0.9181 shares with about 0.5049 USD cost basis still open. At 18:00 UTC the remaining position is modestly profitable, but there is no new valid management trigger: the live executable sell price is only about 0.63 best bid, well below the 0.90-0.95 full take-profit zone, and the partial-take-profit rule has already been used. Re-adding is not justified either: only 6 hours remain, Binance short-term bias has cooled to neutral, and the latest Beecthor thesis is still stale and broadly bearish even if 78k was a mapped rebound zone. A second daily setup is also not clean: 79k REACH still needs an extra leg late in the session, while the dip side is too weakly priced and lacks a confirmed bearish breakdown. The correct action is to hold the remaining runner.",
+    "summary": "NO_ACTION: keep the remaining 78k REACH position; it has not reached the updated full take-profit trigger and there is no clean late-session daily entry.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in the provided context, and the only open BTC price-hit position remains will-bitcoin-reach-78k-on-may-20 Yes in the daily_thesis slot after the earlier same-day reduction. The latest Beecthor material is now current from today and still macro-bearish, but it explicitly allows a short-term sweep into 77k-78k before failure, which keeps the remaining 78k runner alive with BTC spot at 77681.48 and only about 0.41% left to the strike. Under the updated playbook, the only take-profit trigger is a full exit once the live executable sell price for the full remaining size reaches at least 0.75. That trigger is not met here: the live best bid is only about 0.54 and market probability about 0.555, so there is no valid CLOSE action yet. A fresh daily entry is also not justified with only 4 hours left: 79k REACH Yes is too stretched late in the session, while bearish DIP setups still lack the clean rejection or breakdown required by the active bearish-bias correction. The correct action is to hold the remaining 78k REACH position.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77568.77,
+  "binance_spot_price": 77692.9,
   "positions_before": 1,
   "positions_after": 1
 }
