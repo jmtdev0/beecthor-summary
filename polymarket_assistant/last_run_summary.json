@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-20T08:01:36Z",
-  "run_id": "2026-05-20T08-00-01Z",
+  "timestamp": "2026-05-20T10:01:16Z",
+  "run_id": "2026-05-20T10-00-09Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-20T08-00-01Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.84,
-    "summary": "OPEN_POSITION: despite the stale bearish macro thesis, Beecthor's own 78k rebound level and live bullish short-term Binance confirmation make 78k REACH the cleanest May 20 daily expression.",
-    "rationale": "Active strategy is beecthor. Reconciliation is fixed again, daily_success_cooldown is inactive, and there are no open BTC price-hit positions. The latest Beecthor material is stale at D-2, so a new trade only makes sense if the level is unusually clear and Binance confirms it. That condition is met here: the latest transcript explicitly treats the 78k area as a meaningful corrective rebound zone, and live Binance is now confirming that rebound with spot around 77282.65, bullish_short_term bias, positive 12h/24h/48h changes, and strong UTC-day upside progress. On the May 20 board, 77k REACH is already above the hard cap, 78k REACH Yes is around 0.55 with only about 0.93% left to travel and 16 hours remaining, while 79k REACH is much more stretched and the dip side does not fit the current intraday structure. This is also the primary 08:00 UTC entry window, so the clean 78k REACH setup deserves the modest timing bonus.",
+    "run_id": "2026-05-20T10-00-09Z",
+    "action": "NO_ACTION",
+    "confidence": 0.92,
+    "summary": "NO_ACTION: keep the open 78k REACH position; it remains aligned with live bullish momentum, but it has not reached any valid management threshold.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is one active daily position: `will-bitcoin-reach-78k-on-may-20` Yes, opened around 0.55 and now marked around 0.625 for a modest unrealized gain. Live Binance still supports that trade with spot around 77494.02, bullish_short_term bias, and positive 12h/24h momentum. But there is no valid REDUCE or CLOSE trigger yet: the live executable price is still below the 75% partial-take-profit threshold and far below the 90-95% full take-profit zone. Re-adding is also not justified because the same-market cash is already at the early-stage single-position cap. A second daily entry is not clean enough here: 79k REACH is still relatively stretched, while the dip side does not fit current intraday structure. The correct action is to hold.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-20",
-        "market_slug": "will-bitcoin-reach-78k-on-may-20",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 78000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.56,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-20",
-      "market_slug": "will-bitcoin-reach-78k-on-may-20",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.56,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-20T08:01:35.998260Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "101246749411915163030550079269131030373831909082732565321062135529896340766537",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.56,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression.",
-        "market": "Will Bitcoin reach $78,000 on May 20?",
-        "market_slug": "will-bitcoin-reach-78k-on-may-20",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77285.28,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 77541.69,
+  "positions_before": 1,
+  "positions_after": 1
 }

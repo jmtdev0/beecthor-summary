@@ -1,45 +1,24 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-20T08:01:36Z
+- Timestamp: 2026-05-20T10:01:16Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
 - LLM provider: copilot
 - LLM model: gpt-5.4
 - LLM effort: high
-- BTC price: 77285.28
-- Decision action: OPEN_POSITION
-- Decision summary: OPEN_POSITION: despite the stale bearish macro thesis, Beecthor's own 78k rebound level and live bullish short-term Binance confirmation make 78k REACH the cleanest May 20 daily expression.
+- BTC price: 77541.69
+- Decision action: NO_ACTION
+- Decision summary: NO_ACTION: keep the open 78k REACH position; it remains aligned with live bullish momentum, but it has not reached any valid management threshold.
 - Validation: True (ok)
-- Open positions before: 0
-- Open positions after: 0
+- Open positions before: 1
+- Open positions after: 1
 
 ## Execution
 
 ```json
 {
-  "performed": true,
-  "details": [
-    {
-      "order_id": "2026-05-20T08:01:35.998260Z",
-      "status": "pending_phone_execution",
-      "type": "OPEN_POSITION",
-      "token_id": "101246749411915163030550079269131030373831909082732565321062135529896340766537",
-      "side": "BUY",
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.56,
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "strategy": "beecthor",
-      "strategy_candidate_id": "",
-      "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression.",
-      "market": "Will Bitcoin reach $78,000 on May 20?",
-      "market_slug": "will-bitcoin-reach-78k-on-may-20",
-      "outcome": "Yes"
-    }
-  ]
+  "performed": false,
+  "details": null
 }
 ```
