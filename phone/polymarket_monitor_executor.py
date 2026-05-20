@@ -4,12 +4,12 @@ Autonomous Polymarket phone monitor for exits.
 
 Runs on the phone every odd UTC hour + 5 minutes, reads live open positions
 directly from the Polymarket Data API, applies a hard-coded take-profit
-threshold, validates against recent account activity, and if needed builds and
-signs a SELL order locally before posting it to the CLOB.
+threshold, and if needed builds and signs a SELL order locally before posting
+it to the CLOB.
 
 No server-side action file or LLM is required for exits. The first automatic
-exit for a position is the 50% partial take-profit; a full take-profit is only
-selected after that partial has already been logged.
+exit for a position is now a full take-profit once the executable sell price
+for the complete live position reaches 75%.
 """
 
 from __future__ import annotations
@@ -41,10 +41,7 @@ from polymarket_order_v2 import (
 ENV_FILE = Path.home() / '.polymarket.env'
 CLOB_HOST = 'https://clob.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
-RECENT_ACTIVITY_LIMIT = 30
-RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
-PARTIAL_TAKE_PROFIT_THRESHOLD = 0.75
-TAKE_PROFIT_THRESHOLD = 0.90
+TAKE_PROFIT_THRESHOLD = 0.75
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 # Do not execute an exit below the configured threshold, even if the server saw
@@ -229,19 +226,6 @@ def fetch_live_positions() -> list[dict[str, Any]]:
     return resp.json()
 
 
-def fetch_recent_activity(limit: int = RECENT_ACTIVITY_LIMIT) -> list[dict[str, Any]]:
-    user = POLY_FUNDER or POLY_SIGNER_ADDRESS
-    if not user:
-        return []
-    resp = requests.get(
-        f'{DATA_API_HOST}/activity',
-        params={'user': user, 'limit': limit, 'offset': 0},
-        timeout=20,
-    )
-    resp.raise_for_status()
-    return resp.json()
-
-
 def monitor_action_key(action: str, position: dict[str, Any]) -> str:
     return f'{action}:{position.get("slug", "")}:{position.get("outcome", "")}:{position.get("asset", "")}'
 
@@ -259,62 +243,21 @@ def save_monitor_action_key(key: str) -> None:
     MONITOR_EXECUTED_ACTIONS_FILE.write_text('\n'.join(sorted(keys)))
 
 
-def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None:
-    now_ts = int(time.time())
-    market_slug = position.get('slug', '')
-    outcome = position.get('outcome', '')
-    token_id = str(position.get('asset', ''))
-
-    for item in fetch_recent_activity():
-        if item.get('type') != 'TRADE':
-            continue
-        if item.get('side') != 'SELL':
-            continue
-        if item.get('slug') != market_slug:
-            continue
-        if item.get('outcome') != outcome:
-            continue
-        item_token = str(item.get('asset', ''))
-        if token_id and item_token and item_token != token_id:
-            continue
-        item_ts = item.get('timestamp')
-        try:
-            item_ts = int(item_ts)
-        except (TypeError, ValueError):
-            continue
-        if now_ts - item_ts <= RECENT_TRADE_WINDOW_SECONDS:
-            return item
-    return None
-
-
-def classify_action(
-    position: dict[str, Any],
-    executed_keys: set[str],
-) -> tuple[str, float] | tuple[None, None]:
+def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None, None]:
     prob = safe_float(position.get('curPrice'))
     size = safe_float(position.get('size'))
     token_id = str(position.get('asset', ''))
 
     full_sell_price = None
-    partial_sell_price = None
     if token_id and size > 0:
         try:
             full_sell_price = get_market_price(token_id, 'SELL', size)
-            partial_sell_price = get_market_price(token_id, 'SELL', size * 0.5)
         except MarketResolvedException as exc:
             print(f'[monitor-executor] Skipping resolved/untradeable position while classifying: {exc}')
             return None, None
         except Exception as exc:
             print(f'[monitor-executor] Could not classify by executable book price: {exc}')
 
-    partial_key = monitor_action_key('PARTIAL_TAKE_PROFIT', position)
-    if (
-        partial_sell_price is not None
-        and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD
-        and partial_key not in executed_keys
-    ):
-        position['_selected_book_sell_price'] = partial_sell_price
-        return 'PARTIAL_TAKE_PROFIT', 0.5
     if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
         position['_selected_book_sell_price'] = full_sell_price
         return 'TAKE_PROFIT', 1.0
@@ -332,7 +275,6 @@ def position_priority_key(action: str, position: dict[str, Any]) -> tuple[int, f
     priority = {
         'TAKE_PROFIT': 0,
         'EXCEPTIONAL_STOP_LOSS': 1,
-        'PARTIAL_TAKE_PROFIT': 2,
     }.get(action, 9)
     return (priority, -sell_price)
 
@@ -342,15 +284,11 @@ def choose_target_positions(
     limit: int = MAX_TAKE_PROFIT_ACTIONS_PER_RUN,
 ) -> list[tuple[str, float, dict[str, Any]]]:
     candidates: list[tuple[str, float, dict[str, Any]]] = []
-    executed_keys = load_monitor_action_keys()
     for pos in positions:
         if not is_live_exit_position(pos):
             continue
-        action, fraction = classify_action(pos, executed_keys)
+        action, fraction = classify_action(pos)
         if action:
-            key = monitor_action_key(action, pos)
-            if action == 'PARTIAL_TAKE_PROFIT' and key in executed_keys:
-                continue
             candidates.append((action, fraction, pos))
     candidates.sort(key=lambda item: position_priority_key(item[0], item[2]))
     return candidates[:max(0, limit)]
@@ -424,8 +362,6 @@ def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
 def minimum_executable_price(action: str) -> float:
     if action == 'TAKE_PROFIT':
         return TAKE_PROFIT_THRESHOLD
-    if action == 'PARTIAL_TAKE_PROFIT':
-        return PARTIAL_TAKE_PROFIT_THRESHOLD
     return 0.001
 
 
@@ -491,27 +427,6 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
             'fraction': fraction,
         },
     )
-
-    recent_sell = find_recent_matching_sell(target) if action == 'PARTIAL_TAKE_PROFIT' else None
-    if recent_sell:
-        print(
-            '[monitor-executor] Recent matching SELL found in activity; '
-            'marking monitor action as already handled.'
-        )
-        send_server_log(
-            'phone.monitor',
-            'trigger_skipped',
-            'Recent matching SELL found in activity; treating trigger as already handled',
-            payload={'market_slug': market_slug, 'reason': 'recent_activity', 'action': action},
-        )
-        maybe_send_telegram(
-            f'\u26a0\ufe0f {action} ya parece ejecutado:\n'
-            f'{market_slug}\n'
-            f'{outcome} @ {prob:.0%}\n'
-            'He visto una venta reciente en la actividad de la cuenta. '
-            'Probablemente te adelantaste, impaciente.'
-        )
-        return True
 
     try:
         print('[monitor-executor] Querying order book...')
@@ -617,10 +532,9 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         exit_proceeds = round(amount * price, 4)
         pnl_usd = round(exit_proceeds - entry_cost, 4) if entry_cost is not None else None
         pnl_pct = round((exit_proceeds / entry_cost - 1) * 100, 2) if entry_cost else None
-        log_type = 'trade_reduced' if action == 'PARTIAL_TAKE_PROFIT' else 'trade_closed'
         append_trade_closed_to_log({
             'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-        'type': log_type,
+            'type': 'trade_closed',
             'market_slug': market_slug,
             'market_title': title,
             'outcome': outcome,

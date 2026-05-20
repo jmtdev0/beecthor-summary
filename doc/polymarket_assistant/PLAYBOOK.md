@@ -17,19 +17,18 @@
 Each automated cycle must follow these steps strictly in order:
 
 1. **Discarded-slot check** — No automated stop-loss. If a daily or legacy weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks fresher allowed daily exposure; it does **not** mean force-sell it.
-2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
-3. **Partial take-profit check** — If a position reaches an executable sell price of at least `75%`, automatically sell `50%` of the position once. The phone must verify the live order book before selling; dashboard/market probability alone is not enough.
-4. **Exceptional invalidation check** — Disabled. No stop-loss sale may be executed by the server, the phone, or the LLM. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold.
-5. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
-6. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
-7. **Range / no-trade gate** — Before scouting new entries, decide whether BTC is in a lateral regime. If the last `24-72h` show compression, repeated failed extensions, and no clean break of the local range, the default decision for new entries is `NO_ACTION`. Existing positions may still be monitored, reduced, closed, or allowed to resolve.
-8. **Scout opportunities** — Daily markets are the only allowed new-entry vehicle. Weekly `REACH/DIP` openings are disabled after historical review showed poor risk-adjusted performance. Default to the `daily thesis` slot first; use `daily momentum` only when Binance is showing a very clear same-day continuation that does not fit the main Beecthor thesis. For each daily slot (`daily thesis / daily momentum`), check whether it is occupied by an **active** daily position. Discarded daily positions do not block the slot. If the slot is free, scan active BTC daily price-hit markets on Polymarket. Look for markets that are:
+2. **Take-profit check** — Review all open positions. If the live CLOB order book allows selling the **full remaining position** at an executable price of at least `75%`, automatically exit `100%` of that position. Dashboard/Gamma probability alone is not enough: both the server alert and the phone execution must use the live order book and bid depth for the full sell amount.
+3. **Exceptional invalidation check** — Disabled. No stop-loss sale may be executed by the server, the phone, or the LLM. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold.
+4. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
+5. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
+6. **Range / no-trade gate** — Before scouting new entries, decide whether BTC is in a lateral regime. If the last `24-72h` show compression, repeated failed extensions, and no clean break of the local range, the default decision for new entries is `NO_ACTION`. Existing positions may still be monitored, closed, or allowed to resolve.
+7. **Scout opportunities** — Daily markets are the only allowed new-entry vehicle. Weekly `REACH/DIP` openings are disabled after historical review showed poor risk-adjusted performance. Default to the `daily thesis` slot first; use `daily momentum` only when Binance is showing a very clear same-day continuation that does not fit the main Beecthor thesis. For each daily slot (`daily thesis / daily momentum`), check whether it is occupied by an **active** daily position. Discarded daily positions do not block the slot. If the slot is free, scan active BTC daily price-hit markets on Polymarket. Look for markets that are:
    - In line with Beecthor's current directional thesis.
    - In line with the current BTC price trend (momentum confirmation).
    - Both directions (REACH and DIP) must be evaluated before deciding. Do not default to one direction by habit — if Beecthor's thesis supports a bullish move, a REACH market may be the right bet even if recent cycles have been DIP.
    - Preferably between `45%` and `90%` probability on Polymarket (hard cap at `> 90%`).
    - For the **daily momentum** slot: it may go against the main Beecthor thesis, but only when Binance shows a very clear intraday continuation that is cleaner than forcing the thesis-aligned daily.
-9. **Place bet (if valid)** — If a viable daily market is found, open at most **one** new daily position following the entry rules below. Most cycles should still open `0` positions.
+8. **Place bet (if valid)** — If a viable daily market is found, open at most **one** new daily position following the entry rules below. Most cycles should still open `0` positions.
 
 ## Market scope
 
@@ -43,7 +42,7 @@ Two allowed BTC price-hit slots, tracked separately:
 - Daily markets are for same-day timing expressions.
 - The **daily thesis** slot is the default same-day expression of Beecthor's current directional view.
 - The **daily momentum** slot exists to exploit a very clear intraday continuation even when it runs against the original thesis. This is not revenge trading and must not be used to average down a failed idea.
-- Weekly `REACH/DIP` markets are **disabled for new openings**. Existing weekly positions may still be monitored, partially reduced, closed for take-profit, or allowed to resolve naturally, but they do not create permission to open another weekly.
+- Weekly `REACH/DIP` markets are **disabled for new openings**. Existing weekly positions may still be monitored, closed for take-profit, or allowed to resolve naturally, but they do not create permission to open another weekly.
 - The default portfolio intention is therefore **daily thesis first**, with **daily momentum** only as a secondary slot when same-day price action is unusually clear.
 - Not allowed:
   - non-BTC markets
@@ -113,15 +112,13 @@ Two allowed BTC price-hit slots, tracked separately:
   - if a daily or legacy weekly position drops to `<= 20%`, it may be treated as discarded for slot availability, but it still remains open until take-profit or natural resolution
   - no exceptional stop-loss exits are allowed; do not sell losing positions solely because they reached `<= 15-20%` or because the thesis looks invalidated
 - Take profit:
-  - automatically partial-exit `50%` once the live executable sell price reaches `75%`; this partial may happen only once per position
-  - if no partial take-profit has been executed for a position yet, the automatic monitor must sell only `50%` first, even if the executable sell price is already `90%+`
-  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the relevant sell fraction), not only dashboard/Gamma probability, before alerting the phone
+  - automatically full-exit `100%` of the remaining position once the live executable sell price for the full sell amount reaches `75%`
+  - there is no partial take-profit path; a qualifying take-profit closes the whole live position
+  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the full sell amount), not only dashboard/Gamma probability, before alerting the phone
   - the server monitor is only an alert layer: it must not pass token ids, share amounts, or prebuilt sell orders to the phone
-  - the phone is the execution authority: after any alert, it must refresh positions and the live CLOB order book, then generate the `SELL` order itself only if the executable sell price is still at or above the relevant threshold
-  - consider exit once market probability reaches `90%`
-  - default full take profit range: `90-95%`
+  - the phone is the execution authority: after any alert, it must refresh positions and the live CLOB order book, then generate the `SELL` order itself only if the executable full-position sell price is still at or above `75%`
   - if two positions independently hit the take-profit zone in the same review, exiting both is valid
-  - exception: if resolution is near-certain (market is about to close and the outcome is obvious), the position may be held to resolve naturally at 100%
+  - exception: if resolution is already certain and the market has effectively resolved, do not force a sell into a bad/empty book; allow Polymarket redemption to handle it
 
 ## Execution freshness
 
