@@ -1,12 +1,12 @@
 [
   {
-    "order_id": "2026-05-19T10:02:33.800192Z",
-    "status": "executed",
+    "order_id": "2026-05-20T08:01:35.998260Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "69674814377009712861125949131773145156125119156037197967701902441733828591425",
+    "token_id": "101246749411915163030550079269131030373831909082732565321062135529896340766537",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.51,
+    "max_entry_probability": 0.56,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
@@ -14,16 +14,9 @@
     "expiry_validity": "strong",
     "strategy": "beecthor",
     "strategy_candidate_id": "",
-    "strategy_reason": "Current bearish Beecthor thesis is now supported by live downside repricing and the nearest clean daily strike is 76k DIP.",
-    "market": "Will Bitcoin dip to $76,000 on May 19?",
-    "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-    "outcome": "Yes",
-    "execution_status_detail": "Order executed successfully on phone",
-    "execution_updated_at": "2026-05-19T10:02:42Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-      "price": 0.48,
-      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x6a323d19efa420f25c1cf697732a14d3025e4a14b53040ecd38bfab5bcd319e6\",\"takingAmount\":\"2.083332\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x18b2288ef146bb7c0a99499117c539f7a5ccdd65051f67aa5d008ee762142249\"],\"success\":true}"
-    }
+    "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression.",
+    "market": "Will Bitcoin reach $78,000 on May 20?",
+    "market_slug": "will-bitcoin-reach-78k-on-may-20",
+    "outcome": "Yes"
   }
 ]
