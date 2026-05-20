@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -114,6 +115,41 @@ def safe_float(value: Any, default: float = 0.0) -> float:
 
 class MarketResolvedException(Exception):
     """Raised when the order book returns 404 because the market has already resolved."""
+
+
+def parse_end_date(value: Any) -> float:
+    if not value:
+        return 0.0
+    text = str(value).strip()
+    if not text:
+        return 0.0
+    if text.endswith('Z'):
+        text = f'{text[:-1]}+00:00'
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        try:
+            dt = datetime.fromisoformat(f'{text}T23:59:59+00:00')
+        except ValueError:
+            return 0.0
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.timestamp()
+
+
+def is_live_exit_position(position: dict[str, Any]) -> bool:
+    if position.get('redeemable') is True:
+        return False
+    if safe_float(position.get('size')) <= 0:
+        return False
+    current_value = safe_float(position.get('currentValue'))
+    cur_price = safe_float(position.get('curPrice'))
+    if current_value <= 0 and cur_price <= 0:
+        return False
+    end_ts = parse_end_date(position.get('endDate'))
+    if end_ts and end_ts < time.time():
+        return False
+    return True
 
 
 def get_market_price(token_id: str, side: str, amount: float) -> float:
@@ -260,8 +296,9 @@ def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None,
         try:
             full_sell_price = get_market_price(token_id, 'SELL', size)
             partial_sell_price = get_market_price(token_id, 'SELL', size * 0.5)
-        except MarketResolvedException:
-            raise
+        except MarketResolvedException as exc:
+            print(f'[monitor-executor] Skipping resolved/untradeable position while classifying: {exc}')
+            return None, None
         except Exception as exc:
             print(f'[monitor-executor] Could not classify by executable book price: {exc}')
 
@@ -297,6 +334,8 @@ def choose_target_positions(
     candidates: list[tuple[str, float, dict[str, Any]]] = []
     executed_keys = load_monitor_action_keys()
     for pos in positions:
+        if not is_live_exit_position(pos):
+            continue
         action, fraction = classify_action(pos)
         if action:
             key = monitor_action_key(action, pos)
