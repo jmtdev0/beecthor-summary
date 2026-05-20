@@ -23,7 +23,7 @@ from codex_chat_bridge import (
     start_bridge_request,
 )
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, redirect, render_template_string, request, session, url_for
+from flask import Flask, Response, jsonify, redirect, render_template_string, request, send_file, session, url_for
 
 try:
     from py_clob_client.client import ClobClient
@@ -37,6 +37,7 @@ except ImportError:  # pragma: no cover - optional at runtime
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
+FAVICON_PATH = Path(__file__).resolve().parent / 'channels4_profile.jpg'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
 SIMULATED_SUMMARIES_PATH = REPO_ROOT / 'doc' / 'beecthor_simulations.json'
 BITCOINALDIA_SUMMARIES_PATH = REPO_ROOT / 'data' / 'bitcoinaldia_summaries.json'
@@ -558,11 +559,20 @@ def page_start(title: str) -> str:
     return (
         "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        "<link rel=\"icon\" type=\"image/jpeg\" href=\"/favicon.jpg\">"
         f"<title>{safe_title}</title>{STYLE}</head><body>"
     )
 
 
 PAGE_END = "</body></html>"
+
+
+@app.route('/favicon.ico')
+@app.route('/favicon.jpg')
+def favicon():
+    if not FAVICON_PATH.exists():
+        return Response('favicon not found', status=404, mimetype='text/plain')
+    return send_file(FAVICON_PATH, mimetype='image/jpeg', max_age=86400)
 
 LOGIN_HTML = page_start('Login | Beecthor') + """
 <div class="shell"><div class="card" style="max-width:360px;margin:10vh auto 0">
