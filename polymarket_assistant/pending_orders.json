@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-05-20T08:01:35.998260Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "101246749411915163030550079269131030373831909082732565321062135529896340766537",
     "side": "BUY",
@@ -17,6 +17,13 @@
     "strategy_reason": "Beecthor's mapped rebound target at 78k is now directly supported by bullish short-term Binance action, making 78k REACH the nearest clean daily thesis expression.",
     "market": "Will Bitcoin reach $78,000 on May 20?",
     "market_slug": "will-bitcoin-reach-78k-on-may-20",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-05-20T08:01:42Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-78k-on-may-20",
+      "price": 0.55,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x3ac25ced1ab46178c2a4286b7c21b6c116d54ee99e86661531714f713e8dc057\",\"takingAmount\":\"1.81818\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0xe22f08ce5676f43d6fffe88160f0c5c8b5a54b29c70536f9aca174d74b3b8dda\"],\"success\":true}"
+    }
   }
 ]
