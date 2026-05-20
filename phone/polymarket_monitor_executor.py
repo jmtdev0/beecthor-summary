@@ -40,13 +40,13 @@ CLOB_HOST = 'https://clob.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 RECENT_ACTIVITY_LIMIT = 30
 RECENT_TRADE_WINDOW_SECONDS = 6 * 60 * 60
-PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
+PARTIAL_TAKE_PROFIT_THRESHOLD = 0.75
 TAKE_PROFIT_THRESHOLD = 0.90
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
-# Do not execute a take-profit sale below the configured threshold, even if the
-# server saw >= 90% a few seconds earlier. The live executable book price is the
-# final source of truth for the order.
+# Do not execute an exit below the configured threshold, even if the server saw
+# a qualifying quote a few seconds earlier. The live executable book price is
+# the final source of truth for the order.
 MIN_EXECUTABLE_TAKE_PROFIT_PRICE = TAKE_PROFIT_THRESHOLD
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 MONITOR_EXECUTED_ACTIONS_FILE = Path.home() / '.polymarket_monitor_executed_action_keys'
@@ -251,9 +251,25 @@ def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None
 
 def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None, None]:
     prob = safe_float(position.get('curPrice'))
-    if prob >= TAKE_PROFIT_THRESHOLD:
+    size = safe_float(position.get('size'))
+    token_id = str(position.get('asset', ''))
+
+    full_sell_price = None
+    partial_sell_price = None
+    if token_id and size > 0:
+        try:
+            full_sell_price = get_market_price(token_id, 'SELL', size)
+            partial_sell_price = get_market_price(token_id, 'SELL', size * 0.5)
+        except MarketResolvedException:
+            raise
+        except Exception as exc:
+            print(f'[monitor-executor] Could not classify by executable book price: {exc}')
+
+    if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
+        position['_selected_book_sell_price'] = full_sell_price
         return 'TAKE_PROFIT', 1.0
-    if prob >= PARTIAL_TAKE_PROFIT_THRESHOLD:
+    if partial_sell_price is not None and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD:
+        position['_selected_book_sell_price'] = partial_sell_price
         return 'PARTIAL_TAKE_PROFIT', 0.5
     if (
         ENABLE_EXCEPTIONAL_STOP_LOSS
@@ -265,13 +281,13 @@ def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None,
 
 
 def position_priority_key(action: str, position: dict[str, Any]) -> tuple[int, float]:
-    prob = safe_float(position.get('curPrice'))
+    sell_price = safe_float(position.get('_selected_book_sell_price'), safe_float(position.get('curPrice')))
     priority = {
         'TAKE_PROFIT': 0,
         'EXCEPTIONAL_STOP_LOSS': 1,
         'PARTIAL_TAKE_PROFIT': 2,
     }.get(action, 9)
-    return (priority, -prob)
+    return (priority, -sell_price)
 
 
 def choose_target_positions(
@@ -409,12 +425,22 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         if not dry_run:
             send_telegram(text)
 
-    print(f'[monitor-executor] Trigger: {action} SELL {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}')
+    selected_book_sell_price = safe_float(target.get('_selected_book_sell_price'))
+    book_note = f' selected_book_sell={selected_book_sell_price:.1%}' if selected_book_sell_price else ''
+    print(f'[monitor-executor] Trigger: {action} SELL {outcome} on "{market_slug}" amount={amount} prob={prob:.1%}{book_note}')
     send_server_log(
         'phone.monitor',
         'trigger_detected',
         f'{action} selected for {market_slug}',
-        payload={'market_slug': market_slug, 'title': title, 'outcome': outcome, 'probability': prob, 'amount': amount, 'fraction': fraction},
+        payload={
+            'market_slug': market_slug,
+            'title': title,
+            'outcome': outcome,
+            'probability': prob,
+            'selected_book_sell_price': selected_book_sell_price,
+            'amount': amount,
+            'fraction': fraction,
+        },
     )
 
     recent_sell = find_recent_matching_sell(target) if action == 'PARTIAL_TAKE_PROFIT' else None
@@ -514,7 +540,22 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
     resp = post_sell_order_with_version_retry(token_id, amount, price)
     if resp.ok:
         print(f'[monitor-executor] SUCCESS: {resp.text}')
-        send_server_log('phone.monitor', 'order_executed', f'{action} executed successfully', payload={'market_slug': market_slug, 'action': action, 'response': resp.text[:500]})
+        send_server_log(
+            'phone.monitor',
+            'order_executed',
+            f'{action} executed successfully',
+            payload={
+                'market_slug': market_slug,
+                'title': title,
+                'outcome': outcome,
+                'action': action,
+                'price': price,
+                'amount': amount,
+                'fraction': fraction,
+                'live_probability': prob,
+                'response': resp.text[:500],
+            },
+        )
         save_monitor_action_key(action_key)
         maybe_send_telegram(
             f'\u2705 {action} executed from phone:\n'

@@ -18,7 +18,7 @@ Each automated cycle must follow these steps strictly in order:
 
 1. **Discarded-slot check** — No automated stop-loss. If a daily or legacy weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks fresher allowed daily exposure; it does **not** mean force-sell it.
 2. **Take-profit check** — Review all open positions. Consider exiting any position where the market probability has reached `90-95%`. If two positions independently meet the take-profit criteria in the same review, exiting both in the same pass is allowed. If resolution is near-certain (very obvious the market will resolve in our favor), the position may be held to let it resolve naturally.
-3. **Partial take-profit check** — If a position reaches `80-85%` probability and expiry is not imminent, automatically reduce `40-60%` to lock in profit while leaving upside for full resolution.
+3. **Partial take-profit check** — If a position reaches an executable sell price of at least `75%`, automatically sell `50%` of the position once. The phone must verify the live order book before selling; dashboard/market probability alone is not enough.
 4. **Exceptional invalidation check** — Disabled. No stop-loss sale may be executed by the server, the phone, or the LLM. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold.
 5. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 6. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
@@ -113,7 +113,8 @@ Two allowed BTC price-hit slots, tracked separately:
   - if a daily or legacy weekly position drops to `<= 20%`, it may be treated as discarded for slot availability, but it still remains open until take-profit or natural resolution
   - no exceptional stop-loss exits are allowed; do not sell losing positions solely because they reached `<= 15-20%` or because the thesis looks invalidated
 - Take profit:
-  - automatically partial-exit `40-60%` once market probability reaches `80-85%` and expiry is not imminent
+  - automatically partial-exit `50%` once the live executable sell price reaches `75%`; this partial may happen only once per position
+  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the actual sell amount), not only dashboard/Gamma probability, before alerting the phone
   - consider exit once market probability reaches `90%`
   - default full take profit range: `90-95%`
   - if two positions independently hit the take-profit zone in the same review, exiting both is valid

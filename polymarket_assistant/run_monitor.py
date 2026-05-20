@@ -4,6 +4,7 @@ Polymarket Position Monitor
 
 Runs every minute while the server systemd timer is active.
 No GPT/Copilot — hard-coded thresholds only:
+  - Partial take-profit: phone executable SELL price >= 0.75
   - Take-profit: cur_price >= 0.90
 
 On trigger: stores a local snapshot of the candidate actions, then attempts to
@@ -18,6 +19,7 @@ position remains.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -43,8 +45,11 @@ MONITOR_ACTION_PATH = ASSISTANT_DIR / 'last_monitor_action.json'
 MONITOR_DISPATCH_STATE_PATH = ASSISTANT_DIR / 'monitor_dispatch_state.json'
 MONITOR_HISTORY_PATH = ASSISTANT_DIR / 'monitor_history.json'
 MONITOR_TIMER_NAME = os.environ.get('POLYMARKET_MONITOR_TIMER_NAME', 'polymarket-monitor.timer')
+DASHBOARD_LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (ASSISTANT_DIR.parent / 'server_runtime_logs'))
+MOBILE_LOG_PATH = DASHBOARD_LOG_DIR / 'mobile.jsonl'
+CLOB_HOST = 'https://clob.polymarket.com'
 
-PARTIAL_TAKE_PROFIT_THRESHOLD = 0.80
+PARTIAL_TAKE_PROFIT_THRESHOLD = 0.75
 TAKE_PROFIT_THRESHOLD = 0.90
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
@@ -95,7 +100,42 @@ def monitor_action_key(action: dict[str, object]) -> str:
     return f'{action.get("market_slug", "")}::{action.get("outcome", "")}::{action.get("action", "")}'
 
 
+def phone_partial_take_profit_executed(action: dict[str, object]) -> bool:
+    """Return True when the phone has logged a real partial take-profit sale."""
+    if action.get('action') != 'PARTIAL_TAKE_PROFIT' or not MOBILE_LOG_PATH.exists():
+        return False
+
+    market_slug = str(action.get('market_slug') or '')
+    outcome = str(action.get('outcome') or '')
+    try:
+        lines = MOBILE_LOG_PATH.read_text(encoding='utf-8', errors='replace').splitlines()[-500:]
+    except Exception as exc:
+        print(f'[monitor] WARN: could not read mobile log for partial execution check: {exc}')
+        return False
+
+    for line in reversed(lines):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get('source') != 'phone.monitor' or event.get('event_type') != 'order_executed':
+            continue
+        payload = event.get('payload') or {}
+        if payload.get('action') != 'PARTIAL_TAKE_PROFIT':
+            continue
+        if payload.get('market_slug') != market_slug:
+            continue
+        payload_outcome = str(payload.get('outcome') or '')
+        if payload_outcome and outcome and payload_outcome != outcome:
+            continue
+        return True
+    return False
+
+
 def should_dispatch(action: dict[str, object], dispatch_state: dict[str, dict[str, Any]]) -> tuple[bool, str]:
+    if phone_partial_take_profit_executed(action):
+        return False, 'partial_take_profit_already_executed'
+
     state = dispatch_state.get(monitor_action_key(action), {})
     last_attempt = int(safe_float(state.get('last_attempt_ts'), 0))
     if not last_attempt:
@@ -103,8 +143,6 @@ def should_dispatch(action: dict[str, object], dispatch_state: dict[str, dict[st
 
     elapsed = max(0, int(time.time()) - last_attempt)
     last_status = str(state.get('last_status') or 'unknown')
-    if action.get('action') == 'PARTIAL_TAKE_PROFIT' and last_status == 'success':
-        return False, 'partial_take_profit_already_dispatched'
     retry_after = SUCCESS_DISPATCH_COOLDOWN_SECONDS if last_status == 'success' else FAILED_DISPATCH_RETRY_SECONDS
     if elapsed < retry_after:
         return False, f'cooldown_active:{retry_after - elapsed}s'
@@ -128,6 +166,55 @@ def update_dispatch_state(
             'prob': safe_float(action.get('prob')),
         }
     save_json(MONITOR_DISPATCH_STATE_PATH, dispatch_state)
+
+
+def fetch_sell_book(token_id: str) -> tuple[list[tuple[float, float]], dict[str, object]]:
+    details: dict[str, object] = {
+        'token_id': token_id,
+        'book_best_bid': None,
+        'top_bid_size': None,
+        'bid_depth_top5': 0.0,
+        'collector_error': '',
+    }
+    if not token_id:
+        details['collector_error'] = 'missing_token_id'
+        return [], details
+
+    try:
+        resp = requests.get(f'{CLOB_HOST}/book', params={'token_id': token_id}, timeout=15)
+        if resp.status_code == 404:
+            details['collector_error'] = 'order_book_not_found'
+            return [], details
+        resp.raise_for_status()
+        book = resp.json()
+    except Exception as exc:
+        details['collector_error'] = str(exc)[:240]
+        return [], details
+
+    bids: list[tuple[float, float]] = []
+    for level in book.get('bids', []):
+        price = safe_float(level.get('price'), -1)
+        size = safe_float(level.get('size'), 0)
+        if price >= 0 and size > 0:
+            bids.append((price, size))
+    bids.sort(key=lambda item: item[0], reverse=True)
+
+    if bids:
+        details['book_best_bid'] = bids[0][0]
+        details['top_bid_size'] = bids[0][1]
+        details['bid_depth_top5'] = round(sum(size for _, size in bids[:5]), 6)
+    return bids, details
+
+
+def executable_sell_price_from_bids(bids: list[tuple[float, float]], amount: float) -> float | None:
+    if amount <= 0:
+        return None
+    filled = 0.0
+    for price, size in bids:
+        filled += size
+        if filled >= amount:
+            return price
+    return None
 
 
 def trigger_phone_monitor_executor() -> tuple[bool, str]:
@@ -307,22 +394,48 @@ def main() -> None:
         return
 
     monitor_actions: list[dict[str, object]] = []
-    candidates: list[tuple[int, dict[str, Any], str, float]] = []
+    skipped_actions: list[dict[str, object]] = []
+    candidates: list[tuple[int, float, dict[str, Any], str, float, dict[str, object]]] = []
     for pos in positions:
         prob = safe_float(pos.get('cur_price'))
-        if prob >= TAKE_PROFIT_THRESHOLD:
-            candidates.append((0, pos, 'TAKE_PROFIT', 1.0))
-        elif prob >= PARTIAL_TAKE_PROFIT_THRESHOLD:
-            candidates.append((1, pos, 'PARTIAL_TAKE_PROFIT', 0.5))
-        elif (
+        size = safe_float(pos.get('size'))
+        token_id = str(pos.get('asset', ''))
+        bids, book_details = fetch_sell_book(token_id)
+        full_sell_price = executable_sell_price_from_bids(bids, size)
+        partial_sell_price = executable_sell_price_from_bids(bids, size * 0.5)
+        book_details.update(
+            {
+                'full_executable_sell_price': full_sell_price,
+                'partial_executable_sell_price': partial_sell_price,
+            }
+        )
+
+        if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
+            candidates.append((0, full_sell_price, pos, 'TAKE_PROFIT', 1.0, book_details))
+        elif partial_sell_price is not None and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD:
+            candidates.append((1, partial_sell_price, pos, 'PARTIAL_TAKE_PROFIT', 0.5, book_details))
+        else:
+            visible_trigger = prob >= PARTIAL_TAKE_PROFIT_THRESHOLD
+            if visible_trigger:
+                skipped_actions.append(
+                    {
+                        'market_slug': str(pos.get('market_slug', '')),
+                        'outcome': str(pos.get('outcome', '')),
+                        'reason': 'book_executable_price_below_exit_threshold',
+                        'visible_probability': round(prob, 6),
+                        **book_details,
+                    }
+                )
+
+        if (
             ENABLE_EXCEPTIONAL_STOP_LOSS
             and 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD
             and safe_float(pos.get('current_value')) >= 0.05
         ):
-            candidates.append((2, pos, 'EXCEPTIONAL_STOP_LOSS', 1.0))
-    candidates.sort(key=lambda item: (item[0], -safe_float(item[1].get('cur_price'))))
+            candidates.append((2, prob, pos, 'EXCEPTIONAL_STOP_LOSS', 1.0, book_details))
+    candidates.sort(key=lambda item: (item[0], -item[1]))
 
-    for _, pos, action, fraction in candidates[:MAX_TAKE_PROFIT_ACTIONS_PER_RUN]:
+    for _, executable_sell_price, pos, action, fraction, book_details in candidates[:MAX_TAKE_PROFIT_ACTIONS_PER_RUN]:
         prob = safe_float(pos.get('cur_price'))
         market_slug = pos['market_slug']
         outcome = pos['outcome']
@@ -330,7 +443,10 @@ def main() -> None:
         amount = size * fraction
         title = pos.get('market_title', market_slug)
 
-        print(f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | amount={amount:.4f}')
+        print(
+            f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | '
+            f'book_sell={executable_sell_price:.1%} | amount={amount:.4f}'
+        )
         monitor_actions.append(
             {
                 'timestamp': now_utc(),
@@ -344,18 +460,22 @@ def main() -> None:
                 'side': 'SELL',
                 'amount': amount,
                 'fraction': fraction,
+                'book_sell_price': executable_sell_price,
+                'book_best_bid': book_details.get('book_best_bid'),
+                'top_bid_size': book_details.get('top_bid_size'),
+                'bid_depth_top5': book_details.get('bid_depth_top5'),
             }
         )
 
     if not monitor_actions:
         print('[monitor] No exit trigger in live positions.')
         history_entry['status'] = 'no_trigger'
+        history_entry['skipped_actions'] = skipped_actions
         save_json(MONITOR_ACTION_PATH, history_entry)
         append_monitor_history(history_entry)
         return
 
     eligible_actions: list[dict[str, object]] = []
-    skipped_actions: list[dict[str, str]] = []
     for action in monitor_actions:
         should_run, reason = should_dispatch(action, dispatch_state)
         if should_run:
@@ -405,10 +525,13 @@ def main() -> None:
         payload['status'] = 'phone_triggered'
         payload['dispatch_detail'] = dispatch_detail
         print(f'[monitor] Phone executor triggered: {summary_slug} ({dispatch_detail})')
+        first_action = eligible_actions[0]
+        book_sell_price = safe_float(first_action.get('book_sell_price'))
+        price_line = f'\nbook_sell={book_sell_price:.0%}' if book_sell_price else ''
         send_telegram(
             telegram_token,
             telegram_chat_id,
-            f'\U0001f514 MONITOR EXIT\n{summary_slug}\nPhone executor triggered via tunnel.',
+            f'\U0001f514 MONITOR EXIT\n{summary_slug}{price_line}\nPhone executor triggered via tunnel.',
         )
     else:
         payload['status'] = 'trigger_failed'
