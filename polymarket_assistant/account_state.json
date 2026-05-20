@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 7.321958,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.4895,
+  "open_exposure": 0,
   "max_open_positions": 3,
   "max_daily_positions": 2,
   "max_weekly_positions": 0,
@@ -16,23 +16,7 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-may-19",
-      "market_slug": "will-bitcoin-dip-to-76k-on-may-19",
-      "market_title": "Will Bitcoin dip to $76,000 on May 19?",
-      "position_side": "Yes",
-      "token_id": "69674814377009712861125949131773145156125119156037197967701902441733828591425",
-      "shares": 2.0833,
-      "avg_price": 0.4799,
-      "entry_cost_usd": 0.9999,
-      "current_price": 0.235,
-      "current_value_usd": 0.4895,
-      "cash_pnl_usd": -0.5104,
-      "status": "open",
-      "slot_status": "active"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-05-19T20:00:54Z"
+  "last_synced_at": "2026-05-20T06:00:44Z"
 }
