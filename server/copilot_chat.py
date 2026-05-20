@@ -77,6 +77,12 @@ CHAIN_ID = 137
 LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (REPO_ROOT / 'server_runtime_logs'))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 TRACE_LANE_LIMIT = 5
+HIDDEN_PUBLIC_VIDEO_IDS = {
+    '_zyxYZO67-8',
+    'lwAibKGUPPI',
+    'BNxWfRQ0RNA',
+    'yTz2oN6PQhA',
+}
 STRATEGY_OPTIONS = {
     'beecthor': {
         'label': 'Beecthor',
@@ -188,6 +194,19 @@ img{display:block;max-width:100%}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
 }
 .video-date{font-size:.95rem;color:#9ca3af}
+.public-controls{
+  display:flex;align-items:end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin:0 0 28px;padding:18px;border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018))
+}
+.public-controls-fields{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+.public-controls label{display:flex;flex-direction:column;gap:7px;color:#9ca3af;font-size:.82rem;font-weight:800}
+.public-controls input,.public-controls select{
+  min-width:150px;background:#111;color:#fff;border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:10px 12px
+}
+.public-controls-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.public-count{color:#d1d5db;font-size:.95rem}
 .public-tabs a{
   padding:8px 12px;border-radius:999px;background:transparent;color:#d7dee7
 }
@@ -529,6 +548,8 @@ img{display:block;max-width:100%}
   .nav a{padding:4px 0}
   .nav.public-tabs a{padding:8px 10px}
   .brand-title,.private-title{font-size:1.9rem}
+  .public-controls,.public-controls-fields,.public-controls-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .public-controls input,.public-controls select{width:100%}
   .video-grid{grid-template-columns:1fr}
   .private-grid{grid-template-columns:1fr}
   .control-grid{grid-template-columns:1fr}
@@ -1452,6 +1473,14 @@ def timestamp_to_local(timestamp: str) -> str:
         return timestamp
 
 
+def timestamp_to_local_date(timestamp: str) -> str:
+    try:
+        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(_CET)
+        return dt.strftime('%Y-%m-%d')
+    except Exception:
+        return ''
+
+
 def parse_utc_timestamp(timestamp: str) -> datetime | None:
     if not timestamp:
         return None
@@ -1749,9 +1778,13 @@ def load_summary_entries() -> list[dict[str, Any]]:
     for entry in reversed(entries):
         message = entry.get('message', '')
         video_id = entry.get('video_id', '')
+        if video_id in HIDDEN_PUBLIC_VIDEO_IDS:
+            continue
         items.append({
             **entry,
             'timestamp_local': timestamp_to_local(entry.get('timestamp', '')),
+            'timestamp_date': timestamp_to_local_date(entry.get('timestamp', '')),
+            'sort_timestamp': entry.get('timestamp', ''),
             'summary_html': extract_message_section(message, '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>') or '<span class="muted">Sin resumen visible</span>',
             'message_html': message,
             'public_title': derive_public_title(entry),
@@ -1759,6 +1792,24 @@ def load_summary_entries() -> list[dict[str, Any]]:
             'thumbnail_url': youtube_thumb_url(video_id),
         })
     return items
+
+
+def filter_summary_entries(
+    items: list[dict[str, Any]],
+    start_date: str = '',
+    end_date: str = '',
+    sort_order: str = 'desc',
+) -> list[dict[str, Any]]:
+    filtered = []
+    for item in items:
+        item_date = item.get('timestamp_date', '')
+        if start_date and item_date and item_date < start_date:
+            continue
+        if end_date and item_date and item_date > end_date:
+            continue
+        filtered.append(item)
+    reverse = sort_order != 'asc'
+    return sorted(filtered, key=lambda item: item.get('sort_timestamp', ''), reverse=reverse)
 
 
 def find_summary(video_id: str) -> dict[str, Any] | None:
@@ -2176,7 +2227,20 @@ def run_copilot(message: str) -> str:
 
 @app.route('/')
 def public_index():
-    items = load_summary_entries()
+    all_items = load_summary_entries()
+    filters = {
+        'from_date': request.args.get('from', '').strip(),
+        'to_date': request.args.get('to', '').strip(),
+        'sort': request.args.get('sort', 'desc').strip(),
+    }
+    if filters['sort'] not in {'asc', 'desc'}:
+        filters['sort'] = 'desc'
+    items = filter_summary_entries(
+        all_items,
+        start_date=filters['from_date'],
+        end_date=filters['to_date'],
+        sort_order=filters['sort'],
+    )
     html = page_start('Resúmenes | Beecthor') + """
     <div class="shell public-shell">
       <div class="top">
@@ -2189,6 +2253,28 @@ def public_index():
           <a href="{{ url_for('public_simulations') }}">Simulaciones</a>
         </div>
       </div>
+      <form class="public-controls" method="GET">
+        <div class="public-controls-fields">
+          <label>Desde
+            <input type="date" name="from" value="{{ filters.from_date }}">
+          </label>
+          <label>Hasta
+            <input type="date" name="to" value="{{ filters.to_date }}">
+          </label>
+          <label>Orden
+            <select name="sort">
+              <option value="desc" {% if filters.sort == 'desc' %}selected{% endif %}>Más reciente primero</option>
+              <option value="asc" {% if filters.sort == 'asc' %}selected{% endif %}>Más antiguo primero</option>
+            </select>
+          </label>
+        </div>
+        <div class="public-controls-actions">
+          <span class="public-count">{{ items|length }} de {{ total_count }} vídeos</span>
+          <button type="submit">Aplicar</button>
+          <a class="button-link secondary" href="{{ url_for('public_index') }}">Limpiar</a>
+        </div>
+      </form>
+      {% if items %}
       <div class="video-grid">
         {% for item in items %}
         <article class="video-card">
@@ -2204,8 +2290,13 @@ def public_index():
         </article>
         {% endfor %}
       </div>
+      {% else %}
+      <section class="surface-card">
+        <p class="muted">No hay vídeos para ese rango de fechas.</p>
+      </section>
+      {% endif %}
     </div>""" + PAGE_END
-    return render_template_string(html, items=items)
+    return render_template_string(html, items=items, filters=filters, total_count=len(all_items))
 
 
 @app.route('/videos/<video_id>')
