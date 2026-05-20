@@ -5,12 +5,14 @@ Polymarket Position Monitor
 Runs every minute while the server systemd timer is active.
 No GPT/Copilot — hard-coded thresholds only:
   - Partial take-profit: phone executable SELL price >= 0.75
-  - Take-profit: cur_price >= 0.90
+  - Take-profit: phone executable SELL price >= 0.90
 
-On trigger: stores a local snapshot of the candidate actions, then attempts to
-launch the phone monitor executor immediately through the reverse SSH tunnel.
-This keeps detection on the server while preserving residential-IP execution on
-the phone.
+On trigger: stores an advisory sell signal, then attempts to launch the phone
+monitor executor immediately through the reverse SSH tunnel. The server never
+passes order instructions such as token id, side, or amount; the phone refreshes
+positions and the live order book, then creates the SELL order only if the
+threshold is still viable at execution time. This keeps detection on the server
+while preserving residential-IP execution on the phone.
 
 The timer is intentionally on-demand: server cycles enable it after queueing a
 phone OPEN_POSITION order, and this monitor disables it again once no live
@@ -73,6 +75,7 @@ PHONE_SSH = [
 ]
 PHONE_MONITOR_CMD = (
     "bash -lc 'cd ~/beecthor-summary && "
+    "git pull --ff-only >/dev/null 2>&1 || true; "
     "nohup python3 phone/polymarket_monitor_executor.py "
     ">> ~/polymarket_monitor_executor.log 2>&1 </dev/null &'"
 )
@@ -410,10 +413,21 @@ def main() -> None:
             }
         )
 
-        if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
-            candidates.append((0, full_sell_price, pos, 'TAKE_PROFIT', 1.0, book_details))
-        elif partial_sell_price is not None and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD:
+        partial_action_probe = {
+            'action': 'PARTIAL_TAKE_PROFIT',
+            'market_slug': pos.get('market_slug', ''),
+            'outcome': pos.get('outcome', ''),
+        }
+        partial_already_executed = phone_partial_take_profit_executed(partial_action_probe)
+
+        if (
+            partial_sell_price is not None
+            and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD
+            and not partial_already_executed
+        ):
             candidates.append((1, partial_sell_price, pos, 'PARTIAL_TAKE_PROFIT', 0.5, book_details))
+        elif full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
+            candidates.append((0, full_sell_price, pos, 'TAKE_PROFIT', 1.0, book_details))
         else:
             visible_trigger = prob >= PARTIAL_TAKE_PROFIT_THRESHOLD
             if visible_trigger:
@@ -439,27 +453,24 @@ def main() -> None:
         prob = safe_float(pos.get('cur_price'))
         market_slug = pos['market_slug']
         outcome = pos['outcome']
-        size = safe_float(pos['size'])
-        amount = size * fraction
         title = pos.get('market_title', market_slug)
+        threshold = TAKE_PROFIT_THRESHOLD if action == 'TAKE_PROFIT' else PARTIAL_TAKE_PROFIT_THRESHOLD
 
         print(
             f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | '
-            f'book_sell={executable_sell_price:.1%} | amount={amount:.4f}'
+            f'book_sell={executable_sell_price:.1%} | sell_fraction={fraction:.0%}'
         )
         monitor_actions.append(
             {
                 'timestamp': now_utc(),
                 'action': action,
-                'status': 'pending_phone_execution',
+                'status': 'phone_evaluation_requested',
                 'market_slug': market_slug,
                 'market_title': title,
                 'outcome': outcome,
                 'prob': prob,
-                'token_id': pos['asset'],
-                'side': 'SELL',
-                'amount': amount,
-                'fraction': fraction,
+                'sell_fraction': fraction,
+                'minimum_book_sell_price': threshold,
                 'book_sell_price': executable_sell_price,
                 'book_best_bid': book_details.get('book_best_bid'),
                 'top_bid_size': book_details.get('top_bid_size'),
@@ -528,10 +539,14 @@ def main() -> None:
         first_action = eligible_actions[0]
         book_sell_price = safe_float(first_action.get('book_sell_price'))
         price_line = f'\nbook_sell={book_sell_price:.0%}' if book_sell_price else ''
+        sell_fraction = safe_float(first_action.get('sell_fraction'), 1.0)
+        phone_instruction = (
+            f'Phone asked to re-check live book and sell {sell_fraction:.0%} only if still viable.'
+        )
         send_telegram(
             telegram_token,
             telegram_chat_id,
-            f'\U0001f514 MONITOR EXIT\n{summary_slug}{price_line}\nPhone executor triggered via tunnel.',
+            f'\U0001f514 MONITOR EXIT\n{summary_slug}{price_line}\n{phone_instruction}',
         )
     else:
         payload['status'] = 'trigger_failed'

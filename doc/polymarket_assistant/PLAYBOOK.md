@@ -114,7 +114,10 @@ Two allowed BTC price-hit slots, tracked separately:
   - no exceptional stop-loss exits are allowed; do not sell losing positions solely because they reached `<= 15-20%` or because the thesis looks invalidated
 - Take profit:
   - automatically partial-exit `50%` once the live executable sell price reaches `75%`; this partial may happen only once per position
-  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the actual sell amount), not only dashboard/Gamma probability, before alerting the phone
+  - if no partial take-profit has been executed for a position yet, the automatic monitor must sell only `50%` first, even if the executable sell price is already `90%+`
+  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the relevant sell fraction), not only dashboard/Gamma probability, before alerting the phone
+  - the server monitor is only an alert layer: it must not pass token ids, share amounts, or prebuilt sell orders to the phone
+  - the phone is the execution authority: after any alert, it must refresh positions and the live CLOB order book, then generate the `SELL` order itself only if the executable sell price is still at or above the relevant threshold
   - consider exit once market probability reaches `90%`
   - default full take profit range: `90-95%`
   - if two positions independently hit the take-profit zone in the same review, exiting both is valid

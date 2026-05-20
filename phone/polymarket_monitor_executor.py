@@ -7,7 +7,9 @@ directly from the Polymarket Data API, applies a hard-coded take-profit
 threshold, validates against recent account activity, and if needed builds and
 signs a SELL order locally before posting it to the CLOB.
 
-No server-side action file or LLM is required for exits.
+No server-side action file or LLM is required for exits. The first automatic
+exit for a position is the 50% partial take-profit; a full take-profit is only
+selected after that partial has already been logged.
 """
 
 from __future__ import annotations
@@ -285,7 +287,10 @@ def find_recent_matching_sell(position: dict[str, Any]) -> dict[str, Any] | None
     return None
 
 
-def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None, None]:
+def classify_action(
+    position: dict[str, Any],
+    executed_keys: set[str],
+) -> tuple[str, float] | tuple[None, None]:
     prob = safe_float(position.get('curPrice'))
     size = safe_float(position.get('size'))
     token_id = str(position.get('asset', ''))
@@ -302,12 +307,17 @@ def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None,
         except Exception as exc:
             print(f'[monitor-executor] Could not classify by executable book price: {exc}')
 
+    partial_key = monitor_action_key('PARTIAL_TAKE_PROFIT', position)
+    if (
+        partial_sell_price is not None
+        and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD
+        and partial_key not in executed_keys
+    ):
+        position['_selected_book_sell_price'] = partial_sell_price
+        return 'PARTIAL_TAKE_PROFIT', 0.5
     if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
         position['_selected_book_sell_price'] = full_sell_price
         return 'TAKE_PROFIT', 1.0
-    if partial_sell_price is not None and partial_sell_price >= PARTIAL_TAKE_PROFIT_THRESHOLD:
-        position['_selected_book_sell_price'] = partial_sell_price
-        return 'PARTIAL_TAKE_PROFIT', 0.5
     if (
         ENABLE_EXCEPTIONAL_STOP_LOSS
         and 0 < prob <= EXCEPTIONAL_STOP_LOSS_THRESHOLD
@@ -336,7 +346,7 @@ def choose_target_positions(
     for pos in positions:
         if not is_live_exit_position(pos):
             continue
-        action, fraction = classify_action(pos)
+        action, fraction = classify_action(pos, executed_keys)
         if action:
             key = monitor_action_key(action, pos)
             if action == 'PARTIAL_TAKE_PROFIT' and key in executed_keys:
