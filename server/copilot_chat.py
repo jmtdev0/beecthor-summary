@@ -37,7 +37,8 @@ except ImportError:  # pragma: no cover - optional at runtime
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = REPO_ROOT / 'polymarket_assistant' / '.env'
 HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
-FAVICON_PATH = Path(__file__).resolve().parent / 'channels4_profile.jpg'
+FAVICON_PATH = Path(__file__).resolve().parent / 'favicon.png'
+FAVICON_SOURCE_PATH = Path(__file__).resolve().parent / 'channels4_profile.jpg'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
 SIMULATED_SUMMARIES_PATH = REPO_ROOT / 'doc' / 'beecthor_simulations.json'
 BITCOINALDIA_SUMMARIES_PATH = REPO_ROOT / 'data' / 'bitcoinaldia_summaries.json'
@@ -559,7 +560,7 @@ def page_start(title: str) -> str:
     return (
         "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-        "<link rel=\"icon\" type=\"image/jpeg\" href=\"/favicon.jpg\">"
+        "<link rel=\"icon\" type=\"image/png\" href=\"/favicon.png\">"
         f"<title>{safe_title}</title>{STYLE}</head><body>"
     )
 
@@ -568,11 +569,18 @@ PAGE_END = "</body></html>"
 
 
 @app.route('/favicon.ico')
-@app.route('/favicon.jpg')
+@app.route('/favicon.png')
 def favicon():
     if not FAVICON_PATH.exists():
         return Response('favicon not found', status=404, mimetype='text/plain')
-    return send_file(FAVICON_PATH, mimetype='image/jpeg', max_age=86400)
+    return send_file(FAVICON_PATH, mimetype='image/png', max_age=86400)
+
+
+@app.route('/favicon.jpg')
+def favicon_source():
+    if not FAVICON_SOURCE_PATH.exists():
+        return Response('favicon source not found', status=404, mimetype='text/plain')
+    return send_file(FAVICON_SOURCE_PATH, mimetype='image/jpeg', max_age=86400)
 
 LOGIN_HTML = page_start('Login | Beecthor') + """
 <div class="shell"><div class="card" style="max-width:360px;margin:10vh auto 0">
