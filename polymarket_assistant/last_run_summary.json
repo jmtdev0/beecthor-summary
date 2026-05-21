@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-21T10:00:56Z",
-  "run_id": "2026-05-21T10-00-16Z",
+  "timestamp": "2026-05-21T10:11:14Z",
+  "run_id": "2026-05-21T10-10-27Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-21T10-00-16Z",
+    "run_id": "2026-05-21T10-10-27Z",
     "action": "NO_ACTION",
-    "confidence": 0.99,
-    "summary": "NO_ACTION: the hard post-win daily cooldown remains active after the successful 78k REACH redemption, so no new May 21 daily entry is allowed.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, there are no open BTC price-hit positions, and the May 21 board is available, but the hard post-win daily cooldown is still active for the current UTC day. The context shows one successful exit today from the redeemed will-bitcoin-reach-78k-on-may-20 position at 2026-05-21T07:12:18Z, with cooldown enforced until 2026-05-22T00:00:00Z. Under the playbook, that blocks any additional BTC daily REACH or DIP opening today regardless of board quality. Binance has cooled to neutral around 77635.79, and the latest Beecthor thesis remains macro-bearish while still allowing a sweep through 77k-78k before failure, but those interpretive factors do not matter once the daily cooldown is active. Even though the closest live markets are 77k DIP Yes around 0.48 and 79k REACH Yes around 0.215, no new daily thesis or daily momentum trade is valid in this cycle.",
+    "confidence": 0.91,
+    "summary": "NO_ACTION: reconciliation is clean and cooldown is no longer blocking, but the May 21 board still has no clear same-day edge under the current Beecthor thesis and neutral Binance structure.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, there are no open BTC price-hit positions, and daily_success_cooldown is inactive in this context, so a new May 21 daily entry is mechanically allowed again. The latest Beecthor view is still macro-bearish, but tactically it allows a sweep through 77k-78k before failure and wants clearer rejection there or a loss of 74.8k before leaning harder into downside continuation. Live Binance is not giving that confirmation yet: spot is around 77670.37, short_term_bias is neutral, open interest is flat, and the last 12-24h still look range-like rather than like a clean breakdown or breakout. On the board, 77k DIP Yes around 0.485 is the nearest bearish candidate, but it lacks the explicit rejection/breakdown evidence required in a lateral regime; 79k REACH Yes around 0.215 is too stretched and poorly aligned with the current thesis and momentum. With no open position to manage and no fresh daily setup that is both thesis-valid and timing-valid, the correct action is to stand aside.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77655.77,
+  "binance_spot_price": 77670.36,
   "positions_before": 0,
   "positions_after": 0
 }
