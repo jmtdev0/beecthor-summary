@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-21T12:01:19Z",
-  "run_id": "2026-05-21T12-00-03Z",
+  "timestamp": "2026-05-21T14:01:08Z",
+  "run_id": "2026-05-21T14-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-21T12-00-03Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.86,
-    "summary": "OPEN_POSITION: 77k DIP has become the cleanest May 21 daily thesis expression after the 77k-78k sweep failed and BTC rolled back toward the local lows.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in this context, and there are no open BTC price-hit positions, so a fresh daily entry is allowed. The latest Beecthor thesis is still macro-bearish and explicitly framed the 77k-78k area as a likely sweep zone before failure, with stronger bearish conviction if downside starts asserting itself. That failure now looks materially more real than it did in the earlier cycles: BTC is down on the UTC day, the 12h move is clearly negative, price is trading around 77207 near the local lows after rejecting from the 78k area, and Polymarket has bearishly repriced the nearest downside strike very aggressively. On the May 21 board, 77k DIP Yes is now around 0.815 with only about 0.27% left to travel and roughly 12 hours remaining, which makes it the nearest conservative same-day bearish expression under the 90% cap. The REACH side was evaluated too, but 79k REACH Yes around 0.12 is now the wrong side of the live structure after the failed push, while 76k DIP Yes around 0.25 is the next leg and no longer the closest-strike-first choice. This is the point where the bearish daily thesis becomes timing-valid.",
+    "run_id": "2026-05-21T14-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.9,
+    "summary": "NO_ACTION: the 77k downside move is already effectively spent, and the next bearish strike would now be a late chase rather than a clean fresh daily entry.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in this context, and there are no live BTC price-hit positions to manage. The latest Beecthor thesis remains bearish and Binance now confirms more downside than earlier, with bearish_short_term bias, negative UTC-day performance, and a clear 12h decline. But the closest bearish daily expression has already become unusable: 77k DIP Yes is now around 0.995, far above the hard 0.90 cap, which means the clean move has already largely happened. The next strike down, 76k DIP Yes around 0.34, would be a fresh second-leg chase after the conservative target already repriced to near-certainty, and the playbook warns against paying for one more push after much of the move is spent unless continuation is unusually clear. Here that continuation is not clean enough: spot is still well above Beecthor's stronger bearish trigger zone around 74.8k, open interest is flat, and the move can still be read as range expansion inside a broader chop rather than an already-confirmed cascade. The REACH side was evaluated too, but it is even less aligned with the current live structure. The correct action is to stand aside.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-21",
-        "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 77000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.84,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-21",
-      "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 77000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.84,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-21T12:01:19.408645Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "76634250495684029338726513849435867634719263374851966882001075596049930406400",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.84,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression.",
-        "market": "Will Bitcoin dip to $77,000 on May 21?",
-        "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77229.3,
+  "binance_spot_price": 77142.72,
   "positions_before": 0,
   "positions_after": 0
 }
