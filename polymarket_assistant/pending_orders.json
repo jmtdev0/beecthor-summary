@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-05-21T12:01:19.408645Z",
-    "status": "pending_phone_execution",
+    "status": "skipped_probability_too_high",
     "type": "OPEN_POSITION",
     "token_id": "76634250495684029338726513849435867634719263374851966882001075596049930406400",
     "side": "BUY",
@@ -17,6 +17,13 @@
     "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression.",
     "market": "Will Bitcoin dip to $77,000 on May 21?",
     "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Live OPEN_POSITION price is above the phone execution cap (85.0% > 84.0%)",
+    "execution_updated_at": "2026-05-21T12:01:26Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
+      "live_probability": 0.85,
+      "max_allowed_probability": 0.84
+    }
   }
 ]
