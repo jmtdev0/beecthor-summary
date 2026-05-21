@@ -128,6 +128,7 @@ Two allowed BTC price-hit slots, tracked separately:
 ## Post-win daily cooldown
 
 - Strict daily rule: if any BTC daily `REACH` or `DIP` position resolves in our favor or is exited via take-profit on a given UTC day, do not open any new BTC daily `REACH` or `DIP` position until the next UTC day. The system may open the first daily position of the day even after a large BTC move, but once that first daily prediction has paid, the daily board is done for the day.
+- The cooldown belongs to the market date, not to delayed bookkeeping. A manual redeem performed today for yesterday's daily market must not block today's daily board.
 - The server must compute this from Polymarket account activity before calling the LLM and expose the result in the run context. If the activity check is unavailable, new daily openings are invalid until the check works again.
 - Rationale: once the daily move has already paid, additional same-day daily entries are usually late-chase trades with worse risk/reward. Historical account activity shows that continuing to open daily positions after the first fulfilled position has reduced performance.
 - Weekly openings are always forbidden for new entries, independently of the daily cooldown state. Legacy weekly positions may still be managed by the exit rules.

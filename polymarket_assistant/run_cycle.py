@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +56,32 @@ MAX_ENTRY_PROBABILITY = 0.90
 MAX_TRANSCRIPTS = 3
 MAX_SUMMARIES = 4
 MAX_MARKETS = 24
+MONTH_NAME_TO_NUMBER = {
+    'jan': 1,
+    'january': 1,
+    'feb': 2,
+    'february': 2,
+    'mar': 3,
+    'march': 3,
+    'apr': 4,
+    'april': 4,
+    'may': 5,
+    'jun': 6,
+    'june': 6,
+    'jul': 7,
+    'july': 7,
+    'aug': 8,
+    'august': 8,
+    'sep': 9,
+    'sept': 9,
+    'september': 9,
+    'oct': 10,
+    'october': 10,
+    'nov': 11,
+    'november': 11,
+    'dec': 12,
+    'december': 12,
+}
 DEFAULT_STRATEGY = 'beecthor'
 FAR_DIP_RADAR = 'far_dip_radar'
 SUPPORTED_STRATEGIES = {DEFAULT_STRATEGY, FAR_DIP_RADAR}
@@ -1082,13 +1108,63 @@ def is_btc_price_hit_activity(entry: dict[str, Any]) -> bool:
     return 'bitcoin' in lowered and ('reach $' in lowered or 'dip to $' in lowered)
 
 
-def is_successful_daily_exit_activity(entry: dict[str, Any]) -> bool:
+def daily_market_date_from_text(text: str, reference: datetime) -> date | None:
+    normalized = re.sub(r'[-_/]+', ' ', text.lower())
+    month_pattern = '|'.join(sorted(MONTH_NAME_TO_NUMBER, key=len, reverse=True))
+    match = re.search(rf'\bon\s+({month_pattern})\.?\s+(\d{{1,2}})\b', normalized)
+    if not match:
+        return None
+
+    month = MONTH_NAME_TO_NUMBER.get(match.group(1))
+    day = int(match.group(2))
+    if not month:
+        return None
+
+    try:
+        candidate = datetime(reference.year, month, day, tzinfo=UTC).date()
+    except ValueError:
+        return None
+
+    reference_date = reference.date()
+    if (candidate - reference_date).days > 183:
+        candidate = datetime(reference.year - 1, month, day, tzinfo=UTC).date()
+    elif (reference_date - candidate).days > 183:
+        candidate = datetime(reference.year + 1, month, day, tzinfo=UTC).date()
+    return candidate
+
+
+def infer_activity_daily_market_date(entry: dict[str, Any], reference: datetime) -> date | None:
+    for key in ('title', 'market_title', 'slug', 'marketSlug', 'eventSlug', 'event_slug'):
+        value = entry.get(key)
+        if value:
+            inferred = daily_market_date_from_text(str(value), reference)
+            if inferred:
+                return inferred
+
+    end_dt = parse_activity_timestamp(entry.get('endDate') or entry.get('end_date'))
+    if end_dt:
+        # Polymarket daily BTC markets normally end the UTC day after the
+        # displayed "on Month Day" date.
+        return (end_dt - timedelta(days=1)).date()
+    return None
+
+
+def is_successful_daily_exit_activity(
+    entry: dict[str, Any],
+    *,
+    cooldown_day: date | None = None,
+    reference: datetime | None = None,
+) -> bool:
     if not is_btc_price_hit_activity(entry):
         return False
     title = str(entry.get('title') or entry.get('market_title') or '')
     event_slug = str(entry.get('eventSlug') or entry.get('event_slug') or '')
     if infer_btc_market_type(title, event_slug=event_slug) != 'daily':
         return False
+    if cooldown_day is not None:
+        market_date = infer_activity_daily_market_date(entry, reference or datetime.now(UTC))
+        if market_date != cooldown_day:
+            return False
 
     activity_type = str(entry.get('type') or entry.get('activityType') or '').upper()
     side = str(entry.get('side') or '').upper()
@@ -1115,6 +1191,11 @@ def summarize_successful_exit(entry: dict[str, Any]) -> dict[str, Any]:
         'market_slug': entry.get('slug') or entry.get('marketSlug') or '',
         'event_slug': entry.get('eventSlug') or entry.get('event_slug') or '',
         'market_title': entry.get('title') or entry.get('market_title') or '',
+        'market_date_utc': (
+            inferred_date.isoformat()
+            if (inferred_date := infer_activity_daily_market_date(entry, ts or datetime.now(UTC)))
+            else ''
+        ),
         'outcome': entry.get('outcome') or '',
         'side': side,
         'price': safe_float(entry.get('price')),
@@ -1168,7 +1249,7 @@ def build_daily_success_cooldown(config: dict[str, str]) -> dict[str, Any]:
         ts = parse_activity_timestamp(entry.get('timestamp') or entry.get('createdAt'))
         if not ts or ts < day_start or ts >= next_day:
             continue
-        if is_successful_daily_exit_activity(entry):
+        if is_successful_daily_exit_activity(entry, cooldown_day=day_start.date(), reference=ts):
             matches.append(summarize_successful_exit(entry))
 
     matches.sort(key=lambda item: item.get('timestamp_utc') or '')
