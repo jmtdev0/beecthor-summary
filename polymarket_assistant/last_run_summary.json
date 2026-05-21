@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-21T14:01:08Z",
-  "run_id": "2026-05-21T14-00-16Z",
+  "timestamp": "2026-05-21T18:01:03Z",
+  "run_id": "2026-05-21T18-00-11Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-21T14-00-16Z",
+    "run_id": "2026-05-21T18-00-11Z",
     "action": "NO_ACTION",
-    "confidence": 0.9,
-    "summary": "NO_ACTION: the 77k downside move is already effectively spent, and the next bearish strike would now be a late chase rather than a clean fresh daily entry.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in this context, and there are no live BTC price-hit positions to manage. The latest Beecthor thesis remains bearish and Binance now confirms more downside than earlier, with bearish_short_term bias, negative UTC-day performance, and a clear 12h decline. But the closest bearish daily expression has already become unusable: 77k DIP Yes is now around 0.995, far above the hard 0.90 cap, which means the clean move has already largely happened. The next strike down, 76k DIP Yes around 0.34, would be a fresh second-leg chase after the conservative target already repriced to near-certainty, and the playbook warns against paying for one more push after much of the move is spent unless continuation is unusually clear. Here that continuation is not clean enough: spot is still well above Beecthor's stronger bearish trigger zone around 74.8k, open interest is flat, and the move can still be read as range expansion inside a broader chop rather than an already-confirmed cascade. The REACH side was evaluated too, but it is even less aligned with the current live structure. The correct action is to stand aside.",
+    "confidence": 0.94,
+    "summary": "NO_ACTION: the earlier 77k downside thesis already played out off-screen, and there is no clean late-session replacement on the remaining May 21 board.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in this context, and there are no open BTC price-hit positions to manage. The latest Beecthor thesis is still macro-bearish and still treats 77k-78k as the key sweep/failure zone, but by this cycle the board no longer offers that clean expression: the 77k DIP market is no longer an actionable active candidate, so the conservative bearish move has already been spent. Binance has also bounced back materially from the midday lows, with spot around 77908, positive UTC-day performance, and only neutral short-term bias rather than fresh bearish continuation. That makes the remaining choices unattractive. The next downside strike, 76k DIP Yes around 0.0495, now needs a fresh second leg lower with only 6 hours left, which is weak expiry timing. The upside side was evaluated too, but 79k REACH Yes around 0.138 is still low-probability and runs against the current Beecthor thesis. With no valid take-profit action, no live open position, and no replacement daily that is both thesis-valid and expiry-valid, the correct decision is to stand aside.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77142.72,
+  "binance_spot_price": 77897.36,
   "positions_before": 0,
   "positions_after": 0
 }
