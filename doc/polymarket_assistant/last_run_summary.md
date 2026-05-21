@@ -1,15 +1,15 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-21T10:11:14Z
+- Timestamp: 2026-05-21T12:01:19Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
 - LLM provider: copilot
 - LLM model: gpt-5.4
 - LLM effort: high
-- BTC price: 77670.36
-- Decision action: NO_ACTION
-- Decision summary: NO_ACTION: reconciliation is clean and cooldown is no longer blocking, but the May 21 board still has no clear same-day edge under the current Beecthor thesis and neutral Binance structure.
+- BTC price: 77229.3
+- Decision action: OPEN_POSITION
+- Decision summary: OPEN_POSITION: 77k DIP has become the cleanest May 21 daily thesis expression after the 77k-78k sweep failed and BTC rolled back toward the local lows.
 - Validation: True (ok)
 - Open positions before: 0
 - Open positions after: 0
@@ -18,7 +18,28 @@
 
 ```json
 {
-  "performed": false,
-  "details": null
+  "performed": true,
+  "details": [
+    {
+      "order_id": "2026-05-21T12:01:19.408645Z",
+      "status": "pending_phone_execution",
+      "type": "OPEN_POSITION",
+      "token_id": "76634250495684029338726513849435867634719263374851966882001075596049930406400",
+      "side": "BUY",
+      "stake_usd": 1.0,
+      "max_entry_probability": 0.84,
+      "market_type": "daily",
+      "slot_name": "daily_thesis",
+      "beecthor_aligned": true,
+      "momentum_confirmed": true,
+      "expiry_validity": "strong",
+      "strategy": "beecthor",
+      "strategy_candidate_id": "",
+      "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression.",
+      "market": "Will Bitcoin dip to $77,000 on May 21?",
+      "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
+      "outcome": "Yes"
+    }
+  ]
 }
 ```
