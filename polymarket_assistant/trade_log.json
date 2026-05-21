@@ -20744,5 +20744,69 @@
     "binance_spot_price": 77914.17,
     "positions_before": 0,
     "positions_after": 0
+  },
+  {
+    "timestamp": "2026-05-21T10:00:56Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-21T10-00-16Z",
+    "dry_run": false,
+    "active_strategy": "beecthor",
+    "strategy_mode": "llm",
+    "llm_provider": "copilot",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "high",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-21T10-00-16Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "NO_ACTION: the hard post-win daily cooldown remains active after the successful 78k REACH redemption, so no new May 21 daily entry is allowed.",
+      "rationale": "Active strategy is beecthor. Reconciliation is clean, there are no open BTC price-hit positions, and the May 21 board is available, but the hard post-win daily cooldown is still active for the current UTC day. The context shows one successful exit today from the redeemed will-bitcoin-reach-78k-on-may-20 position at 2026-05-21T07:12:18Z, with cooldown enforced until 2026-05-22T00:00:00Z. Under the playbook, that blocks any additional BTC daily REACH or DIP opening today regardless of board quality. Binance has cooled to neutral around 77635.79, and the latest Beecthor thesis remains macro-bearish while still allowing a sweep through 77k-78k before failure, but those interpretive factors do not matter once the daily cooldown is active. Even though the closest live markets are 77k DIP Yes around 0.48 and 79k REACH Yes around 0.215, no new daily thesis or daily momentum trade is valid in this cycle.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "beecthor",
+      "llm_provider": "copilot"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77655.77,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
