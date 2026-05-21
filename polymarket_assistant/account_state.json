@@ -4,7 +4,7 @@
   "starting_bankroll": 7.842164,
   "cash_available": 7.019179,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.5509,
+  "open_exposure": 0,
   "max_open_positions": 3,
   "max_daily_positions": 2,
   "max_weekly_positions": 0,
@@ -16,23 +16,7 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-may-20",
-      "market_slug": "will-bitcoin-reach-78k-on-may-20",
-      "market_title": "Will Bitcoin reach $78,000 on May 20?",
-      "position_side": "Yes",
-      "token_id": "101246749411915163030550079269131030373831909082732565321062135529896340766537",
-      "shares": 0.9181,
-      "avg_price": 0.55,
-      "entry_cost_usd": 0.5049,
-      "current_price": 0.6,
-      "current_value_usd": 0.5509,
-      "cash_pnl_usd": 0.0459,
-      "status": "open",
-      "slot_status": "active"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-05-20T20:00:51Z"
+  "last_synced_at": "2026-05-21T06:00:49Z"
 }

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-20T20:00:51Z",
-  "run_id": "2026-05-20T20-00-07Z",
+  "timestamp": "2026-05-21T06:00:49Z",
+  "run_id": "2026-05-21T06-00-04Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-20T20-00-07Z",
+    "run_id": "2026-05-21T06-00-04Z",
     "action": "NO_ACTION",
-    "confidence": 0.93,
-    "summary": "NO_ACTION: keep the remaining 78k REACH position; it has not reached the updated full take-profit trigger and there is no clean late-session daily entry.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive in the provided context, and the only open BTC price-hit position remains will-bitcoin-reach-78k-on-may-20 Yes in the daily_thesis slot after the earlier same-day reduction. The latest Beecthor material is now current from today and still macro-bearish, but it explicitly allows a short-term sweep into 77k-78k before failure, which keeps the remaining 78k runner alive with BTC spot at 77681.48 and only about 0.41% left to the strike. Under the updated playbook, the only take-profit trigger is a full exit once the live executable sell price for the full remaining size reaches at least 0.75. That trigger is not met here: the live best bid is only about 0.54 and market probability about 0.555, so there is no valid CLOSE action yet. A fresh daily entry is also not justified with only 4 hours left: 79k REACH Yes is too stretched late in the session, while bearish DIP setups still lack the clean rejection or breakdown required by the active bearish-bias correction. The correct action is to hold the remaining 78k REACH position.",
+    "confidence": 0.97,
+    "summary": "NO_ACTION: reconciliation is broken after the prior 78k REACH disappeared without a closure record, so no new May 21 daily entry is valid.",
+    "rationale": "Active strategy is beecthor. There are no open BTC price-hit positions, daily_success_cooldown is inactive for 2026-05-21, and the latest Beecthor thesis remains macro-bearish while still allowing a sweep into the 77k-78k area before failure. Binance is not giving a strong fresh break either: spot is around 77818.61 with neutral short-term bias. The May 21 board is readable, with the closest candidates being 77k DIP Yes around 0.47 and 79k REACH Yes around 0.35, but none of that can be acted on because the hard reconciliation gate is failing. The context explicitly reports `missing closure record for will-bitcoin-reach-78k-on-may-20:Yes`, so the only valid decision is to stand down until state is repaired.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77692.9,
-  "positions_before": 1,
-  "positions_after": 1
+  "binance_spot_price": 77802.0,
+  "positions_before": 0,
+  "positions_after": 0
 }
