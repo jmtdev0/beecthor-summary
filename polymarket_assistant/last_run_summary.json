@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-21T06:00:49Z",
-  "run_id": "2026-05-21T06-00-04Z",
+  "timestamp": "2026-05-21T08:01:06Z",
+  "run_id": "2026-05-21T08-00-07Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-21T06-00-04Z",
+    "run_id": "2026-05-21T08-00-07Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "NO_ACTION: reconciliation is broken after the prior 78k REACH disappeared without a closure record, so no new May 21 daily entry is valid.",
-    "rationale": "Active strategy is beecthor. There are no open BTC price-hit positions, daily_success_cooldown is inactive for 2026-05-21, and the latest Beecthor thesis remains macro-bearish while still allowing a sweep into the 77k-78k area before failure. Binance is not giving a strong fresh break either: spot is around 77818.61 with neutral short-term bias. The May 21 board is readable, with the closest candidates being 77k DIP Yes around 0.47 and 79k REACH Yes around 0.35, but none of that can be acted on because the hard reconciliation gate is failing. The context explicitly reports `missing closure record for will-bitcoin-reach-78k-on-may-20:Yes`, so the only valid decision is to stand down until state is repaired.",
+    "confidence": 0.98,
+    "summary": "NO_ACTION: reconciliation is repaired, but the hard post-win daily cooldown is now active after the successful 78k REACH redemption, so no new May 21 daily entry is allowed.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean again, there are no open BTC price-hit positions, and this is normally the main 08:00 UTC entry window. However, the context now shows daily_success_cooldown.active = true because the remaining will-bitcoin-reach-78k-on-may-20 position was successfully redeemed at 2026-05-21T07:12:18Z. Under the playbook, once a BTC daily REACH or DIP has paid during the current UTC day, no additional BTC daily position may be opened until the next UTC day. That hard gate overrides the otherwise readable May 21 board. Binance is mildly constructive with spot around 77890 and bullish_short_term bias, while the latest Beecthor summary remains macro-bearish but still allows a sweep through 77k-78k before failure. Even though the closest live markets are 77k DIP Yes around 0.505 and 79k REACH Yes around 0.27, no new daily thesis or daily momentum trade is valid while the cooldown is active. The correct action is to stand down.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77802.0,
+  "binance_spot_price": 77914.17,
   "positions_before": 0,
   "positions_after": 0
 }
