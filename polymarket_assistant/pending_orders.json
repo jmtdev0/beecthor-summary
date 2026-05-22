@@ -1,12 +1,12 @@
 [
   {
-    "order_id": "2026-05-21T12:01:19.408645Z",
-    "status": "skipped_probability_too_high",
+    "order_id": "2026-05-22T14:00:45.400247Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "76634250495684029338726513849435867634719263374851966882001075596049930406400",
+    "token_id": "78815894117427500952495175145157173456260914406141162602328009211755188170243",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.84,
+    "max_entry_probability": 0.81,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
@@ -14,16 +14,9 @@
     "expiry_validity": "strong",
     "strategy": "beecthor",
     "strategy_candidate_id": "",
-    "strategy_reason": "Beecthor mapped the 77k-78k zone as a likely sweep-before-failure area, and live Binance plus Polymarket now support 77k DIP as the nearest clean same-day bearish expression.",
-    "market": "Will Bitcoin dip to $77,000 on May 21?",
-    "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-    "outcome": "Yes",
-    "execution_status_detail": "Live OPEN_POSITION price is above the phone execution cap (85.0% > 84.0%)",
-    "execution_updated_at": "2026-05-21T12:01:26Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-dip-to-77k-on-may-21",
-      "live_probability": 0.85,
-      "max_allowed_probability": 0.84
-    }
+    "strategy_reason": "The stale bearish Beecthor thesis is now exceptionally confirmed by bearish short-term Binance structure, making 77k DIP the nearest clean same-day expression.",
+    "market": "Will Bitcoin dip to $77,000 on May 22?",
+    "market_slug": "will-bitcoin-dip-to-77k-on-may-22",
+    "outcome": "Yes"
   }
 ]
