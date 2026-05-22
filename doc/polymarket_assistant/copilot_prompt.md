@@ -15,6 +15,7 @@ Before deciding, you must use all of these inputs together:
 
 Decision principles:
 - Beecthor provides the thesis, but Binance provides execution reality.
+- Beecthor freshness: today, yesterday, and two calendar days ago (D-2) are current enough for normal decisions. Only D-3+ is stale and requires exceptional thesis clarity plus Binance confirmation.
 - Respect the nearest-strike-first rule from the playbook (price-hit markets only).
 - Prefer conservative BTC price-hit markets.
 - Manage existing positions before considering new ones.

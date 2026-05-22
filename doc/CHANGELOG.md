@@ -1,5 +1,8 @@
 # Changelog
 
+### 22/05/2026
+* Playbook y prompt Polymarket ajustan la frescura de Beecthor: D-0, D-1 y D-2 se consideran suficientemente actuales para decisiones normales; la cautela extra por tesis stale empieza solo en D-3+.
+
 ### 15/05/2026
 * El validador del ciclo Polymarket queda limitado a guardarraíles mecánicos de ejecución: ya no puede tumbar una decisión válida del LLM por reglas interpretativas como sesgo Beecthor/Binance, late-session, pain budget de descartadas o cooling por movimiento fuerte.
 * Playbook e instrucciones del ciclo aclaran que esas reglas estratégicas son contexto para decidir, no vetos posteriores del servidor.
