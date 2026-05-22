@@ -105,7 +105,7 @@ On-chain redemption requires calling `redeemPositions` from the funder proxy. Th
 
 | Timer | Schedule | What it runs |
 |-------|----------|-------------|
-| `polymarket-operator.timer` | even UTC hours every 2h | `/root/run_polymarket_cycle.sh` -> `run_cycle_codex.py --decision-file` |
+| `polymarket-operator.timer` | selected UTC hours: 06, 08, 10, 12, 14, 18 | `/root/run_polymarket_cycle.sh` -> `run_cycle_codex.py --decision-file` |
 | `polymarket-monitor.timer` | every minute | `run_monitor.py` (minute-level TP/SL exit detector, no GPT) |
 
 ---
