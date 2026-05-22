@@ -21566,5 +21566,23 @@
     "status": "open",
     "source": "phone_executor",
     "notes": "Recorded after a successful phone-side BUY execution."
+  },
+  {
+    "timestamp": "2026-05-22T14:01:07Z",
+    "type": "trade_closed",
+    "market_slug": "will-bitcoin-dip-to-77k-on-may-22",
+    "market_title": "Will Bitcoin dip to $77,000 on May 22?",
+    "outcome": "Yes",
+    "side": "SELL",
+    "close_reason": "take_profit",
+    "shares": 1.2987,
+    "fraction": 1.0,
+    "avg_entry_price": 0.0,
+    "exit_price": 0.76,
+    "entry_cost_usd": null,
+    "exit_proceeds_usd": 0.987,
+    "pnl_usd": null,
+    "pnl_pct": null,
+    "source": "monitor_executor"
   }
 ]
