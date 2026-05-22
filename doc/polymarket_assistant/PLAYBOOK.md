@@ -17,7 +17,7 @@
 Each automated cycle must follow these steps strictly in order:
 
 1. **Discarded-slot check** — No automated stop-loss. If a daily or legacy weekly position falls to `<= 20%` probability on Polymarket, it may remain open but be treated as **discarded for slot availability**. Discarded means the position no longer blocks fresher allowed daily exposure; it does **not** mean force-sell it.
-2. **Take-profit check** — Review all open positions. If the live CLOB order book allows selling the **full remaining position** at an executable price of at least `75%`, automatically exit `100%` of that position. Dashboard/Gamma probability alone is not enough: both the server alert and the phone execution must use the live order book and bid depth for the full sell amount.
+2. **Take-profit check** — Review all open positions. If the live CLOB order book allows selling `50%` of a position at an executable price of at least `75%`, automatically partial-exit `50%` once. A full exit requires an executable price of at least `90%` after that partial path has already been handled. Dashboard/Gamma probability alone is not enough: both the server alert and the phone execution must use the live order book and bid depth for the relevant sell amount.
 3. **Exceptional invalidation check** — Disabled. No stop-loss sale may be executed by the server, the phone, or the LLM. Positions with very low probability can be treated as discarded for slot availability, but they must not be force-sold.
 4. **Reconciliation gate** — Before opening any new position, confirm that `account_state.json` and `trade_log.json` tell a coherent story about open positions and recently closed trades. If reconciliation is broken, the only valid action for new entries is `NO_ACTION` until the state is repaired.
 5. **Analyze context** — Fetch the current BTC price from Binance. Review the latest Beecthor transcripts and recent summaries from `analyses_log.json`. Determine the current directional thesis, but also whether Binance has actually confirmed that thesis.
@@ -112,11 +112,12 @@ Two allowed BTC price-hit slots, tracked separately:
   - if a daily or legacy weekly position drops to `<= 20%`, it may be treated as discarded for slot availability, but it still remains open until take-profit or natural resolution
   - no exceptional stop-loss exits are allowed; do not sell losing positions solely because they reached `<= 15-20%` or because the thesis looks invalidated
 - Take profit:
-  - automatically full-exit `100%` of the remaining position once the live executable sell price for the full sell amount reaches `75%`
-  - there is no partial take-profit path; a qualifying take-profit closes the whole live position
-  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the full sell amount), not only dashboard/Gamma probability, before alerting the phone
+  - automatically partial-exit `50%` once the live executable sell price for that partial amount reaches `75%`; this partial may happen only once per position
+  - a full take-profit requires the live executable sell price for the full remaining amount to reach `90%`
+  - neither partial nor full take-profit may execute below the position's average entry price
+  - the server monitor must use the live CLOB order book (`book_best_bid` plus available bid depth for the relevant sell amount), not only dashboard/Gamma probability, before alerting the phone
   - the server monitor is only an alert layer: it must not pass token ids, share amounts, or prebuilt sell orders to the phone
-  - the phone is the execution authority: after any alert, it must refresh positions and the live CLOB order book, then generate the `SELL` order itself only if the executable full-position sell price is still at or above `75%`
+  - the phone is the execution authority: after any alert, it must refresh positions and the live CLOB order book, then generate the `SELL` order itself only if the executable sell price is still at or above the relevant threshold
   - if two positions independently hit the take-profit zone in the same review, exiting both is valid
   - exception: if resolution is already certain and the market has effectively resolved, do not force a sell into a bad/empty book; allow Polymarket redemption to handle it
 

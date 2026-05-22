@@ -4,7 +4,8 @@ Polymarket Position Monitor
 
 Runs every minute while the server systemd timer is active.
 No GPT/Copilot — hard-coded thresholds only:
-  - Take-profit: phone executable SELL price for the full position >= 0.75
+  - Partial take-profit: phone executable SELL price for 50% >= 0.75
+  - Full take-profit: phone executable SELL price for 100% >= 0.90
 
 On trigger: stores an advisory sell signal, then attempts to launch the phone
 monitor executor immediately through the reverse SSH tunnel. The server never
@@ -21,6 +22,7 @@ position remains.
 from __future__ import annotations
 
 import os
+import json
 import subprocess
 import sys
 import time
@@ -45,9 +47,12 @@ MONITOR_ACTION_PATH = ASSISTANT_DIR / 'last_monitor_action.json'
 MONITOR_DISPATCH_STATE_PATH = ASSISTANT_DIR / 'monitor_dispatch_state.json'
 MONITOR_HISTORY_PATH = ASSISTANT_DIR / 'monitor_history.json'
 MONITOR_TIMER_NAME = os.environ.get('POLYMARKET_MONITOR_TIMER_NAME', 'polymarket-monitor.timer')
+DASHBOARD_LOG_DIR = Path(os.environ.get('DASHBOARD_LOG_DIR') or (ASSISTANT_DIR.parent / 'server_runtime_logs'))
+MOBILE_LOG_PATH = DASHBOARD_LOG_DIR / 'mobile.jsonl'
 CLOB_HOST = 'https://clob.polymarket.com'
 
-TAKE_PROFIT_THRESHOLD = 0.75
+PARTIAL_TAKE_PROFIT_THRESHOLD = 0.75
+TAKE_PROFIT_THRESHOLD = 0.90
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
@@ -110,6 +115,38 @@ def should_dispatch(action: dict[str, object], dispatch_state: dict[str, dict[st
     if elapsed < retry_after:
         return False, f'cooldown_active:{retry_after - elapsed}s'
     return True, 'cooldown_elapsed'
+
+
+def phone_partial_take_profit_executed(action: dict[str, object]) -> bool:
+    """Return True when the phone has logged a real partial take-profit sale."""
+    if action.get('action') != 'PARTIAL_TAKE_PROFIT' or not MOBILE_LOG_PATH.exists():
+        return False
+
+    market_slug = str(action.get('market_slug') or '')
+    outcome = str(action.get('outcome') or '')
+    try:
+        lines = MOBILE_LOG_PATH.read_text(encoding='utf-8', errors='replace').splitlines()[-500:]
+    except Exception as exc:
+        print(f'[monitor] WARN: could not read mobile log for partial execution check: {exc}')
+        return False
+
+    for line in reversed(lines):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get('source') != 'phone.monitor' or event.get('event_type') != 'order_executed':
+            continue
+        payload = event.get('payload') or {}
+        if payload.get('action') != 'PARTIAL_TAKE_PROFIT':
+            continue
+        if payload.get('market_slug') != market_slug:
+            continue
+        payload_outcome = str(payload.get('outcome') or '')
+        if payload_outcome and outcome and payload_outcome != outcome:
+            continue
+        return True
+    return False
 
 
 def update_dispatch_state(
@@ -178,6 +215,11 @@ def executable_sell_price_from_bids(bids: list[tuple[float, float]], amount: flo
         if filled >= amount:
             return price
     return None
+
+
+def minimum_profitable_sell_price(position: dict[str, Any], threshold: float) -> float:
+    avg_price = safe_float(position.get('avg_price'))
+    return max(threshold, avg_price)
 
 
 def trigger_phone_monitor_executor() -> tuple[bool, str]:
@@ -365,16 +407,35 @@ def main() -> None:
         token_id = str(pos.get('asset', ''))
         bids, book_details = fetch_sell_book(token_id)
         full_sell_price = executable_sell_price_from_bids(bids, size)
+        partial_sell_price = executable_sell_price_from_bids(bids, size * 0.5)
+        min_partial_sell_price = minimum_profitable_sell_price(pos, PARTIAL_TAKE_PROFIT_THRESHOLD)
+        min_full_sell_price = minimum_profitable_sell_price(pos, TAKE_PROFIT_THRESHOLD)
+        partial_action_probe = {
+            'action': 'PARTIAL_TAKE_PROFIT',
+            'market_slug': pos.get('market_slug', ''),
+            'outcome': pos.get('outcome', ''),
+        }
+        partial_already_executed = phone_partial_take_profit_executed(partial_action_probe)
         book_details.update(
             {
                 'full_executable_sell_price': full_sell_price,
+                'partial_executable_sell_price': partial_sell_price,
+                'min_partial_sell_price': min_partial_sell_price,
+                'min_full_sell_price': min_full_sell_price,
+                'partial_already_executed': partial_already_executed,
             }
         )
 
-        if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
+        if (
+            partial_sell_price is not None
+            and partial_sell_price >= min_partial_sell_price
+            and not partial_already_executed
+        ):
+            candidates.append((1, partial_sell_price, pos, 'PARTIAL_TAKE_PROFIT', 0.5, book_details))
+        elif full_sell_price is not None and full_sell_price >= min_full_sell_price:
             candidates.append((0, full_sell_price, pos, 'TAKE_PROFIT', 1.0, book_details))
         else:
-            visible_trigger = prob >= TAKE_PROFIT_THRESHOLD
+            visible_trigger = prob >= PARTIAL_TAKE_PROFIT_THRESHOLD
             if visible_trigger:
                 skipped_actions.append(
                     {
@@ -399,7 +460,11 @@ def main() -> None:
         market_slug = pos['market_slug']
         outcome = pos['outcome']
         title = pos.get('market_title', market_slug)
-        threshold = TAKE_PROFIT_THRESHOLD
+        threshold = (
+            book_details.get('min_full_sell_price')
+            if action == 'TAKE_PROFIT'
+            else book_details.get('min_partial_sell_price')
+        )
 
         print(
             f'[monitor] {action}: {market_slug} | {outcome} @ {prob:.1%} | '

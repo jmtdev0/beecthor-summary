@@ -8,8 +8,8 @@ threshold, and if needed builds and signs a SELL order locally before posting
 it to the CLOB.
 
 No server-side action file or LLM is required for exits. The first automatic
-exit for a position is now a full take-profit once the executable sell price
-for the complete live position reaches 75%.
+exit for a position is the 50% partial take-profit; a full take-profit is only
+selected after that partial has already been logged.
 """
 
 from __future__ import annotations
@@ -41,13 +41,14 @@ from polymarket_order_v2 import (
 ENV_FILE = Path.home() / '.polymarket.env'
 CLOB_HOST = 'https://clob.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
-TAKE_PROFIT_THRESHOLD = 0.75
+PARTIAL_TAKE_PROFIT_THRESHOLD = 0.75
+TAKE_PROFIT_THRESHOLD = 0.90
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
 # Do not execute an exit below the configured threshold, even if the server saw
 # a qualifying quote a few seconds earlier. The live executable book price is
 # the final source of truth for the order.
-MIN_EXECUTABLE_TAKE_PROFIT_PRICE = TAKE_PROFIT_THRESHOLD
+MIN_EXECUTABLE_TAKE_PROFIT_PRICE = PARTIAL_TAKE_PROFIT_THRESHOLD
 MAX_TAKE_PROFIT_ACTIONS_PER_RUN = 2
 MONITOR_EXECUTED_ACTIONS_FILE = Path.home() / '.polymarket_monitor_executed_action_keys'
 
@@ -243,22 +244,42 @@ def save_monitor_action_key(key: str) -> None:
     MONITOR_EXECUTED_ACTIONS_FILE.write_text('\n'.join(sorted(keys)))
 
 
-def classify_action(position: dict[str, Any]) -> tuple[str, float] | tuple[None, None]:
+def minimum_profitable_sell_price(position: dict[str, Any], threshold: float) -> float:
+    avg_price = safe_float(position.get('avgPrice'))
+    return max(threshold, avg_price)
+
+
+def classify_action(
+    position: dict[str, Any],
+    executed_keys: set[str],
+) -> tuple[str, float] | tuple[None, None]:
     prob = safe_float(position.get('curPrice'))
     size = safe_float(position.get('size'))
     token_id = str(position.get('asset', ''))
 
     full_sell_price = None
+    partial_sell_price = None
     if token_id and size > 0:
         try:
             full_sell_price = get_market_price(token_id, 'SELL', size)
+            partial_sell_price = get_market_price(token_id, 'SELL', size * 0.5)
         except MarketResolvedException as exc:
             print(f'[monitor-executor] Skipping resolved/untradeable position while classifying: {exc}')
             return None, None
         except Exception as exc:
             print(f'[monitor-executor] Could not classify by executable book price: {exc}')
 
-    if full_sell_price is not None and full_sell_price >= TAKE_PROFIT_THRESHOLD:
+    partial_key = monitor_action_key('PARTIAL_TAKE_PROFIT', position)
+    min_partial_sell_price = minimum_profitable_sell_price(position, PARTIAL_TAKE_PROFIT_THRESHOLD)
+    min_full_sell_price = minimum_profitable_sell_price(position, TAKE_PROFIT_THRESHOLD)
+    if (
+        partial_sell_price is not None
+        and partial_sell_price >= min_partial_sell_price
+        and partial_key not in executed_keys
+    ):
+        position['_selected_book_sell_price'] = partial_sell_price
+        return 'PARTIAL_TAKE_PROFIT', 0.5
+    if full_sell_price is not None and full_sell_price >= min_full_sell_price:
         position['_selected_book_sell_price'] = full_sell_price
         return 'TAKE_PROFIT', 1.0
     if (
@@ -275,6 +296,7 @@ def position_priority_key(action: str, position: dict[str, Any]) -> tuple[int, f
     priority = {
         'TAKE_PROFIT': 0,
         'EXCEPTIONAL_STOP_LOSS': 1,
+        'PARTIAL_TAKE_PROFIT': 2,
     }.get(action, 9)
     return (priority, -sell_price)
 
@@ -284,11 +306,15 @@ def choose_target_positions(
     limit: int = MAX_TAKE_PROFIT_ACTIONS_PER_RUN,
 ) -> list[tuple[str, float, dict[str, Any]]]:
     candidates: list[tuple[str, float, dict[str, Any]]] = []
+    executed_keys = load_monitor_action_keys()
     for pos in positions:
         if not is_live_exit_position(pos):
             continue
-        action, fraction = classify_action(pos)
+        action, fraction = classify_action(pos, executed_keys)
         if action:
+            key = monitor_action_key(action, pos)
+            if action == 'PARTIAL_TAKE_PROFIT' and key in executed_keys:
+                continue
             candidates.append((action, fraction, pos))
     candidates.sort(key=lambda item: position_priority_key(item[0], item[2]))
     return candidates[:max(0, limit)]
@@ -359,9 +385,11 @@ def append_trade_closed_to_log(entry: dict[str, Any]) -> None:
         print(f'[monitor-executor] Failed to update trade_log.json: {put_resp.status_code} {put_resp.text[:200]}')
 
 
-def minimum_executable_price(action: str) -> float:
+def minimum_executable_price(action: str, position: dict[str, Any]) -> float:
     if action == 'TAKE_PROFIT':
-        return TAKE_PROFIT_THRESHOLD
+        return minimum_profitable_sell_price(position, TAKE_PROFIT_THRESHOLD)
+    if action == 'PARTIAL_TAKE_PROFIT':
+        return minimum_profitable_sell_price(position, PARTIAL_TAKE_PROFIT_THRESHOLD)
     return 0.001
 
 
@@ -432,7 +460,7 @@ def execute_target_position(action: str, fraction: float, target: dict[str, Any]
         print('[monitor-executor] Querying order book...')
         price = get_market_price(token_id, 'SELL', amount)
         print(f'[monitor-executor] Market price: {price}')
-        minimum_price = minimum_executable_price(action)
+        minimum_price = minimum_executable_price(action, target)
         if price < minimum_price:
             detail = (
                 f'Live executable SELL price {price:.4f} is below the minimum '
