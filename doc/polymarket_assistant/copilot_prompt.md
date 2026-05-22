@@ -59,7 +59,7 @@ Your task:
 - You may open at most 1 new position in one cycle, and it must be daily.
 - You may manage up to 2 existing positions in one cycle when the take-profit / invalidation logic is independently clear for both.
 - Do not mix CLOSE and REDUCE actions in the same response.
-- A daily market that has already been partially reduced for take-profit is not permanently banned. If the same daily market/outcome remains active, non-discarded, and newly attractive again, you may re-add to it.
+- A daily market that has already been reduced or sold via take-profit is not permanently banned. If the same daily market/outcome remains active, non-discarded, and newly attractive again, you may re-add to it.
 - Re-adding to an already-open daily market still uses the same slot and is allowed only when the resulting **live open cash assigned to that market** remains within the current single-position cap (`1$` in early stage, otherwise `15%` of available cash).
 - Do not re-add to a discarded same-market position just to average down.
 
@@ -111,6 +111,6 @@ Rules for output:
 - If uncertain, prefer NO_ACTION.
 - For each proposed new position, only use `expiry_validity: "strong"` or `"acceptable"`. If expiry validity is weak, return NO_ACTION.
 - Do not open weekly positions. Weekly entries are disabled after historical performance review.
-- Consider partial take-profit / invalidation exits before proposing fresh entries when open positions are carrying meaningful account risk.
+- Consider take-profit / invalidation exits before proposing fresh entries when open positions are carrying meaningful account risk.
 
 Context snapshot follows.
