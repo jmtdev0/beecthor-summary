@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-23T06:01:21Z",
-  "run_id": "2026-05-23T06-00-12Z",
+  "timestamp": "2026-05-23T08:00:46Z",
+  "run_id": "2026-05-23T08-00-06Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-23T06-00-12Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.86,
-    "summary": "OPEN_POSITION: 75k DIP is the cleanest May 23 daily thesis expression after BTC carried yesterday's breakdown into a fresh bearish session.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there are no open BTC price-hit positions to manage, so a fresh daily entry is allowed. The latest Beecthor thesis is older now and effectively stale at D-3, but the playbook allows a trade when the setup is exceptionally clear and Binance confirms it. That confirmation is present here: BTC is around 75498, short_term_bias is bearish_short_term, the 24h move is about -2.47%, the 48h move is about -3.07%, and price is still trading near the session lows rather than showing a meaningful reclaim. This is no longer a lateral regime. On the May 23 board, 75k DIP Yes around 0.575 is the nearest conservative bearish strike, still below the hard cap, with only a modest remaining move needed and roughly 18 hours left, which gives it solid expiry validity. The deeper 74k DIP market around 0.50 was evaluated too, but that is already the next leg and no longer the closest-strike-first choice. The REACH side was also checked: 76k REACH Yes around 0.34 is the nearest bounce candidate, but it runs against the live bearish structure and is less coherent than expressing the current downside continuation through 75k DIP.",
+    "run_id": "2026-05-23T08-00-06Z",
+    "action": "NO_ACTION",
+    "confidence": 0.97,
+    "summary": "NO_ACTION: hold the live 75k DIP position; there is no valid take-profit exit yet and no clean second daily setup.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is one active BTC daily position to monitor: will-bitcoin-dip-to-75k-on-may-23 Yes, opened at an average price of 0.70 with current price around 0.6899 and best bid around 0.67. Under the current playbook, positions with average entry price >= 65% do not use the 75% take-profit threshold; they should only be sold if the executable full-position sell price reaches 100% or the market naturally resolves, so there is no valid CLOSE_POSITION action now. Binance still supports the bearish thesis rather than invalidating it: spot is around 74609, short_term_bias is bearish_short_term, 24h change is about -3.47%, 48h is about -3.87%, and price remains near the lows. There is also no good fresh opening to add: the daily thesis slot is already occupied by the live 75k DIP position, while the nearest upside candidates such as 76k REACH around 0.295 are countertrend and too weak to justify a separate daily momentum trade. The correct action is to hold the existing position and do nothing else this cycle.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-23",
-        "market_slug": "will-bitcoin-dip-to-75k-on-may-23",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 75000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.6,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "The broader bearish Beecthor map is exceptionally confirmed by live Binance downside expansion, making 75k DIP the nearest clean same-day bearish expression."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-23",
-      "market_slug": "will-bitcoin-dip-to-75k-on-may-23",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 75000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.6,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "The broader bearish Beecthor map is exceptionally confirmed by live Binance downside expansion, making 75k DIP the nearest clean same-day bearish expression.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-23T06:01:21.788854Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "94557059203187523839574228644949068268506129970334060152926537212195301167861",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.6,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "The broader bearish Beecthor map is exceptionally confirmed by live Binance downside expansion, making 75k DIP the nearest clean same-day bearish expression.",
-        "market": "Will Bitcoin dip to $75,000 on May 23?",
-        "market_slug": "will-bitcoin-dip-to-75k-on-may-23",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 75483.82,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 74648.17,
+  "positions_before": 1,
+  "positions_after": 1
 }
