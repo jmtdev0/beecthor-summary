@@ -23,6 +23,7 @@ DOCS_DIR = REPO_ROOT / 'doc'
 ASSISTANT_DOCS_DIR = DOCS_DIR / 'polymarket_assistant'
 TRANSCRIPTS_DIR = REPO_ROOT / 'transcripts'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
+SIMULATED_SUMMARIES_PATH = DOCS_DIR / 'beecthor_simulations.json'
 PLAYBOOK_PATH = ASSISTANT_DOCS_DIR / 'PLAYBOOK.md'
 PLAYBOOK_FBR_PATH = ASSISTANT_DOCS_DIR / 'PLAYBOOK_FBR.md'
 PROMPT_TEMPLATE_PATH = ASSISTANT_DOCS_DIR / 'copilot_prompt.md'
@@ -83,8 +84,9 @@ MONTH_NAME_TO_NUMBER = {
     'december': 12,
 }
 DEFAULT_STRATEGY = 'beecthor'
+BEECTHOR_SIMULATION = 'beecthor-simulation'
 FAR_DIP_RADAR = 'far_dip_radar'
-SUPPORTED_STRATEGIES = {DEFAULT_STRATEGY, FAR_DIP_RADAR}
+SUPPORTED_STRATEGIES = {DEFAULT_STRATEGY, BEECTHOR_SIMULATION, FAR_DIP_RADAR}
 FAR_DIP_RADAR_ALLOWED_UTC_HOURS = {6, 8}
 FAR_DIP_MIN_DISTANCE_USD = 1500.0
 FAR_DIP_MIN_NO_PROBABILITY = 0.25
@@ -275,6 +277,16 @@ def build_cycle_telegram_message(decision: dict[str, Any], btc_price: Any) -> st
     return '\n'.join(parts)
 
 
+def apply_active_strategy_to_decision(decision: dict[str, Any], active_strategy: str) -> None:
+    """Keep execution/log metadata aligned with the active strategy switch."""
+    decision['active_strategy'] = active_strategy
+    for target in decision.get('new_positions') or []:
+        if target.get('should_open'):
+            target['strategy'] = active_strategy
+    if (decision.get('new_position') or {}).get('should_open'):
+        decision['new_position']['strategy'] = active_strategy
+
+
 def normalize_open_target(raw: dict[str, Any] | None, default_kind: str = 'price_hit') -> dict[str, Any]:
     target = dict(DEFAULT_OPEN_TARGET)
     if raw:
@@ -436,6 +448,29 @@ def read_recent_summaries(limit: int = MAX_SUMMARIES, chars_per_message: int = 1
             'btc_usd': entry.get('btc_usd'),
             'robot_score': entry.get('robot_score'),
             'message_excerpt': ' '.join(str(entry.get('message', '')).split())[:chars_per_message],
+        })
+    return results
+
+
+def read_recent_beecthor_simulations(limit: int = 3, chars_per_summary: int = 1200) -> list[dict[str, Any]]:
+    entries = load_json(SIMULATED_SUMMARIES_PATH, [])
+    if not isinstance(entries, list):
+        return []
+    results: list[dict[str, Any]] = []
+    sorted_entries = sorted(
+        [entry for entry in entries if isinstance(entry, dict)],
+        key=lambda item: str(item.get('timestamp') or ''),
+        reverse=True,
+    )
+    for entry in sorted_entries[:limit]:
+        results.append({
+            'id': entry.get('id'),
+            'timestamp': entry.get('timestamp'),
+            'title': entry.get('title'),
+            'scenario': entry.get('scenario'),
+            'btc_price': entry.get('btc_price'),
+            'source': entry.get('source'),
+            'summary_excerpt': ' '.join(str(entry.get('summary', '')).split())[:chars_per_summary],
         })
     return results
 
@@ -1021,6 +1056,11 @@ def build_strategy_context(
     return {
         'active_strategy': active_strategy,
         'strategy_mode': strategy_state.get('strategy_mode', 'llm'),
+        BEECTHOR_SIMULATION: {
+            'enabled': active_strategy == BEECTHOR_SIMULATION,
+            'source': 'doc/beecthor_simulations.json',
+            'candidates': read_recent_beecthor_simulations() if active_strategy == BEECTHOR_SIMULATION else [],
+        },
         FAR_DIP_RADAR: {
             'enabled': active_strategy == FAR_DIP_RADAR,
             'allowed_utc_hours': sorted(FAR_DIP_RADAR_ALLOWED_UTC_HOURS),
@@ -1375,6 +1415,7 @@ def build_context_snapshot(config: dict[str, str]) -> dict[str, Any]:
         },
         'recent_transcripts': read_recent_transcripts(),
         'recent_summaries': recent_summaries,
+        'recent_beecthor_simulations': read_recent_beecthor_simulations(),
         'account_state': account_state,
         'recent_trade_log': trade_log[-8:],
         'performance_snapshot': perf,
@@ -2252,7 +2293,7 @@ def main() -> None:
     llm_provider = os.environ.get('POLYMARKET_LLM_PROVIDER', 'external_decision_file' if args.decision_file else 'copilot')
     llm_provider_model = os.environ.get('POLYMARKET_LLM_PROVIDER_MODEL', args.model)
     llm_provider_effort = os.environ.get('POLYMARKET_LLM_PROVIDER_EFFORT', '')
-    decision['active_strategy'] = strategy_state.get('active_strategy', DEFAULT_STRATEGY)
+    apply_active_strategy_to_decision(decision, strategy_state.get('active_strategy', DEFAULT_STRATEGY))
     decision['llm_provider'] = llm_provider
     if selected_strategy_candidate_id(decision):
         decision['selected_strategy_candidate_id'] = selected_strategy_candidate_id(decision)

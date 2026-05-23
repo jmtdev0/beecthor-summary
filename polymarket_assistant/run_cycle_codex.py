@@ -123,7 +123,10 @@ def main() -> None:
     llm_provider = os.environ.get('POLYMARKET_LLM_PROVIDER', 'copilot' if not args.decision_file else 'external_decision_file')
     llm_provider_model = os.environ.get('POLYMARKET_LLM_PROVIDER_MODEL', args.model)
     llm_provider_effort = os.environ.get('POLYMARKET_LLM_PROVIDER_EFFORT', '')
-    decision['active_strategy'] = strategy_state.get('active_strategy', base.DEFAULT_STRATEGY)
+    base.apply_active_strategy_to_decision(
+        decision,
+        strategy_state.get('active_strategy', base.DEFAULT_STRATEGY),
+    )
     decision['llm_provider'] = llm_provider
     if base.selected_strategy_candidate_id(decision):
         decision['selected_strategy_candidate_id'] = base.selected_strategy_candidate_id(decision)

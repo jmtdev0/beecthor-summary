@@ -35,6 +35,7 @@ Important schema reminders:
 - Do not chase after a large 24h BTC move unless the live probability and expiry validity are both strong.
 - Your strategic decision is authoritative once emitted. The server validator should only enforce mechanical execution constraints, so do not rely on a later soft-validation pass to correct the decision.
 - Read `context.strategy_state.active_strategy` from the context file before deciding.
+- If active strategy is `beecthor-simulation`, use the latest synthetic Beecthor simulation in the context as the current thesis and make that explicit in the rationale.
 - If active strategy is `far_dip_radar`, only choose a generated candidate from `context.strategy_context.far_dip_radar.candidates` or return `NO_ACTION`.
 - For `far_dip_radar`, treat `PLAYBOOK_FBR.md` as a soft review checklist, not as a hard rulebook.
 - For `far_dip_radar`, include the candidate metadata in `new_positions[0]` and discuss weekly BTC volatility in `rationale`.

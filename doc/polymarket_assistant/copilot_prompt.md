@@ -12,6 +12,7 @@ Before deciding, you must use all of these inputs together:
 5. The current BTC price and recent BTC structure from Binance
 6. The current Polymarket markets, probabilities, open positions, and available cash
 7. The active strategy from polymarket_assistant/strategy_state.json
+8. The recent synthetic Beecthor simulations from doc/beecthor_simulations.json, when active strategy is `beecthor-simulation`
 
 Decision principles:
 - Beecthor provides the thesis, but Binance provides execution reality.
@@ -26,6 +27,7 @@ Decision principles:
 Strategy mode:
 - Read `context.strategy_state.active_strategy` before deciding.
 - If active strategy is `beecthor`, use the normal Beecthor/playbook flow below.
+- If active strategy is `beecthor-simulation`, use the normal Beecthor/playbook flow below but treat the latest item in `context.recent_beecthor_simulations` / `context.strategy_context["beecthor-simulation"].candidates` as the current synthetic Beecthor thesis. It is operational guidance, not a real video transcript, so say explicitly in `rationale` that the thesis is simulation-based.
 - If active strategy is `far_dip_radar`, ignore Beecthor thesis for new entries and use only `context.strategy_context.far_dip_radar.candidates`.
 - If active strategy is `far_dip_radar`, use `doc/polymarket_assistant/PLAYBOOK_FBR.md` and `context.strategy_playbooks.far_dip_radar` as non-binding qualitative review guidance. It can make you reject a candidate, but it cannot authorize a candidate that the script did not generate.
 - In `far_dip_radar`, the only valid actions are `NO_ACTION` or `OPEN_POSITION`.
@@ -107,6 +109,7 @@ Rules for output:
 - Use `new_positions: []` when `action != OPEN_POSITION`.
 - Use `position_managements: []` when `action == OPEN_POSITION` or `NO_ACTION`.
 - For `OPEN_POSITION`, return at most 1 item in `new_positions`.
+- For `OPEN_POSITION`, set `new_positions[0].strategy` to the active strategy exactly (`beecthor`, `beecthor-simulation`, or `far_dip_radar`).
 - For `CLOSE_POSITION` or `REDUCE_POSITION`, return at most 2 items in `position_managements` and keep the same action for all of them.
 - If uncertain, prefer NO_ACTION.
 - For each proposed new position, only use `expiry_validity: "strong"` or `"acceptable"`. If expiry validity is weak, return NO_ACTION.

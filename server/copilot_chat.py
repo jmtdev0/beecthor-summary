@@ -89,6 +89,11 @@ STRATEGY_OPTIONS = {
         'mode': 'LLM thesis',
         'description': 'Decisión completa con Beecthor, Binance, playbook y Codex.',
     },
+    'beecthor-simulation': {
+        'label': 'Beecthor Simulation',
+        'mode': 'LLM synthetic thesis',
+        'description': 'Variante Beecthor que usa una simulación sintética como tesis cuando no hay vídeo reciente.',
+    },
     'far_dip_radar': {
         'label': 'Dip Lejano Radar',
         'mode': 'Hybrid',

@@ -7,7 +7,7 @@ Required steps:
 2. Read `/root/beecthor-summary/doc/polymarket_assistant/PLAYBOOK.md`.
 3. Read `/root/beecthor-summary/TIP.md` if it exists.
 4. Read `/root/beecthor-summary/doc/polymarket_assistant/copilot_prompt.md` for the exact decision schema and slot rules.
-5. If active strategy is `far_dip_radar`, read `/root/beecthor-summary/doc/polymarket_assistant/PLAYBOOK_FBR.md` as non-binding qualitative review guidance.
+5. If active strategy is `far_dip_radar`, read `/root/beecthor-summary/doc/polymarket_assistant/PLAYBOOK_FBR.md` as non-binding qualitative review guidance. If active strategy is `beecthor-simulation`, use the latest synthetic Beecthor simulation from the context as the current thesis.
 6. Read `{{CONTEXT_FILE}}`.
 7. Do not modify files.
 8. Do not execute trading scripts.

@@ -1,6 +1,7 @@
 # Changelog
 
 ### 23/05/2026
+* Estrategia `beecthor-simulation` añadida al selector privado, al prompt operativo y a los mensajes/metadata del ciclo para distinguir tesis sintética de Beecthor real.
 * Monitor de take-profit refinado: las posiciones compradas con precio medio `>=65%` ya no salen al `75%`; se dejan correr hasta `100%` o resolución.
 
 ### 22/05/2026
