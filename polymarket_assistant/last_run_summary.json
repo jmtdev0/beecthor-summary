@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-23T12:00:36Z",
-  "run_id": "2026-05-23T12-00-03Z",
+  "timestamp": "2026-05-23T14:01:50Z",
+  "run_id": "2026-05-23T14-00-06Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-23T12-00-03Z",
+    "run_id": "2026-05-23T14-00-06Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "NO_ACTION: the successful 75k DIP exit already locked the day, so no new BTC daily trade is allowed.",
-    "rationale": "Active strategy is beecthor, not beecthor-simulation. Reconciliation is now clean, but daily_success_cooldown remains active because the earlier will-bitcoin-dip-to-75k-on-may-23 Yes position was successfully exited today at 2026-05-23T08:00:47Z. The playbook treats that as a hard same-day block on any additional BTC daily REACH/DIP opening until the next UTC day. There are no live positions left to manage, so neither CLOSE_POSITION nor REDUCE_POSITION applies. Binance still shows bearish_short_term structure with BTC around 74786, but the cooldown overrides further scouting. The correct action is to stand aside.",
+    "summary": "Post-win daily cooldown is still active, so no new BTC daily position is allowed.",
+    "rationale": "Active strategy remains beecthor. Reconciliation is clean and there are no open positions to manage, but the hard post-win daily cooldown is still active for 2026-05-23 after the successful take-profit exit on will-bitcoin-dip-to-75k-on-may-23 at 08:00:47Z. Binance still shows bearish_short_term structure and the board has live daily candidates, but that does not override the same-day cooldown rule, so the only valid decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 74769.71,
+  "binance_spot_price": 75162.17,
   "positions_before": 0,
   "positions_after": 0
 }
