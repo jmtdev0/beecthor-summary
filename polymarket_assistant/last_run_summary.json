@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-23T10:00:37Z",
-  "run_id": "2026-05-23T10-00-03Z",
+  "timestamp": "2026-05-23T12:00:36Z",
+  "run_id": "2026-05-23T12-00-03Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-23T10-00-03Z",
+    "run_id": "2026-05-23T12-00-03Z",
     "action": "NO_ACTION",
     "confidence": 0.99,
-    "summary": "NO_ACTION: a successful 75k DIP exit already happened today and reconciliation is currently broken, so no new BTC daily action is valid.",
-    "rationale": "Active strategy is beecthor, not beecthor-simulation. There are no live BTC price-hit positions to manage, but two hard gates block any fresh entry in this cycle. First, daily_success_cooldown.active is true because the earlier will-bitcoin-dip-to-75k-on-may-23 Yes position was successfully sold at 2026-05-23T08:00:47Z, so the daily board is done for today. Second, reconciliation.ok is false with an explicit missing closure record for that same market, and the playbook treats reconciliation as a hard gate for new entries until state is repaired. Binance still looks bearish_short_term with BTC around 74671, but that does not matter because the cooldown and reconciliation gates override scouting. The correct action is to stand aside.",
+    "summary": "NO_ACTION: the successful 75k DIP exit already locked the day, so no new BTC daily trade is allowed.",
+    "rationale": "Active strategy is beecthor, not beecthor-simulation. Reconciliation is now clean, but daily_success_cooldown remains active because the earlier will-bitcoin-dip-to-75k-on-may-23 Yes position was successfully exited today at 2026-05-23T08:00:47Z. The playbook treats that as a hard same-day block on any additional BTC daily REACH/DIP opening until the next UTC day. There are no live positions left to manage, so neither CLOSE_POSITION nor REDUCE_POSITION applies. Binance still shows bearish_short_term structure with BTC around 74786, but the cooldown overrides further scouting. The correct action is to stand aside.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 74671.36,
+  "binance_spot_price": 74769.71,
   "positions_before": 0,
   "positions_after": 0
 }
