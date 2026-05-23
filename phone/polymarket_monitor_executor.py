@@ -8,8 +8,8 @@ threshold, and if needed builds and signs a SELL order locally before posting
 it to the CLOB.
 
 No server-side action file or LLM is required for exits. The phone always
-refreshes the live order book before selling. Positions bought at or below 75%
-can be fully sold at 75% or better; positions bought above 75% are left to run
+refreshes the live order book before selling. Positions bought below 65% can be
+fully sold at 75% or better; positions bought at 65% or higher are left to run
 until the executable sell price reaches 100%.
 """
 
@@ -43,6 +43,7 @@ ENV_FILE = Path.home() / '.polymarket.env'
 CLOB_HOST = 'https://clob.polymarket.com'
 DATA_API_HOST = 'https://data-api.polymarket.com'
 TAKE_PROFIT_THRESHOLD = 0.75
+HIGH_ENTRY_GUARD_ENTRY_THRESHOLD = 0.65
 HIGH_ENTRY_TAKE_PROFIT_THRESHOLD = 1.0
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
@@ -246,7 +247,7 @@ def save_monitor_action_key(key: str) -> None:
 
 def take_profit_sell_threshold(position: dict[str, Any]) -> float:
     avg_price = safe_float(position.get('avgPrice'))
-    if avg_price > TAKE_PROFIT_THRESHOLD:
+    if avg_price >= HIGH_ENTRY_GUARD_ENTRY_THRESHOLD:
         return HIGH_ENTRY_TAKE_PROFIT_THRESHOLD
     return TAKE_PROFIT_THRESHOLD
 

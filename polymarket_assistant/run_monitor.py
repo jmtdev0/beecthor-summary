@@ -5,7 +5,7 @@ Polymarket Position Monitor
 Runs every minute while the server systemd timer is active.
 No GPT/Copilot — hard-coded thresholds only:
   - Normal take-profit: phone executable SELL price for 100% >= 0.75
-  - High-entry guard: if the average entry price is > 0.75, wait for 1.00
+  - High-entry guard: if the average entry price is >= 0.65, wait for 1.00
 
 On trigger: stores an advisory sell signal, then attempts to launch the phone
 monitor executor immediately through the reverse SSH tunnel. The server never
@@ -49,6 +49,7 @@ MONITOR_TIMER_NAME = os.environ.get('POLYMARKET_MONITOR_TIMER_NAME', 'polymarket
 CLOB_HOST = 'https://clob.polymarket.com'
 
 TAKE_PROFIT_THRESHOLD = 0.75
+HIGH_ENTRY_GUARD_ENTRY_THRESHOLD = 0.65
 HIGH_ENTRY_TAKE_PROFIT_THRESHOLD = 1.0
 ENABLE_EXCEPTIONAL_STOP_LOSS = False
 EXCEPTIONAL_STOP_LOSS_THRESHOLD = 0.15
@@ -184,7 +185,7 @@ def executable_sell_price_from_bids(bids: list[tuple[float, float]], amount: flo
 
 def take_profit_sell_threshold(position: dict[str, Any]) -> float:
     avg_price = safe_float(position.get('avg_price'))
-    if avg_price > TAKE_PROFIT_THRESHOLD:
+    if avg_price >= HIGH_ENTRY_GUARD_ENTRY_THRESHOLD:
         return HIGH_ENTRY_TAKE_PROFIT_THRESHOLD
     return TAKE_PROFIT_THRESHOLD
 
@@ -381,7 +382,7 @@ def main() -> None:
                 'full_executable_sell_price': full_sell_price,
                 'min_full_sell_price': min_full_sell_price,
                 'avg_entry_price': avg_entry_price,
-                'high_entry_guard': avg_entry_price > TAKE_PROFIT_THRESHOLD,
+                'high_entry_guard': avg_entry_price >= HIGH_ENTRY_GUARD_ENTRY_THRESHOLD,
             }
         )
 

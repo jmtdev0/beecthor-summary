@@ -1,5 +1,8 @@
 # Changelog
 
+### 23/05/2026
+* Monitor de take-profit refinado: las posiciones compradas con precio medio `>=65%` ya no salen al `75%`; se dejan correr hasta `100%` o resolución.
+
 ### 22/05/2026
 * Timer del ciclo de decisión Polymarket ajustado para retirar el disparo de `20:00 UTC`; el operador queda en `06, 08, 10, 12, 14, 18 UTC`.
 * Monitor de take-profit corregido al criterio nuevo: posiciones compradas a `<=75%` se venden al `100%` al llegar a `75%`, pero posiciones compradas por encima de `75%` no salen en ese umbral y quedan corriendo hasta `100%` o resolución.
