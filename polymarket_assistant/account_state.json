@@ -2,9 +2,9 @@
   "account_name": "polymarket_manual_account_v1",
   "currency": "USD",
   "starting_bankroll": 7.842164,
-  "cash_available": 6.877591,
+  "cash_available": 8.282411,
   "realized_pnl": 0.3412,
-  "open_exposure": 0.9855,
+  "open_exposure": 0,
   "max_open_positions": 3,
   "max_daily_positions": 2,
   "max_weekly_positions": 0,
@@ -16,23 +16,7 @@
   "discarded_probability_threshold": 0.2,
   "take_profit_probability_min": 0.9,
   "take_profit_probability_max": 0.95,
-  "open_positions": [
-    {
-      "event_slug": "what-price-will-bitcoin-hit-on-may-23",
-      "market_slug": "will-bitcoin-dip-to-75k-on-may-23",
-      "market_title": "Will Bitcoin dip to $75,000 on May 23?",
-      "position_side": "Yes",
-      "token_id": "94557059203187523839574228644949068268506129970334060152926537212195301167861",
-      "shares": 1.4285,
-      "avg_price": 0.7,
-      "entry_cost_usd": 0.9999,
-      "current_price": 0.6899,
-      "current_value_usd": 0.9855,
-      "cash_pnl_usd": -0.0144,
-      "status": "open",
-      "slot_status": "active"
-    }
-  ],
+  "open_positions": [],
   "notes": "Manual conversational workflow. Account currently authenticated via Polymarket email/Gmail-style proxy flow with signature type 1. Use Binance for BTC price validation and Polymarket for execution.",
-  "last_synced_at": "2026-05-23T08:00:46Z"
+  "last_synced_at": "2026-05-23T10:00:37Z"
 }

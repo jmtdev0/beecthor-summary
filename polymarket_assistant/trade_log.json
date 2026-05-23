@@ -21825,5 +21825,69 @@
     "binance_spot_price": 74648.17,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-23T10:00:37Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-23T10-00-03Z",
+    "dry_run": false,
+    "active_strategy": "beecthor",
+    "strategy_mode": "llm",
+    "llm_provider": "copilot",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "high",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-23T10-00-03Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "NO_ACTION: a successful 75k DIP exit already happened today and reconciliation is currently broken, so no new BTC daily action is valid.",
+      "rationale": "Active strategy is beecthor, not beecthor-simulation. There are no live BTC price-hit positions to manage, but two hard gates block any fresh entry in this cycle. First, daily_success_cooldown.active is true because the earlier will-bitcoin-dip-to-75k-on-may-23 Yes position was successfully sold at 2026-05-23T08:00:47Z, so the daily board is done for today. Second, reconciliation.ok is false with an explicit missing closure record for that same market, and the playbook treats reconciliation as a hard gate for new entries until state is repaired. Binance still looks bearish_short_term with BTC around 74671, but that does not matter because the cooldown and reconciliation gates override scouting. The correct action is to stand aside.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "beecthor",
+      "llm_provider": "copilot"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 74671.36,
+    "positions_before": 0,
+    "positions_after": 0
   }
 ]
