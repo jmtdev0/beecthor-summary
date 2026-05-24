@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-24T12:00:53Z",
-  "run_id": "2026-05-24T12-00-03Z",
+  "timestamp": "2026-05-24T14:01:02Z",
+  "run_id": "2026-05-24T14-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-24T12-00-03Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.84,
-    "summary": "OPEN_POSITION: 78k REACH is now the cleanest live daily momentum expression after BTC reclaimed 77k and kept extending with fresh bullish confirmation.",
-    "rationale": "Active strategy remains beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there are no open positions, so a fresh daily entry is allowed. The latest Beecthor transcript and summary remain current enough, but the short-term reality has shifted: BTC is around 77324, Binance short_term_bias is bullish_short_term, the 24h move is about +2.81%, the 12h move is positive, and price is trading near session highs while bearish-bias correction is active and explicitly requires confirmation before forcing a DIP. That confirmation for a bearish reversal is absent. The first upside target, 77k REACH, is already spent and above the hard cap, so it cannot be used. The downside side was evaluated next: 76k DIP Yes around 0.185 is now both low-probability and directly against the live move. The next upside candidate, 78k REACH Yes around 0.45, is the nearest valid extension above price, still within the preferred probability band, and needs less than 1% further upside with 12 hours left. This is no longer the original Beecthor thesis trade, so it fits best as a daily momentum expression, but it is the cleanest current edge on the board.",
+    "run_id": "2026-05-24T14-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.93,
+    "summary": "NO_ACTION: the upside extension lost momentum, but the bearish reversal is still not confirmed enough to justify a fresh daily entry.",
+    "rationale": "Active strategy remains beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there are no live positions to manage in the account state, so this cycle is about whether a fresh entry is justified. The latest Beecthor thesis is still current enough and medium-term bearish, but the bearish-bias correction is active and explicitly requires confirmation before forcing a DIP while BTC has recently held net higher. That confirmation is still incomplete here: Binance short_term_bias is neutral, the last 12h are essentially flat, open interest is contracting, and price has pulled back from the intraday high without showing a clean downside expansion. On the upside, 78k REACH Yes around 0.27 is now weaker than it was at 12:00 and would be a late second-leg chase after the 77k rebound already played out. On the downside, 76k DIP Yes around 0.305 is the nearest bearish candidate, but it is still below the preferred probability band and lacks the clean rejection/breakdown evidence required by the active bias-correction rule. With 10 hours left and neither side offering a clean confirmed edge, the correct decision is NO_ACTION.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_momentum",
-        "beecthor_aligned": false,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-24",
-        "market_slug": "will-bitcoin-reach-78k-on-may-24",
-        "outcome": "Yes",
-        "direction": "bullish",
-        "strike": 78000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.48,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "77k has already been reclaimed, bearish rejection is still missing, and live Binance continuation makes 78k the nearest clean same-day momentum extension."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-24",
-      "market_slug": "will-bitcoin-reach-78k-on-may-24",
-      "outcome": "Yes",
-      "direction": "bullish",
-      "strike": 78000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.48,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "77k has already been reclaimed, bearish rejection is still missing, and live Binance continuation makes 78k the nearest clean same-day momentum extension.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_momentum",
-      "beecthor_aligned": false,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-24T12:00:52.947890Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "39592037967006644538114639676051976111073138965491505445742630166132826409856",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.48,
-        "market_type": "daily",
-        "slot_name": "daily_momentum",
-        "beecthor_aligned": false,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "77k has already been reclaimed, bearish rejection is still missing, and live Binance continuation makes 78k the nearest clean same-day momentum extension.",
-        "market": "Will Bitcoin reach $78,000 on May 24?",
-        "market_slug": "will-bitcoin-reach-78k-on-may-24",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 77311.06,
+  "binance_spot_price": 76812.7,
   "positions_before": 0,
   "positions_after": 0
 }
