@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-24T14:01:02Z",
-  "run_id": "2026-05-24T14-00-16Z",
+  "timestamp": "2026-05-24T18:02:55Z",
+  "run_id": "2026-05-24T18-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-24T14-00-16Z",
+    "run_id": "2026-05-24T18-00-16Z",
     "action": "NO_ACTION",
-    "confidence": 0.93,
-    "summary": "NO_ACTION: the upside extension lost momentum, but the bearish reversal is still not confirmed enough to justify a fresh daily entry.",
-    "rationale": "Active strategy remains beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there are no live positions to manage in the account state, so this cycle is about whether a fresh entry is justified. The latest Beecthor thesis is still current enough and medium-term bearish, but the bearish-bias correction is active and explicitly requires confirmation before forcing a DIP while BTC has recently held net higher. That confirmation is still incomplete here: Binance short_term_bias is neutral, the last 12h are essentially flat, open interest is contracting, and price has pulled back from the intraday high without showing a clean downside expansion. On the upside, 78k REACH Yes around 0.27 is now weaker than it was at 12:00 and would be a late second-leg chase after the 77k rebound already played out. On the downside, 76k DIP Yes around 0.305 is the nearest bearish candidate, but it is still below the preferred probability band and lacks the clean rejection/breakdown evidence required by the active bias-correction rule. With 10 hours left and neither side offering a clean confirmed edge, the correct decision is NO_ACTION.",
+    "confidence": 0.92,
+    "summary": "NO_ACTION: Beecthor is still bearish, but the live board remains range-bound and neither 76k DIP nor 78k REACH has clean enough same-day confirmation with 6 hours left.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there are no live positions to manage, so the only question is whether a fresh daily entry has a real edge. The latest Beecthor transcript from today is current and keeps a bearish medium-term map, expecting more downside first and only then an ABC rebound toward the 78k resistance area. But the live Binance execution picture is still neutral rather than decisively breaking down: spot is 76693, the UTC-day move is essentially flat (-0.08%), the 12h trend is only -0.14%, open interest is flat, and price is still sitting inside the recent range instead of showing a clean downside expansion. That makes the nearest thesis-aligned candidate, 76k DIP Yes around 0.38, still too weak and not well-confirmed enough for a lateral-regime breakdown trade, especially with only 6 hours left. On the other side, 78k REACH Yes around 0.115 would be a late second-leg upside chase directly against the current transcript and without fresh bullish continuation. With no open positions, no cooldown block, but also no clean confirmed daily edge, the correct decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76812.7,
+  "binance_spot_price": 76695.1,
   "positions_before": 0,
   "positions_after": 0
 }
