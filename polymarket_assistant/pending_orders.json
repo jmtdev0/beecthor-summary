@@ -1,12 +1,12 @@
 [
   {
-    "order_id": "2026-05-23T06:01:21.788854Z",
+    "order_id": "2026-05-24T06:02:17.263976Z",
     "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "94557059203187523839574228644949068268506129970334060152926537212195301167861",
+    "token_id": "52290430718778487180014101213752827605056208893313638611371214039123875908145",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.6,
+    "max_entry_probability": 0.81,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
@@ -14,9 +14,9 @@
     "expiry_validity": "strong",
     "strategy": "beecthor",
     "strategy_candidate_id": "",
-    "strategy_reason": "The broader bearish Beecthor map is exceptionally confirmed by live Binance downside expansion, making 75k DIP the nearest clean same-day bearish expression.",
-    "market": "Will Bitcoin dip to $75,000 on May 23?",
-    "market_slug": "will-bitcoin-dip-to-75k-on-may-23",
+    "strategy_reason": "The fresh Beecthor thesis still expects a rebound into 77k before renewed short interest, and Binance is already validating that immediate upside path.",
+    "market": "Will Bitcoin reach $77,000 on May 24?",
+    "market_slug": "will-bitcoin-reach-77k-on-may-24",
     "outcome": "Yes"
   }
 ]
