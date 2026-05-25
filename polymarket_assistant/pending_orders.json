@@ -1,12 +1,12 @@
 [
   {
-    "order_id": "2026-05-24T06:02:17.263976Z",
-    "status": "skipped_probability_too_high",
+    "order_id": "2026-05-25T06:01:13.501864Z",
+    "status": "pending_phone_execution",
     "type": "OPEN_POSITION",
-    "token_id": "52290430718778487180014101213752827605056208893313638611371214039123875908145",
+    "token_id": "69389814869994669266781885869266974050779460891947653540295755296010763940086",
     "side": "BUY",
     "stake_usd": 1.0,
-    "max_entry_probability": 0.81,
+    "max_entry_probability": 0.6,
     "market_type": "daily",
     "slot_name": "daily_thesis",
     "beecthor_aligned": true,
@@ -14,43 +14,9 @@
     "expiry_validity": "strong",
     "strategy": "beecthor",
     "strategy_candidate_id": "",
-    "strategy_reason": "The fresh Beecthor thesis still expects a rebound into 77k before renewed short interest, and Binance is already validating that immediate upside path.",
-    "market": "Will Bitcoin reach $77,000 on May 24?",
-    "market_slug": "will-bitcoin-reach-77k-on-may-24",
-    "outcome": "Yes",
-    "execution_status_detail": "Live OPEN_POSITION price is above the phone execution cap (89.0% > 81.0%)",
-    "execution_updated_at": "2026-05-24T06:02:22Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-77k-on-may-24",
-      "live_probability": 0.89,
-      "max_allowed_probability": 0.81
-    }
-  },
-  {
-    "order_id": "2026-05-24T12:00:52.947890Z",
-    "status": "skipped_probability_too_high",
-    "type": "OPEN_POSITION",
-    "token_id": "39592037967006644538114639676051976111073138965491505445742630166132826409856",
-    "side": "BUY",
-    "stake_usd": 1.0,
-    "max_entry_probability": 0.48,
-    "market_type": "daily",
-    "slot_name": "daily_momentum",
-    "beecthor_aligned": false,
-    "momentum_confirmed": true,
-    "expiry_validity": "strong",
-    "strategy": "beecthor",
-    "strategy_candidate_id": "",
-    "strategy_reason": "77k has already been reclaimed, bearish rejection is still missing, and live Binance continuation makes 78k the nearest clean same-day momentum extension.",
-    "market": "Will Bitcoin reach $78,000 on May 24?",
-    "market_slug": "will-bitcoin-reach-78k-on-may-24",
-    "outcome": "Yes",
-    "execution_status_detail": "Live OPEN_POSITION price is above the phone execution cap (49.0% > 48.0%)",
-    "execution_updated_at": "2026-05-24T12:00:58Z",
-    "execution_payload": {
-      "market_slug": "will-bitcoin-reach-78k-on-may-24",
-      "live_probability": 0.49,
-      "max_allowed_probability": 0.48
-    }
+    "strategy_reason": "The latest Beecthor map still allows an ABC rebound into 78k-78.2k before renewed shorts, and live Binance price action is already confirming that immediate upside path.",
+    "market": "Will Bitcoin reach $78,000 on May 25?",
+    "market_slug": "will-bitcoin-reach-78k-on-may-25",
+    "outcome": "Yes"
   }
 ]
