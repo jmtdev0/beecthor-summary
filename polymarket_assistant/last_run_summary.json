@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-25T08:00:49Z",
-  "run_id": "2026-05-25T08-00-04Z",
+  "timestamp": "2026-05-25T10:00:39Z",
+  "run_id": "2026-05-25T10-00-03Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-25T08-00-04Z",
+    "run_id": "2026-05-25T10-00-03Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "NO_ACTION: the 78k daily thesis position is now live, it is not in take-profit territory, and there is no clean second daily edge to add at 08:00.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is now one live active daily price-hit position in the account: will-bitcoin-reach-78k-on-may-25 Yes, opened by the phone executor after the 06:00 decision. That position does not qualify for take-profit management yet: avg_price is 0.5899, so the <65% rule would require an executable full-position sell price of at least 0.75, while the live board is only around 0.52-0.53. No stop-loss or discretionary invalidation sale is allowed. For new exposure, the daily thesis slot is already occupied by the live 78k REACH position. The free daily momentum slot was considered, but there is no cleaner second setup than the existing thesis trade: Binance is still bullish_short_term and BTC is holding near the highs, yet 79k REACH Yes is only around 0.115 and would be a fresh second-leg chase after much of the immediate rebound has already played out. On the bearish side, 76k DIP Yes has weakened to about 0.185 and still fights both the live move and the active bearish-bias-correction rule. With the main valid setup already open and no justified management or secondary entry, the correct decision is NO_ACTION.",
+    "confidence": 0.98,
+    "summary": "NO_ACTION: the live 78k REACH position is improving but still below take-profit, and there is no clean second daily setup worth adding.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is one live active daily thesis position in the account: will-bitcoin-reach-78k-on-may-25 Yes. That position still does not qualify for take-profit management. Its avg_price is 0.5899, so under the <65% rule the executable full-position sell price must reach at least 0.75, while the live order book is only around 0.69 bid / 0.71 ask and current marked price is about 0.70. No stop-loss or discretionary invalidation sale is allowed. For fresh exposure, the daily thesis slot is occupied by the live 78k position. The remaining daily momentum slot was checked, but 79k REACH Yes around 0.145 would still be a second-leg chase after much of the immediate rebound has already played out, while bearish DIP markets have collapsed further and remain directly against both the live Binance bullish_short_term structure and the active bearish-bias-correction rule. With the existing position still valid, not yet in take-profit territory, and no cleaner additional edge on the board, the correct decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 77366.46,
+  "binance_spot_price": 77612.32,
   "positions_before": 1,
   "positions_after": 1
 }
