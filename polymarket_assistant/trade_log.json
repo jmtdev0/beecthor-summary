@@ -22952,5 +22952,69 @@
     "binance_spot_price": 77329.06,
     "positions_before": 1,
     "positions_after": 1
+  },
+  {
+    "timestamp": "2026-05-25T18:00:48Z",
+    "type": "cycle_run",
+    "run_id": "2026-05-25T18-00-16Z",
+    "dry_run": false,
+    "active_strategy": "beecthor",
+    "strategy_mode": "llm",
+    "llm_provider": "copilot",
+    "llm_provider_model": "gpt-5.4",
+    "llm_provider_effort": "high",
+    "strategy_candidates": [],
+    "selected_strategy_candidate_id": "",
+    "decision": {
+      "run_id": "2026-05-25T18-00-16Z",
+      "action": "NO_ACTION",
+      "confidence": 0.99,
+      "summary": "NO_ACTION: the live 78k REACH position has recovered but is still below take-profit, and with 6 hours left there is no justified second daily setup to add.",
+      "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is still one live active daily thesis position in the account: will-bitcoin-reach-78k-on-may-25 Yes. That position does not qualify for take-profit management: avg_price is 0.5899, so under the <65% rule the executable full-position sell price must reach at least 0.75, while the live order book is only around 0.49 bid / 0.51 ask and current marked price is about 0.50. It is also not discarded for slot purposes because current probability remains well above the 0.20 threshold, and no stop-loss or discretionary invalidation sale is allowed. For new exposure, the daily thesis slot is occupied by that live 78k position. The daily momentum slot was checked, but 79k REACH Yes around 0.041 is too weak and too late for a fresh second-leg chase with only 6 hours left, while bearish DIP markets still do not have the explicit rejection and downside expansion required by the active bearish-bias-correction rule despite Binance cooling back to neutral. With the existing position still active, no valid exit, and no cleaner additional edge on the board, the correct decision is NO_ACTION.",
+      "position_managements": [],
+      "new_positions": [],
+      "position_management": {
+        "should_manage_existing": false,
+        "target_market_slug": "",
+        "target_outcome": "",
+        "reason": "none",
+        "reduce_fraction": 0.5
+      },
+      "new_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "",
+        "direction": "neutral",
+        "strike": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0,
+        "strategy": "",
+        "strategy_candidate_id": "",
+        "strategy_reason": ""
+      },
+      "new_floor_position": {
+        "should_open": false,
+        "event_slug": "",
+        "market_slug": "",
+        "outcome": "Yes",
+        "floor_level": 0,
+        "stake_usd": 0,
+        "max_entry_probability": 0.0
+      },
+      "active_strategy": "beecthor",
+      "llm_provider": "copilot"
+    },
+    "validation": {
+      "ok": true,
+      "message": "ok"
+    },
+    "execution": {
+      "performed": false,
+      "details": null
+    },
+    "binance_spot_price": 77559.12,
+    "positions_before": 1,
+    "positions_after": 1
   }
 ]
