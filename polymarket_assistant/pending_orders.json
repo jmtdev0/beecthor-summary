@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-05-25T06:01:13.501864Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "69389814869994669266781885869266974050779460891947653540295755296010763940086",
     "side": "BUY",
@@ -17,6 +17,13 @@
     "strategy_reason": "The latest Beecthor map still allows an ABC rebound into 78k-78.2k before renewed shorts, and live Binance price action is already confirming that immediate upside path.",
     "market": "Will Bitcoin reach $78,000 on May 25?",
     "market_slug": "will-bitcoin-reach-78k-on-may-25",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-05-25T06:01:19Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-reach-78k-on-may-25",
+      "price": 0.59,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0xdb757a3210029fb14ad96ba0a2cf842b3d378e5ac46f16776f0a3c57bad04be8\",\"takingAmount\":\"1.694914\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0x46f6c51541f03bb24389a065a545fd2cac2071270ab75f20a81e78b711eb1bee\"],\"success\":true}"
+    }
   }
 ]
