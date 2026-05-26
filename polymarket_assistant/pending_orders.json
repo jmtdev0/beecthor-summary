@@ -1,7 +1,7 @@
 [
   {
     "order_id": "2026-05-26T08:03:37.417220Z",
-    "status": "pending_phone_execution",
+    "status": "executed",
     "type": "OPEN_POSITION",
     "token_id": "11374909297900359234562512685425269810266518347036404218417378507697790811833",
     "side": "BUY",
@@ -17,6 +17,13 @@
     "strategy_reason": "Beecthor's current bearish map now has Binance confirmation after rejection from the 77k-78k resistance area, and 76k DIP is the nearest clean same-day thesis expression.",
     "market": "Will Bitcoin dip to $76,000 on May 26?",
     "market_slug": "will-bitcoin-dip-to-76k-on-may-26",
-    "outcome": "Yes"
+    "outcome": "Yes",
+    "execution_status_detail": "Order executed successfully on phone",
+    "execution_updated_at": "2026-05-26T08:03:46Z",
+    "execution_payload": {
+      "market_slug": "will-bitcoin-dip-to-76k-on-may-26",
+      "price": 0.53,
+      "response": "{\"errorMsg\":\"\",\"orderID\":\"0x0d6c08a31e092a5b5e4c6f9747a781f04a5fd8b47376963347de29eb15c95a80\",\"takingAmount\":\"1.886791\",\"makingAmount\":\"0.999999\",\"status\":\"matched\",\"transactionsHashes\":[\"0xfcb20f355707aff025c40b734782c9f09ad4b62123c1b30408eb93b1a41240b9\"],\"success\":true}"
+    }
   }
 ]
