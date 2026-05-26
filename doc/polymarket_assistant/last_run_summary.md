@@ -1,18 +1,18 @@
 # Polymarket Operator Run
 
-- Timestamp: 2026-05-25T18:00:48Z
+- Timestamp: 2026-05-26T06:01:50Z
 - Dry run: False
 - Active strategy: beecthor
 - Strategy mode: llm
 - LLM provider: copilot
 - LLM model: gpt-5.4
 - LLM effort: high
-- BTC price: 77559.12
+- BTC price: 76862.91
 - Decision action: NO_ACTION
-- Decision summary: NO_ACTION: the live 78k REACH position has recovered but is still below take-profit, and with 6 hours left there is no justified second daily setup to add.
+- Decision summary: NO_ACTION: reconciliation is broken after yesterday's 78k REACH disappeared without a closure record, so no fresh BTC daily entry is allowed.
 - Validation: True (ok)
-- Open positions before: 1
-- Open positions after: 1
+- Open positions before: 0
+- Open positions after: 0
 
 ## Execution
 
