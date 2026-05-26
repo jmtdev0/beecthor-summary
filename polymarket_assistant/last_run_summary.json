@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-26T08:03:37Z",
-  "run_id": "2026-05-26T08-00-06Z",
+  "timestamp": "2026-05-26T10:01:00Z",
+  "run_id": "2026-05-26T10-00-16Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,34 +10,13 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-26T08-00-06Z",
-    "action": "OPEN_POSITION",
-    "confidence": 0.86,
-    "summary": "OPEN_POSITION: 76k DIP is now the cleanest May 26 daily thesis expression because reconciliation is fixed, Beecthor's bearish map is still current, and Binance is confirming downside continuation.",
-    "rationale": "Active strategy is beecthor. Reconciliation is now clean, daily_success_cooldown is inactive, and there are no live positions, so a fresh daily entry is allowed. The latest Beecthor transcript and summary remain current and still frame this move as a bearish continuation after a corrective rebound, with the ideal wave-4 zone around 77.2k and shorts preferred from the 78k-78.5k resistance area; the downside map then looks toward 75.5k, 74k, and 73k-73.5k. Binance is now confirming that rollover: BTC spot is 76730.83, short_term_bias is bearish_short_term, price is below the UTC-day open, the 12h change is -0.82%, the 24h change is -1.13%, and price is trading close to the 24h low after rejecting from the 77.9k area. The bearish-bias correction is no longer active, so a thesis-aligned DIP does not require the extra rejection filter that blocked earlier bearish entries. On the board, will-bitcoin-dip-to-76k-on-may-26 Yes around 0.555 is the nearest meaningful downside strike, sits comfortably inside the preferred probability band, and has strong same-day expiry validity with 16 hours left. Upside alternatives like 78k REACH Yes around 0.23 and 79k REACH Yes around 0.04 are weaker and directly against the current Beecthor/Binance alignment.",
+    "run_id": "2026-05-26T10-00-16Z",
+    "action": "NO_ACTION",
+    "confidence": 0.97,
+    "summary": "NO_ACTION: the live 76k DIP daily thesis position remains active, is not in take-profit territory, and there is no clean second daily edge to add.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is now one live active daily price-hit position in the account: will-bitcoin-dip-to-76k-on-may-26 Yes. That position does not qualify for take-profit management: avg_price is 0.5299, so under the <65% rule the executable full-position sell price must reach at least 0.75, while the live market is only around 0.47 bid / 0.49 ask with current marked price near 0.48. It is also not discarded for slot purposes because current probability remains well above the 0.20 threshold, and no stop-loss or discretionary invalidation sale is allowed. For fresh exposure, the daily thesis slot is occupied by that live 76k DIP position. The remaining daily momentum slot was checked, but the next downside candidate, 75k DIP Yes around 0.075, is a weak second-leg extension with limited market consensus, while upside reach markets remain directly against both the latest Beecthor bearish map and Binance bearish_short_term structure. With the existing bearish thesis trade still active, no valid exit, and no cleaner additional daily setup on the board, the correct decision is NO_ACTION.",
     "position_managements": [],
-    "new_positions": [
-      {
-        "should_open": true,
-        "position_kind": "price_hit",
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "event_slug": "what-price-will-bitcoin-hit-on-may-26",
-        "market_slug": "will-bitcoin-dip-to-76k-on-may-26",
-        "outcome": "Yes",
-        "direction": "bearish",
-        "strike": 76000,
-        "floor_level": 0,
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.6,
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor's current bearish map now has Binance confirmation after rejection from the 77k-78k resistance area, and 76k DIP is the nearest clean same-day thesis expression."
-      }
-    ],
+    "new_positions": [],
     "position_management": {
       "should_manage_existing": false,
       "target_market_slug": "",
@@ -46,24 +25,17 @@
       "reduce_fraction": 0.5
     },
     "new_position": {
-      "should_open": true,
-      "event_slug": "what-price-will-bitcoin-hit-on-may-26",
-      "market_slug": "will-bitcoin-dip-to-76k-on-may-26",
-      "outcome": "Yes",
-      "direction": "bearish",
-      "strike": 76000,
-      "stake_usd": 1.0,
-      "max_entry_probability": 0.6,
-      "strategy": "beecthor",
+      "should_open": false,
+      "event_slug": "",
+      "market_slug": "",
+      "outcome": "",
+      "direction": "neutral",
+      "strike": 0,
+      "stake_usd": 0,
+      "max_entry_probability": 0.0,
+      "strategy": "",
       "strategy_candidate_id": "",
-      "strategy_reason": "Beecthor's current bearish map now has Binance confirmation after rejection from the 77k-78k resistance area, and 76k DIP is the nearest clean same-day thesis expression.",
-      "position_kind": "price_hit",
-      "market_type": "daily",
-      "slot_name": "daily_thesis",
-      "beecthor_aligned": true,
-      "momentum_confirmed": true,
-      "expiry_validity": "strong",
-      "floor_level": 0
+      "strategy_reason": ""
     },
     "new_floor_position": {
       "should_open": false,
@@ -82,31 +54,10 @@
     "message": "ok"
   },
   "execution": {
-    "performed": true,
-    "details": [
-      {
-        "order_id": "2026-05-26T08:03:37.417220Z",
-        "status": "pending_phone_execution",
-        "type": "OPEN_POSITION",
-        "token_id": "11374909297900359234562512685425269810266518347036404218417378507697790811833",
-        "side": "BUY",
-        "stake_usd": 1.0,
-        "max_entry_probability": 0.6,
-        "market_type": "daily",
-        "slot_name": "daily_thesis",
-        "beecthor_aligned": true,
-        "momentum_confirmed": true,
-        "expiry_validity": "strong",
-        "strategy": "beecthor",
-        "strategy_candidate_id": "",
-        "strategy_reason": "Beecthor's current bearish map now has Binance confirmation after rejection from the 77k-78k resistance area, and 76k DIP is the nearest clean same-day thesis expression.",
-        "market": "Will Bitcoin dip to $76,000 on May 26?",
-        "market_slug": "will-bitcoin-dip-to-76k-on-may-26",
-        "outcome": "Yes"
-      }
-    ]
+    "performed": false,
+    "details": null
   },
-  "binance_spot_price": 76700.0,
-  "positions_before": 0,
-  "positions_after": 0
+  "binance_spot_price": 76657.49,
+  "positions_before": 1,
+  "positions_after": 1
 }
