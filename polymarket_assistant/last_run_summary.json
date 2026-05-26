@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-26T10:01:00Z",
-  "run_id": "2026-05-26T10-00-16Z",
+  "timestamp": "2026-05-26T12:00:50Z",
+  "run_id": "2026-05-26T12-00-00Z",
   "dry_run": false,
   "active_strategy": "beecthor",
   "strategy_mode": "llm",
@@ -10,11 +10,11 @@
   "strategy_candidates": [],
   "selected_strategy_candidate_id": "",
   "decision": {
-    "run_id": "2026-05-26T10-00-16Z",
+    "run_id": "2026-05-26T12-00-00Z",
     "action": "NO_ACTION",
-    "confidence": 0.97,
-    "summary": "NO_ACTION: the live 76k DIP daily thesis position remains active, is not in take-profit territory, and there is no clean second daily edge to add.",
-    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is now one live active daily price-hit position in the account: will-bitcoin-dip-to-76k-on-may-26 Yes. That position does not qualify for take-profit management: avg_price is 0.5299, so under the <65% rule the executable full-position sell price must reach at least 0.75, while the live market is only around 0.47 bid / 0.49 ask with current marked price near 0.48. It is also not discarded for slot purposes because current probability remains well above the 0.20 threshold, and no stop-loss or discretionary invalidation sale is allowed. For fresh exposure, the daily thesis slot is occupied by that live 76k DIP position. The remaining daily momentum slot was checked, but the next downside candidate, 75k DIP Yes around 0.075, is a weak second-leg extension with limited market consensus, while upside reach markets remain directly against both the latest Beecthor bearish map and Binance bearish_short_term structure. With the existing bearish thesis trade still active, no valid exit, and no cleaner additional daily setup on the board, the correct decision is NO_ACTION.",
+    "confidence": 0.99,
+    "summary": "NO_ACTION: the live 76k DIP daily thesis position remains active, is still not in take-profit territory, and there is no clean second daily edge to add while BTC drifts back into neutral/range behavior.",
+    "rationale": "Active strategy is beecthor. Reconciliation is clean, daily_success_cooldown is inactive, and there is still one live active daily price-hit position in the account: will-bitcoin-dip-to-76k-on-may-26 Yes. That position does not qualify for take-profit management: avg_price is 0.5299, so under the <65% rule the executable full-position sell price must reach at least 0.75, while the live market is only around 0.21 bid / 0.22 ask with current marked price near 0.215. It is also not discarded for slot purposes because current probability remains slightly above the 0.20 threshold, and no stop-loss or discretionary invalidation sale is allowed. For fresh exposure, the daily thesis slot is occupied by that live 76k DIP position. The remaining daily momentum slot was checked, but Binance has cooled to neutral, bearish_bias_correction is active again, and BTC is back in flatter range behavior rather than showing a very clear same-day continuation. That makes 78k REACH Yes around 0.445 a weak counter-thesis momentum chase rather than a clean breakout expression, while adding another bearish DIP lower on the board would be even worse given the rebound and lack of downside confirmation. With the existing thesis trade still active, no valid exit, and no cleaner additional setup, the correct decision is NO_ACTION.",
     "position_managements": [],
     "new_positions": [],
     "position_management": {
@@ -57,7 +57,7 @@
     "performed": false,
     "details": null
   },
-  "binance_spot_price": 76657.49,
+  "binance_spot_price": 77192.01,
   "positions_before": 1,
   "positions_after": 1
 }
