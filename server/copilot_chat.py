@@ -200,7 +200,7 @@ img{display:block;max-width:100%}
 }
 .video-date{font-size:.95rem;color:#9ca3af}
 .public-controls{
-  display:flex;align-items:end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  display:flex;align-items:end;justify-content:flex-start;gap:14px;flex-wrap:wrap;
   margin:0 0 28px;padding:18px;border:1px solid rgba(255,255,255,.08);
   border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018))
 }
@@ -211,7 +211,10 @@ img{display:block;max-width:100%}
   border-radius:12px;padding:10px 12px
 }
 .public-controls-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.public-count{color:#d1d5db;font-size:.95rem}
+.public-controls-actions .button-link,.public-controls-actions button{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:inherit;font-size:.95rem;font-weight:700;line-height:1.15
+}
 .public-tabs a{
   padding:8px 12px;border-radius:999px;background:transparent;color:#d7dee7
 }
@@ -2272,11 +2275,10 @@ def public_index():
               <option value="asc" {% if filters.sort == 'asc' %}selected{% endif %}>Más antiguo primero</option>
             </select>
           </label>
-        </div>
-        <div class="public-controls-actions">
-          <span class="public-count">{{ items|length }} de {{ total_count }} vídeos</span>
-          <button type="submit">Aplicar</button>
-          <a class="button-link secondary" href="{{ url_for('public_index') }}">Limpiar</a>
+          <div class="public-controls-actions">
+            <button type="submit">Aplicar</button>
+            <a class="button-link secondary" href="{{ url_for('public_index') }}">Limpiar</a>
+          </div>
         </div>
       </form>
       {% if items %}
@@ -2301,7 +2303,7 @@ def public_index():
       </section>
       {% endif %}
     </div>""" + PAGE_END
-    return render_template_string(html, items=items, filters=filters, total_count=len(all_items))
+    return render_template_string(html, items=items, filters=filters)
 
 
 @app.route('/videos/<video_id>')
@@ -2394,7 +2396,7 @@ def public_simulations():
         <div>
           <div class="simulation-warning-title">Experimento sin validez operativa</div>
           <div class="simulation-warning-copy">
-            Estos resúmenes son simulaciones. No proceden necesariamente de un vídeo real de Beecthor, no alimentan el operador de Polymarket,
+            Estos resúmenes son simulaciones. No proceden necesariamente de un vídeo real de Beecthor, no alimentan ningún operador,
             no se guardan en <code>analyses_log.json</code> y no deben usarse para tomar decisiones reales.
           </div>
         </div>
