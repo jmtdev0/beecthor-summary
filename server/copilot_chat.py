@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import subprocess
 import threading
 import time
@@ -58,6 +59,8 @@ LLM_PROVIDER_STATE_PATH = Path(
 MONITOR_ACTION_PATH = REPO_ROOT / 'polymarket_assistant' / 'last_monitor_action.json'
 MONITOR_HISTORY_PATH = REPO_ROOT / 'polymarket_assistant' / 'monitor_history.json'
 OPERATOR_TIMER_UNIT = 'polymarket-operator.timer'
+PHONE_TUNNEL_WATCHDOG_PATTERN = 'ensure_reverse_tunnel.sh'
+PHONE_TUNNEL_WATCHDOG_DISABLED_MARKER = '# DASHBOARD_DISABLED_TUNNEL_WATCHDOG '
 
 load_dotenv(ENV_FILE)
 
@@ -82,6 +85,20 @@ HIDDEN_PUBLIC_VIDEO_IDS = {
     'lwAibKGUPPI',
     'BNxWfRQ0RNA',
     'yTz2oN6PQhA',
+}
+SPANISH_MONTH_NAMES = {
+    1: 'ENERO',
+    2: 'FEBRERO',
+    3: 'MARZO',
+    4: 'ABRIL',
+    5: 'MAYO',
+    6: 'JUNIO',
+    7: 'JULIO',
+    8: 'AGOSTO',
+    9: 'SEPTIEMBRE',
+    10: 'OCTUBRE',
+    11: 'NOVIEMBRE',
+    12: 'DICIEMBRE',
 }
 STRATEGY_OPTIONS = {
     'beecthor': {
@@ -199,8 +216,19 @@ img{display:block;max-width:100%}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
 }
 .video-date{font-size:.95rem;color:#9ca3af}
+.month-section + .month-section{margin-top:18px}
+.month-separator{
+  display:grid;grid-template-columns:minmax(42px,1fr) auto minmax(42px,1fr);
+  align-items:center;gap:30px;margin:44px 0 28px
+}
+.month-section:first-child .month-separator{margin-top:8px}
+.month-separator::before,.month-separator::after{
+  content:"";height:6px;border-radius:999px;background:linear-gradient(90deg,rgba(248,250,252,.12),rgba(248,250,252,.86))
+}
+.month-separator::after{background:linear-gradient(90deg,rgba(248,250,252,.86),rgba(248,250,252,.12))}
+.month-label{font-size:3.45rem;line-height:1;font-weight:900;letter-spacing:0;color:#f8fafc;text-transform:uppercase}
 .public-controls{
-  display:flex;align-items:end;justify-content:flex-start;gap:14px;flex-wrap:wrap;
+  display:flex;align-items:end;justify-content:space-between;gap:14px;flex-wrap:wrap;
   margin:0 0 28px;padding:18px;border:1px solid rgba(255,255,255,.08);
   border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018))
 }
@@ -211,10 +239,7 @@ img{display:block;max-width:100%}
   border-radius:12px;padding:10px 12px
 }
 .public-controls-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.public-controls-actions .button-link,.public-controls-actions button{
-  display:inline-flex;align-items:center;justify-content:center;
-  font-family:inherit;font-size:.95rem;font-weight:700;line-height:1.15
-}
+.public-count{color:#d1d5db;font-size:.95rem}
 .public-tabs a{
   padding:8px 12px;border-radius:999px;background:transparent;color:#d7dee7
 }
@@ -559,6 +584,9 @@ img{display:block;max-width:100%}
   .public-controls,.public-controls-fields,.public-controls-actions{display:grid;grid-template-columns:1fr;width:100%}
   .public-controls input,.public-controls select{width:100%}
   .video-grid{grid-template-columns:1fr}
+  .month-separator{gap:14px;margin:34px 0 20px}
+  .month-separator::before,.month-separator::after{height:4px}
+  .month-label{font-size:2.15rem}
   .private-grid{grid-template-columns:1fr}
   .control-grid{grid-template-columns:1fr}
   .trace-grid{grid-template-columns:1fr}
@@ -1820,6 +1848,25 @@ def filter_summary_entries(
     return sorted(filtered, key=lambda item: item.get('sort_timestamp', ''), reverse=reverse)
 
 
+def summary_month_group(item: dict[str, Any]) -> tuple[str, str]:
+    date_value = str(item.get('timestamp_date') or '')[:10]
+    try:
+        parsed_date = datetime.strptime(date_value, '%Y-%m-%d')
+    except ValueError:
+        return ('unknown', 'SIN FECHA')
+    return (parsed_date.strftime('%Y-%m'), SPANISH_MONTH_NAMES.get(parsed_date.month, date_value[:7]))
+
+
+def group_summary_entries_by_month(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: list[dict[str, Any]] = []
+    for item in items:
+        month_key, month_label = summary_month_group(item)
+        if not groups or groups[-1]['month_key'] != month_key:
+            groups.append({'month_key': month_key, 'month_label': month_label, 'videos': []})
+        groups[-1]['videos'].append(item)
+    return groups
+
+
 def find_summary(video_id: str) -> dict[str, Any] | None:
     for item in load_summary_entries():
         if item.get('video_id') == video_id:
@@ -2275,35 +2322,47 @@ def public_index():
               <option value="asc" {% if filters.sort == 'asc' %}selected{% endif %}>Más antiguo primero</option>
             </select>
           </label>
-          <div class="public-controls-actions">
-            <button type="submit">Aplicar</button>
-            <a class="button-link secondary" href="{{ url_for('public_index') }}">Limpiar</a>
-          </div>
+        </div>
+        <div class="public-controls-actions">
+          <span class="public-count">{{ items|length }} de {{ total_count }} vídeos</span>
+          <button type="submit">Aplicar</button>
+          <a class="button-link secondary" href="{{ url_for('public_index') }}">Limpiar</a>
         </div>
       </form>
       {% if items %}
-      <div class="video-grid">
-        {% for item in items %}
-        <article class="video-card">
-          <a class="video-link" href="{{ url_for('public_video_detail', video_id=item.video_id) }}">
-            <div class="thumb-wrap">
-              <img src="{{ item.thumbnail_url }}" alt="{{ item.public_title }}">
-            </div>
-            <div class="video-meta">
-              <div class="video-title">{{ item.public_title }}</div>
-              <div class="video-date">{{ item.timestamp_local }}</div>
-            </div>
-          </a>
-        </article>
+        {% for group in month_groups %}
+        <section class="month-section" aria-label="{{ group.month_label }}">
+          <div class="month-separator"><span class="month-label">{{ group.month_label }}</span></div>
+          <div class="video-grid">
+            {% for item in group.videos %}
+            <article class="video-card">
+              <a class="video-link" href="{{ url_for('public_video_detail', video_id=item.video_id) }}">
+                <div class="thumb-wrap">
+                  <img src="{{ item.thumbnail_url }}" alt="{{ item.public_title }}">
+                </div>
+                <div class="video-meta">
+                  <div class="video-title">{{ item.public_title }}</div>
+                  <div class="video-date">{{ item.timestamp_local }}</div>
+                </div>
+              </a>
+            </article>
+            {% endfor %}
+          </div>
+        </section>
         {% endfor %}
-      </div>
       {% else %}
       <section class="surface-card">
         <p class="muted">No hay vídeos para ese rango de fechas.</p>
       </section>
       {% endif %}
     </div>""" + PAGE_END
-    return render_template_string(html, items=items, filters=filters)
+    return render_template_string(
+        html,
+        items=items,
+        month_groups=group_summary_entries_by_month(items),
+        filters=filters,
+        total_count=len(all_items),
+    )
 
 
 @app.route('/videos/<video_id>')
@@ -2396,7 +2455,7 @@ def public_simulations():
         <div>
           <div class="simulation-warning-title">Experimento sin validez operativa</div>
           <div class="simulation-warning-copy">
-            Estos resúmenes son simulaciones. No proceden necesariamente de un vídeo real de Beecthor, no alimentan ningún operador,
+            Estos resúmenes son simulaciones. No proceden necesariamente de un vídeo real de Beecthor, no alimentan el operador de Polymarket,
             no se guardan en <code>analyses_log.json</code> y no deben usarse para tomar decisiones reales.
           </div>
         </div>
@@ -2621,6 +2680,128 @@ PHONE_SSH = ['ssh', '-p', '2222', '-o', 'StrictHostKeyChecking=no', 'u0_a647@loc
 PHONE_REPO_CMD = "bash -lc 'cd ~/beecthor-summary && git pull --ff-only >/dev/null 2>&1 || true && python3 {script}'"
 
 
+def run_phone_shell(command: str, timeout: int = 12) -> subprocess.CompletedProcess[str]:
+    remote_command = f'bash -lc {shlex.quote(command)}'
+    return subprocess.run(PHONE_SSH + [remote_command], capture_output=True, text=True, timeout=timeout)
+
+
+def is_phone_tunnel_watchdog_line(line: str) -> bool:
+    stripped = line.strip()
+    if PHONE_TUNNEL_WATCHDOG_PATTERN not in stripped:
+        return False
+    if stripped.startswith('@reboot'):
+        return False
+    if stripped.startswith(f'{PHONE_TUNNEL_WATCHDOG_DISABLED_MARKER}@reboot'):
+        return False
+    return True
+
+
+def read_phone_tunnel_watchdog_status() -> dict[str, Any]:
+    try:
+        result = run_phone_shell('crontab -l 2>/dev/null || true')
+    except Exception as exc:
+        return {
+            'available': False,
+            'can_toggle': False,
+            'state_label': 'Error',
+            'tone': 'bad',
+            'detail': f'No se pudo leer el crontab de Termux: {exc}',
+            'button_action': 'resume',
+            'button_label': 'Reanudar watchdog',
+            'hourly_line': 'No disponible',
+            'reboot_line': 'No disponible',
+        }
+
+    if result.returncode != 0:
+        return {
+            'available': False,
+            'can_toggle': False,
+            'state_label': 'Error',
+            'tone': 'bad',
+            'detail': 'Termux rechazó la lectura de crontab.',
+            'button_action': 'resume',
+            'button_label': 'Reanudar watchdog',
+            'hourly_line': 'No disponible',
+            'reboot_line': 'No disponible',
+        }
+
+    active_line = ''
+    disabled_line = ''
+    reboot_line = ''
+    for raw_line in result.stdout.splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith('@reboot') and PHONE_TUNNEL_WATCHDOG_PATTERN in stripped:
+            reboot_line = stripped
+        if not stripped.startswith('#') and is_phone_tunnel_watchdog_line(stripped):
+            active_line = stripped
+        elif stripped.startswith(PHONE_TUNNEL_WATCHDOG_DISABLED_MARKER) and is_phone_tunnel_watchdog_line(stripped):
+            disabled_line = stripped
+
+    if active_line:
+        return {
+            'available': True,
+            'can_toggle': True,
+            'state_label': 'Activo',
+            'tone': 'good',
+            'detail': 'El cron horario de Termux revisa el túnel una vez por hora. La entrada @reboot queda aparte.',
+            'button_action': 'pause',
+            'button_label': 'Pausar watchdog',
+            'hourly_line': active_line,
+            'reboot_line': reboot_line or 'No encontrada',
+        }
+    if disabled_line:
+        return {
+            'available': True,
+            'can_toggle': True,
+            'state_label': 'Pausado',
+            'tone': 'warn',
+            'detail': 'La línea horaria está comentada desde el panel. El arranque @reboot no se modifica.',
+            'button_action': 'resume',
+            'button_label': 'Reanudar watchdog',
+            'hourly_line': disabled_line,
+            'reboot_line': reboot_line or 'No encontrada',
+        }
+    return {
+        'available': True,
+        'can_toggle': False,
+        'state_label': 'Sin línea horaria',
+        'tone': 'bad',
+        'detail': f'No se encontró una línea horaria con {PHONE_TUNNEL_WATCHDOG_PATTERN}. No se crea una nueva desde el panel.',
+        'button_action': 'resume',
+        'button_label': 'Reanudar watchdog',
+        'hourly_line': 'No encontrada',
+        'reboot_line': reboot_line or 'No encontrada',
+    }
+
+
+def build_phone_tunnel_watchdog_feedback(status: str) -> dict[str, str] | None:
+    if not status:
+        return None
+    palette = {
+        'paused': {
+            'text': '✓ Watchdog horario de Termux pausado. El @reboot del túnel queda intacto.',
+            'bg': 'rgba(245,158,11,.12)',
+            'border': 'rgba(245,158,11,.24)',
+            'color': '#fbbf24',
+        },
+        'resumed': {
+            'text': '✓ Watchdog horario de Termux reanudado.',
+            'bg': 'rgba(34,197,94,.12)',
+            'border': 'rgba(34,197,94,.25)',
+            'color': '#4ade80',
+        },
+        'error': {
+            'text': '✗ No se pudo cambiar el watchdog de Termux. Revisa los logs de la app.',
+            'bg': 'rgba(239,68,68,.12)',
+            'border': 'rgba(239,68,68,.24)',
+            'color': '#f87171',
+        },
+    }
+    return palette.get(status)
+
+
 @app.route('/private/operator-cycle-timer', methods=['POST'])
 @require_private
 def toggle_operator_cycle_timer():
@@ -2678,6 +2859,76 @@ def toggle_operator_cycle_timer():
         payload,
     )
     return redirect(url_for('private_polymarket', operator_timer='error'))
+
+
+@app.route('/private/phone-tunnel-watchdog-cron', methods=['POST'])
+@require_private
+def toggle_phone_tunnel_watchdog_cron():
+    action = request.form.get('action', '').strip()
+    if action == 'pause':
+        command = (
+            'existing="$(crontab -l 2>/dev/null || true)"; '
+            'printf "%s\\n" "$existing" | '
+            'awk \'index($0, "ensure_reverse_tunnel.sh") && $0 !~ /^#/ && $0 !~ /^@reboot/ '
+            '{ print "# DASHBOARD_DISABLED_TUNNEL_WATCHDOG " $0; next } { print }\' | crontab -'
+        )
+        success_status = 'paused'
+    elif action == 'resume':
+        command = (
+            'existing="$(crontab -l 2>/dev/null || true)"; '
+            'printf "%s\\n" "$existing" | '
+            'awk \'index($0, "# DASHBOARD_DISABLED_TUNNEL_WATCHDOG ") == 1 && '
+            'index($0, "ensure_reverse_tunnel.sh") '
+            '{ sub(/^# DASHBOARD_DISABLED_TUNNEL_WATCHDOG /, ""); print; next } { print }\' | crontab -'
+        )
+        success_status = 'resumed'
+    else:
+        append_jsonl_event(
+            'app.polymarket',
+            'phone_tunnel_watchdog_toggle_invalid',
+            'warning',
+            'Invalid phone tunnel watchdog toggle action',
+            {'action': action},
+        )
+        return redirect(url_for('private_polymarket', phone_tunnel_watchdog='error'))
+
+    try:
+        result = run_phone_shell(command, timeout=20)
+    except Exception as exc:
+        append_jsonl_event(
+            'app.polymarket',
+            'phone_tunnel_watchdog_toggle_error',
+            'error',
+            f'Phone tunnel watchdog toggle failed: {exc}',
+            {'action': action, 'pattern': PHONE_TUNNEL_WATCHDOG_PATTERN},
+        )
+        return redirect(url_for('private_polymarket', phone_tunnel_watchdog='error'))
+
+    payload = {
+        'action': action,
+        'pattern': PHONE_TUNNEL_WATCHDOG_PATTERN,
+        'exit_code': result.returncode,
+        'stdout': (result.stdout or '').strip()[:500],
+        'stderr': (result.stderr or '').strip()[:500],
+    }
+    if result.returncode == 0:
+        append_jsonl_event(
+            'app.polymarket',
+            f'phone_tunnel_watchdog_{success_status}',
+            'info',
+            f'Phone tunnel watchdog cron {success_status}',
+            payload,
+        )
+        return redirect(url_for('private_polymarket', phone_tunnel_watchdog=success_status))
+
+    append_jsonl_event(
+        'app.polymarket',
+        'phone_tunnel_watchdog_toggle_failed',
+        'error',
+        'Termux refused to change phone tunnel watchdog cron state',
+        payload,
+    )
+    return redirect(url_for('private_polymarket', phone_tunnel_watchdog='error'))
 
 
 @app.route('/private/trigger/<process>', methods=['POST'])
@@ -2766,6 +3017,10 @@ def private_polymarket():
     trace_lanes = build_private_trace_lanes()
     operator_timer = read_operator_timer_status()
     operator_timer_feedback = build_operator_timer_feedback(request.args.get('operator_timer', '').strip())
+    phone_tunnel_watchdog = read_phone_tunnel_watchdog_status()
+    phone_tunnel_watchdog_feedback = build_phone_tunnel_watchdog_feedback(
+        request.args.get('phone_tunnel_watchdog', '').strip()
+    )
     tip_text = load_text(TIP_PATH, '')
     tip_saved = request.args.get('tip_saved', '').strip()
     tip_feedback = None
@@ -2919,6 +3174,11 @@ def private_polymarket():
         {{ operator_timer_feedback.text }}
       </div>
       {% endif %}
+      {% if phone_tunnel_watchdog_feedback %}
+      <div style="margin-bottom:18px;padding:12px 18px;border-radius:14px;background:{{ phone_tunnel_watchdog_feedback.bg }};border:1px solid {{ phone_tunnel_watchdog_feedback.border }};color:{{ phone_tunnel_watchdog_feedback.color }};font-weight:600;font-size:.93rem">
+        {{ phone_tunnel_watchdog_feedback.text }}
+      </div>
+      {% endif %}
       <div class="control-grid">
         <section class="surface-card control-card">
           <h2 class="section-title">TIP.md</h2>
@@ -2958,6 +3218,31 @@ def private_polymarket():
             <input type="hidden" name="action" value="{{ operator_timer.button_action }}">
             <button type="submit" style="background:{% if operator_timer.button_action == 'pause' %}#7c2d12{% else %}#166534{% endif %}">{{ operator_timer.button_label }}</button>
           </form>
+        </section>
+
+        <section class="surface-card control-card">
+          <h2 class="section-title">Túnel móvil</h2>
+          <div class="control-copy">Switch para el cron horario de Termux que revisa `ensure_reverse_tunnel.sh`. No toca la entrada `@reboot`.</div>
+          <div class="control-current"><span class="{{ phone_tunnel_watchdog.tone }}">{{ phone_tunnel_watchdog.state_label }}</span></div>
+          <div class="control-mini-grid">
+            <div class="control-stat">
+              <div class="control-stat-label">Cron horario</div>
+              <div class="control-stat-value">{{ phone_tunnel_watchdog.hourly_line }}</div>
+            </div>
+            <div class="control-stat">
+              <div class="control-stat-label">@reboot</div>
+              <div class="control-stat-value">{{ phone_tunnel_watchdog.reboot_line }}</div>
+            </div>
+          </div>
+          <div class="control-copy">{{ phone_tunnel_watchdog.detail }}</div>
+          {% if phone_tunnel_watchdog.can_toggle %}
+          <form class="control-form" method="POST" action="/private/phone-tunnel-watchdog-cron" onsubmit="return confirm('Confirmar: {{ phone_tunnel_watchdog.button_label }}?')">
+            <input type="hidden" name="action" value="{{ phone_tunnel_watchdog.button_action }}">
+            <button type="submit" style="background:{% if phone_tunnel_watchdog.button_action == 'pause' %}#7c2d12{% else %}#166534{% endif %}">{{ phone_tunnel_watchdog.button_label }}</button>
+          </form>
+          {% else %}
+          <button type="button" disabled style="opacity:.55;cursor:not-allowed">No editable desde panel</button>
+          {% endif %}
         </section>
 
         <section class="surface-card control-card">
@@ -3231,6 +3516,8 @@ def private_polymarket():
         operator_timer=operator_timer,
         operator_timer_feedback=operator_timer_feedback,
         operator_timer_unit=OPERATOR_TIMER_UNIT,
+        phone_tunnel_watchdog=phone_tunnel_watchdog,
+        phone_tunnel_watchdog_feedback=phone_tunnel_watchdog_feedback,
         llm_provider_feedback=llm_provider_feedback,
         tip_feedback=tip_feedback,
         strategy_feedback=strategy_feedback,
@@ -3720,6 +4007,73 @@ def api_mobile_log():
     stored = append_jsonl_event(source, event_type, level, message, payload)
     append_jsonl_event('api.mobile', 'log_received', 'info', 'Accepted mobile log event', {'source': source, 'event_type': event_type})
     return jsonify({'ok': True, 'stored': stored})
+
+
+def git_head(ref: str = 'HEAD') -> str:
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(REPO_ROOT), 'rev-parse', '--short', ref],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception:
+        return ''
+    if result.returncode != 0:
+        return ''
+    return (result.stdout or '').strip()
+
+
+@app.route('/api/mobile/git-pull', methods=['POST'])
+def api_mobile_git_pull():
+    data = request.get_json(silent=True) or {}
+    provided_secret = (
+        request.headers.get('X-Log-Secret', '').strip()
+        or request.args.get('secret', '').strip()
+        or str(data.get('secret') or '').strip()
+    )
+    if not MOBILE_LOG_API_SECRET or provided_secret != MOBILE_LOG_API_SECRET:
+        append_jsonl_event('api.mobile', 'git_pull_rejected', 'warning', 'Rejected mobile git pull request due to invalid secret')
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
+
+    source = (data.get('source') or 'phone.unknown').strip()
+    video_id = str(data.get('video_id') or '').strip()
+    reason = str(data.get('reason') or 'mobile_request').strip()
+    before_head = git_head()
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(REPO_ROOT), 'pull', '--ff-only', 'origin', 'main'],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except Exception as exc:
+        append_jsonl_event(
+            'api.mobile',
+            'git_pull_error',
+            'error',
+            f'Mobile-triggered git pull failed: {exc}',
+            {'source': source, 'video_id': video_id, 'reason': reason, 'before_head': before_head},
+        )
+        return jsonify({'ok': False, 'error': str(exc), 'before_head': before_head}), 500
+
+    after_head = git_head()
+    payload = {
+        'source': source,
+        'video_id': video_id,
+        'reason': reason,
+        'before_head': before_head,
+        'after_head': after_head,
+        'exit_code': result.returncode,
+        'stdout': (result.stdout or '').strip()[:2000],
+        'stderr': (result.stderr or '').strip()[:2000],
+    }
+    if result.returncode != 0:
+        append_jsonl_event('api.mobile', 'git_pull_failed', 'warning', 'Mobile-triggered git pull returned a non-zero exit code', payload)
+        return jsonify({'ok': False, **payload}), 500
+
+    append_jsonl_event('api.mobile', 'git_pull_completed', 'info', 'Mobile-triggered git pull completed', payload)
+    return jsonify({'ok': True, **payload})
 
 
 @app.route('/api/mobile/strategy-state', methods=['GET', 'POST'])
