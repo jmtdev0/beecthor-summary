@@ -22,13 +22,14 @@ Environment variables (loaded from .env automatically):
   TELEGRAM_CHAT_ID     — Target chat/group ID (negative number for supergroups)
 """
 
+import copy
 import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -46,11 +47,14 @@ REPO_ROOT = Path(__file__).parent.parent
 LAST_VIDEO_FILE = REPO_ROOT / "last_video_id.txt"
 LOG_FILE = REPO_ROOT / "analyses_log.json"
 TRANSCRIPTS_DIR = REPO_ROOT / "transcripts"
+PERPS_THESES_DIR = REPO_ROOT / "data" / "perps_theses"
+LATEST_PERPS_THESIS_FILE = PERPS_THESES_DIR / "latest.json"
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 MAX_TRANSCRIPT_CHARS = 80_000  # ~80K chars stays safely within the 128K-token context
+MAX_PERPS_THESIS_VALID_HOURS = 48
 
 COINGECKO_PRICE_URL = (
     "https://api.coingecko.com/api/v3/simple/price"
@@ -354,6 +358,211 @@ def generate_robot_score(transcript: str) -> tuple[float, str]:
 
 
 # ---------------------------------------------------------------------------
+# Perps thesis helpers
+# ---------------------------------------------------------------------------
+
+SUPPORTED_PERPS_SETUPS = {
+    "wait",
+    "short_resistance",
+    "short_rejection",
+    "short_resistance_bearish_regime",
+    "long_support",
+    "sweep_reclaim_long",
+    "long_support_sweep_reclaim",
+}
+LONG_PERPS_SETUPS = {"long_support", "sweep_reclaim_long", "long_support_sweep_reclaim"}
+SHORT_PERPS_SETUPS = {"short_resistance", "short_rejection", "short_resistance_bearish_regime"}
+WAIT_PERPS_SETUPS = {"wait", "no_trade", "none", ""}
+SUPPORTED_MACRO_BIASES = {"bearish", "bullish", "neutral", "mixed", "unknown"}
+
+
+def _utc_iso(value: datetime) -> str:
+    return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _parse_utc_datetime(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    raw = value.strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _float_or_none(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def _clamp_confidence(value: object) -> float:
+    confidence = _float_or_none(value)
+    if confidence is None:
+        return 0.0
+    return max(0.0, min(1.0, confidence))
+
+
+def _text_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
+
+
+def _normalize_zone(raw_zone: object, direction: str) -> dict | None:
+    if not isinstance(raw_zone, dict):
+        return None
+
+    low = _float_or_none(raw_zone.get("low"))
+    high = _float_or_none(raw_zone.get("high"))
+    stop_loss = _float_or_none(raw_zone.get("stop_loss"))
+    if low is None or high is None or stop_loss is None or low >= high:
+        return None
+
+    raw_targets = raw_zone.get("targets", [])
+    targets = []
+    if isinstance(raw_targets, list):
+        targets = [target for target in (_float_or_none(item) for item in raw_targets) if target is not None]
+
+    if direction == "long":
+        targets = [target for target in targets if target > high]
+        if stop_loss >= low or not targets:
+            return None
+        targets = sorted(targets)
+    else:
+        targets = [target for target in targets if target < low]
+        if stop_loss <= high or not targets:
+            return None
+        targets = sorted(targets, reverse=True)
+
+    return {
+        "low": low,
+        "high": high,
+        "stop_loss": stop_loss,
+        "targets": targets,
+        "label": str(raw_zone.get("label", "")).strip(),
+    }
+
+
+def _wait_perps_thesis(video_id: str, reason: str, generated_at: datetime | None = None) -> dict:
+    now = generated_at or datetime.now(timezone.utc)
+    return {
+        "schema_version": 1,
+        "source": "beecthor-summary",
+        "symbol": "BTCUSDT",
+        "video_id": video_id,
+        "video_url": f"https://www.youtube.com/watch?v={video_id}" if video_id else "",
+        "generated_at": _utc_iso(now),
+        "created_at": _utc_iso(now),
+        "valid_until": _utc_iso(now + timedelta(hours=MAX_PERPS_THESIS_VALID_HOURS)),
+        "macro_bias": "unknown",
+        "preferred_setup": "wait",
+        "confidence": 0.0,
+        "long_zones": [],
+        "short_zones": [],
+        "invalidation_levels": [],
+        "no_trade_conditions": [reason],
+        "notes": reason,
+    }
+
+
+def normalize_perps_thesis(payload: object, video_id: str) -> dict:
+    """Return a safe, schema-versioned perps thesis for downstream automation."""
+    if not isinstance(payload, dict):
+        return _wait_perps_thesis(video_id, "LLM did not return a perps_thesis object.")
+
+    now = datetime.now(timezone.utc)
+    generated_at = _parse_utc_datetime(payload.get("generated_at")) or now
+    max_valid_until = generated_at + timedelta(hours=MAX_PERPS_THESIS_VALID_HOURS)
+    valid_until = _parse_utc_datetime(payload.get("valid_until")) or max_valid_until
+    if valid_until > max_valid_until:
+        valid_until = max_valid_until
+
+    preferred_setup = str(payload.get("preferred_setup", "wait")).strip().lower()
+    if preferred_setup in WAIT_PERPS_SETUPS:
+        preferred_setup = "wait"
+
+    macro_bias = str(payload.get("macro_bias", "unknown")).strip().lower()
+    if macro_bias not in SUPPORTED_MACRO_BIASES:
+        macro_bias = "unknown"
+
+    long_zones = [
+        zone
+        for zone in (_normalize_zone(raw_zone, "long") for raw_zone in payload.get("long_zones", []) or [])
+        if zone is not None
+    ]
+    short_zones = [
+        zone
+        for zone in (_normalize_zone(raw_zone, "short") for raw_zone in payload.get("short_zones", []) or [])
+        if zone is not None
+    ]
+
+    confidence = _clamp_confidence(payload.get("confidence", 0.0))
+    notes = str(payload.get("notes", "")).strip()
+    no_trade_conditions = _text_list(payload.get("no_trade_conditions"))
+    invalidation_levels = payload.get("invalidation_levels", [])
+    if not isinstance(invalidation_levels, list):
+        invalidation_levels = []
+
+    safe_video_id = str(payload.get("video_id") or video_id).strip()
+    if safe_video_id != video_id:
+        safe_video_id = video_id
+
+    if preferred_setup not in SUPPORTED_PERPS_SETUPS:
+        return _wait_perps_thesis(
+            video_id,
+            f"Unsupported perps setup from LLM: {preferred_setup or '(empty)'}",
+            generated_at,
+        )
+    if preferred_setup in LONG_PERPS_SETUPS and not long_zones:
+        return _wait_perps_thesis(video_id, "Long setup returned without any valid long zone.", generated_at)
+    if preferred_setup in SHORT_PERPS_SETUPS and not short_zones:
+        return _wait_perps_thesis(video_id, "Short setup returned without any valid short zone.", generated_at)
+    if preferred_setup == "wait":
+        long_zones = []
+        short_zones = []
+        if not no_trade_conditions:
+            no_trade_conditions = ["The transcript did not produce a clear automated setup."]
+
+    return {
+        "schema_version": 1,
+        "source": "beecthor-summary",
+        "symbol": "BTCUSDT",
+        "video_id": safe_video_id,
+        "video_url": f"https://www.youtube.com/watch?v={safe_video_id}" if safe_video_id else "",
+        "generated_at": _utc_iso(generated_at),
+        "created_at": _utc_iso(generated_at),
+        "valid_until": _utc_iso(valid_until),
+        "macro_bias": macro_bias,
+        "preferred_setup": preferred_setup,
+        "confidence": confidence,
+        "long_zones": long_zones,
+        "short_zones": short_zones,
+        "invalidation_levels": invalidation_levels,
+        "no_trade_conditions": no_trade_conditions,
+        "notes": notes,
+    }
+
+
+def save_perps_thesis(video_id: str, thesis: dict) -> Path:
+    """Persist the operable perps thesis as both historical and latest JSON."""
+    normalized = normalize_perps_thesis(copy.deepcopy(thesis), video_id)
+    PERPS_THESES_DIR.mkdir(parents=True, exist_ok=True)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    history_path = PERPS_THESES_DIR / f"{date_str}_{video_id}.json"
+    serialized = json.dumps(normalized, ensure_ascii=False, indent=2)
+    history_path.write_text(serialized + "\n", encoding="utf-8")
+    LATEST_PERPS_THESIS_FILE.write_text(serialized + "\n", encoding="utf-8")
+    print(f"Perps thesis saved: {history_path}")
+    print(f"Latest perps thesis updated: {LATEST_PERPS_THESIS_FILE}")
+    return history_path
+
+
+# ---------------------------------------------------------------------------
 # Copilot CLI summary generation
 # ---------------------------------------------------------------------------
 
@@ -364,10 +573,11 @@ def generate_summary_via_copilot(
     transcript: str,
     robot_score: float,
     robot_comment: str,
-) -> tuple[str, str, str]:
+    video_id: str,
+) -> tuple[str, str, str, dict]:
     """Call Copilot CLI to generate the Beecthor summary fields.
 
-    Returns (macro_summary, resumen, full_analysis) — all in Spanish.
+    Returns (macro_summary, resumen, full_analysis, perps_thesis).
     Raises RuntimeError if Copilot auth is missing or output cannot be parsed.
     """
     excerpt = transcript[:MAX_COPILOT_TRANSCRIPT_CHARS]
@@ -378,13 +588,28 @@ def generate_summary_via_copilot(
         "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
         "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
         f"(robot score: {robot_score:.1f}/10 — {robot_comment}).\n\n"
-        "Return ONLY a valid JSON object with exactly these three fields (all content in Spanish):\n"
+        "Return ONLY a valid JSON object with exactly these four fields:\n"
         '  "macro_summary": 1-2 sentences on the macro BTC outlook (direction, key levels, bias)\n'
         '  "resumen": 3-5 bullet lines covering macro view, Elliott count/structure, key levels, '
         "liquidations, and the operational conclusion. Each bullet starts with •\n"
         '  "full_analysis": a detailed paragraph covering all technical aspects: Elliott wave count, '
         "Fibonacci levels, liquidations, Value Area/POC, EMAs, AVWAP, supports/resistances, "
-        "and the operational conclusion\n\n"
+        "and the operational conclusion\n"
+        '  "perps_thesis": an object for a deterministic BTCUSDT perpetual futures bot. '
+        "Use English enum values and numeric prices only. If the transcript is ambiguous, "
+        'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
+        "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
+        "short_resistance, short_rejection, long_support_sweep_reclaim, long_support, "
+        "sweep_reclaim_long. The perps_thesis object must contain exactly these fields: "
+        "schema_version, symbol, video_id, generated_at, valid_until, macro_bias, "
+        "preferred_setup, confidence, long_zones, short_zones, invalidation_levels, "
+        "no_trade_conditions, notes. Each zone must contain low, high, stop_loss, targets, label. "
+        "Long targets must be above the zone and long stop_loss below the zone. "
+        "Short targets must be below the zone and short stop_loss above the zone. "
+        "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
+        f'Use video_id "{video_id}" and symbol "BTCUSDT". valid_until must be no more than '
+        f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
+        "The first three fields must be in Spanish. perps_thesis enum/string fields must be in English.\n"
         "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
         f"TRANSCRIPT:\n{excerpt}"
     )
@@ -421,10 +646,11 @@ def generate_summary_via_copilot(
     macro_summary = data.get("macro_summary", "")
     resumen = data.get("resumen", "")
     full_analysis = data.get("full_analysis", "")
+    perps_thesis = normalize_perps_thesis(data.get("perps_thesis"), video_id)
     if not macro_summary or not resumen or not full_analysis:
         raise RuntimeError(f"Copilot JSON missing required fields: {list(data.keys())}")
 
-    return macro_summary, resumen, full_analysis
+    return macro_summary, resumen, full_analysis, perps_thesis
 
 
 # ---------------------------------------------------------------------------
@@ -627,6 +853,10 @@ def git_commit_and_push(video_id: str) -> None:
     ]
     for f in TRANSCRIPTS_DIR.glob(f"{video_id}_*.txt"):
         files_to_add.append(str(f))
+    for f in PERPS_THESES_DIR.glob(f"*_{video_id}.json"):
+        files_to_add.append(str(f))
+    if LATEST_PERPS_THESIS_FILE.exists():
+        files_to_add.append(str(LATEST_PERPS_THESIS_FILE))
 
     try:
         subprocess.run(["git", "add"] + files_to_add, cwd=REPO_ROOT, check=True)
@@ -675,10 +905,11 @@ def run_auto(video_id: str) -> None:
     context = collect_video_context(video_id, save_to_disk=True)
 
     print("Generating summary via Copilot CLI...")
-    macro_summary, resumen, full_analysis = generate_summary_via_copilot(
+    macro_summary, resumen, full_analysis, perps_thesis = generate_summary_via_copilot(
         context["transcript"],
         context["robot_score"],
         context["robot_comment"],
+        context["video_id"],
     )
     print("Summary generated.")
 
@@ -698,6 +929,7 @@ def run_auto(video_id: str) -> None:
 
     save_last_processed_id(video_id)
     append_log_entry(video_id, context["prices_now"], context["robot_score"], message)
+    save_perps_thesis(video_id, perps_thesis)
     git_commit_and_push(video_id)
     print("Done.")
 

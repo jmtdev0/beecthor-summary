@@ -21,8 +21,9 @@ import argparse
 import tempfile
 import time
 import xml.etree.ElementTree as ET
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 from dotenv import load_dotenv
@@ -44,6 +45,9 @@ load_dotenv(ENV_FILE)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
 GH_TOKEN = os.environ.get('GH_TOKEN', '')
+SERVER_LOG_API_URL = os.environ.get('SERVER_LOG_API_URL', '').strip()
+SERVER_LOG_API_SECRET = os.environ.get('SERVER_LOG_API_SECRET', '').strip()
+SERVER_GIT_PULL_API_URL = os.environ.get('SERVER_GIT_PULL_API_URL', '').strip()
 refresh_log_client_config()
 
 
@@ -57,12 +61,186 @@ def detect_repo_dir() -> Path:
 REPO_DIR = detect_repo_dir()
 ANALYSES_LOG = REPO_DIR / 'analyses_log.json'
 TRANSCRIPTS_DIR = REPO_DIR / 'transcripts'
+PERPS_THESES_DIR = REPO_DIR / 'data' / 'perps_theses'
+LATEST_PERPS_THESIS_FILE = PERPS_THESES_DIR / 'latest.json'
+MAX_PERPS_THESIS_VALID_HOURS = 48
 if str(REPO_DIR) not in sys.path:
     sys.path.insert(0, str(REPO_DIR))
 
 
 def now_utc() -> str:
     return datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+SUPPORTED_PERPS_SETUPS = {
+    'wait',
+    'short_resistance',
+    'short_rejection',
+    'short_resistance_bearish_regime',
+    'long_support',
+    'sweep_reclaim_long',
+    'long_support_sweep_reclaim',
+}
+LONG_PERPS_SETUPS = {'long_support', 'sweep_reclaim_long', 'long_support_sweep_reclaim'}
+SHORT_PERPS_SETUPS = {'short_resistance', 'short_rejection', 'short_resistance_bearish_regime'}
+WAIT_PERPS_SETUPS = {'wait', 'no_trade', 'none', ''}
+SUPPORTED_MACRO_BIASES = {'bearish', 'bullish', 'neutral', 'mixed', 'unknown'}
+
+
+def utc_iso(value: datetime) -> str:
+    return value.astimezone(UTC).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+
+
+def parse_utc_datetime(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def float_or_none(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def text_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
+
+
+def normalize_zone(raw_zone: object, direction: str) -> dict | None:
+    if not isinstance(raw_zone, dict):
+        return None
+    low = float_or_none(raw_zone.get('low'))
+    high = float_or_none(raw_zone.get('high'))
+    stop_loss = float_or_none(raw_zone.get('stop_loss'))
+    if low is None or high is None or stop_loss is None or low >= high:
+        return None
+    raw_targets = raw_zone.get('targets', [])
+    targets = []
+    if isinstance(raw_targets, list):
+        targets = [target for target in (float_or_none(item) for item in raw_targets) if target is not None]
+    if direction == 'long':
+        targets = sorted(target for target in targets if target > high)
+        if stop_loss >= low or not targets:
+            return None
+    else:
+        targets = sorted((target for target in targets if target < low), reverse=True)
+        if stop_loss <= high or not targets:
+            return None
+    return {
+        'low': low,
+        'high': high,
+        'stop_loss': stop_loss,
+        'targets': targets,
+        'label': str(raw_zone.get('label', '')).strip(),
+    }
+
+
+def wait_perps_thesis(video_id: str, reason: str, generated_at: datetime | None = None) -> dict:
+    now = generated_at or datetime.now(UTC)
+    return {
+        'schema_version': 1,
+        'source': 'beecthor-summary-phone',
+        'symbol': 'BTCUSDT',
+        'video_id': video_id,
+        'video_url': f'https://www.youtube.com/watch?v={video_id}' if video_id else '',
+        'generated_at': utc_iso(now),
+        'created_at': utc_iso(now),
+        'valid_until': utc_iso(now + timedelta(hours=MAX_PERPS_THESIS_VALID_HOURS)),
+        'macro_bias': 'unknown',
+        'preferred_setup': 'wait',
+        'confidence': 0.0,
+        'long_zones': [],
+        'short_zones': [],
+        'invalidation_levels': [],
+        'no_trade_conditions': [reason],
+        'notes': reason,
+    }
+
+
+def normalize_perps_thesis(payload: object, video_id: str) -> dict:
+    if not isinstance(payload, dict):
+        return wait_perps_thesis(video_id, 'LLM did not return a perps_thesis object.')
+
+    generated_at = parse_utc_datetime(payload.get('generated_at')) or datetime.now(UTC)
+    max_valid_until = generated_at + timedelta(hours=MAX_PERPS_THESIS_VALID_HOURS)
+    valid_until = parse_utc_datetime(payload.get('valid_until')) or max_valid_until
+    if valid_until > max_valid_until:
+        valid_until = max_valid_until
+
+    preferred_setup = str(payload.get('preferred_setup', 'wait')).strip().lower()
+    if preferred_setup in WAIT_PERPS_SETUPS:
+        preferred_setup = 'wait'
+    macro_bias = str(payload.get('macro_bias', 'unknown')).strip().lower()
+    if macro_bias not in SUPPORTED_MACRO_BIASES:
+        macro_bias = 'unknown'
+
+    long_zones = [
+        zone
+        for zone in (normalize_zone(raw_zone, 'long') for raw_zone in payload.get('long_zones', []) or [])
+        if zone is not None
+    ]
+    short_zones = [
+        zone
+        for zone in (normalize_zone(raw_zone, 'short') for raw_zone in payload.get('short_zones', []) or [])
+        if zone is not None
+    ]
+
+    if preferred_setup not in SUPPORTED_PERPS_SETUPS:
+        return wait_perps_thesis(video_id, f'Unsupported perps setup from LLM: {preferred_setup}', generated_at)
+    if preferred_setup in LONG_PERPS_SETUPS and not long_zones:
+        return wait_perps_thesis(video_id, 'Long setup returned without any valid long zone.', generated_at)
+    if preferred_setup in SHORT_PERPS_SETUPS and not short_zones:
+        return wait_perps_thesis(video_id, 'Short setup returned without any valid short zone.', generated_at)
+    if preferred_setup == 'wait':
+        long_zones = []
+        short_zones = []
+
+    confidence = float_or_none(payload.get('confidence'))
+    confidence = 0.0 if confidence is None else max(0.0, min(1.0, confidence))
+    invalidation_levels = payload.get('invalidation_levels', [])
+    if not isinstance(invalidation_levels, list):
+        invalidation_levels = []
+
+    return {
+        'schema_version': 1,
+        'source': 'beecthor-summary-phone',
+        'symbol': 'BTCUSDT',
+        'video_id': video_id,
+        'video_url': f'https://www.youtube.com/watch?v={video_id}',
+        'generated_at': utc_iso(generated_at),
+        'created_at': utc_iso(generated_at),
+        'valid_until': utc_iso(valid_until),
+        'macro_bias': macro_bias,
+        'preferred_setup': preferred_setup,
+        'confidence': confidence,
+        'long_zones': long_zones,
+        'short_zones': short_zones,
+        'invalidation_levels': invalidation_levels,
+        'no_trade_conditions': text_list(payload.get('no_trade_conditions')),
+        'notes': str(payload.get('notes', '')).strip(),
+    }
+
+
+def save_perps_thesis(video_id: str, thesis: dict) -> Path:
+    PERPS_THESES_DIR.mkdir(parents=True, exist_ok=True)
+    normalized = normalize_perps_thesis(thesis, video_id)
+    date_str = datetime.now(UTC).strftime('%Y-%m-%d')
+    history_path = PERPS_THESES_DIR / f'{date_str}_{video_id}.json'
+    serialized = json.dumps(normalized, ensure_ascii=False, indent=2)
+    history_path.write_text(serialized + '\n', encoding='utf-8')
+    LATEST_PERPS_THESIS_FILE.write_text(serialized + '\n', encoding='utf-8')
+    print(f'[summarizer] Perps thesis saved: {history_path}')
+    return history_path
 
 
 class TranscriptRetryableError(RuntimeError):
@@ -203,6 +381,58 @@ def send_telegram_message(text: str, video_id: str = '') -> None:
     if not data.get('ok'):
         raise RuntimeError(f'Telegram API rejected message: {data}')
     print(f'[summarizer] Telegram message sent ({len(text)} chars).')
+
+
+def server_git_pull_url() -> str:
+    if SERVER_GIT_PULL_API_URL:
+        return SERVER_GIT_PULL_API_URL
+    if not SERVER_LOG_API_URL:
+        return ''
+    parts = urlsplit(SERVER_LOG_API_URL)
+    if not parts.scheme or not parts.netloc:
+        return ''
+    return urlunsplit((parts.scheme, parts.netloc, '/api/mobile/git-pull', '', ''))
+
+
+def request_server_git_pull(video_id: str) -> bool:
+    url = server_git_pull_url()
+    if not url or not SERVER_LOG_API_SECRET:
+        print('[summarizer] Server git pull request skipped: API URL/secret not configured.')
+        return False
+
+    payload = {
+        'secret': SERVER_LOG_API_SECRET,
+        'source': 'phone.summarizer',
+        'reason': 'summary_pushed',
+        'video_id': video_id,
+    }
+    try:
+        response = requests.post(url, json=payload, headers={'X-Log-Secret': SERVER_LOG_API_SECRET}, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as exc:
+        print(f'[summarizer] Server git pull request failed: {shorten_error(exc)}')
+        send_server_log(
+            'phone.summarizer',
+            'server_git_pull_failed',
+            'Server git pull request failed after summary push',
+            level='warning',
+            payload={'video_id': video_id, 'error': shorten_error(exc)},
+        )
+        return False
+
+    if data.get('ok'):
+        print(f"[summarizer] Server git pull completed: {data.get('before_head', '')} -> {data.get('after_head', '')}")
+        send_server_log(
+            'phone.summarizer',
+            'server_git_pull_completed',
+            'Server git pull completed after summary push',
+            payload={'video_id': video_id, 'before_head': data.get('before_head', ''), 'after_head': data.get('after_head', '')},
+        )
+        return True
+
+    print(f"[summarizer] Server git pull rejected: {data.get('error') or data.get('stderr') or data}")
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -367,9 +597,10 @@ The following values are already computed — embed them exactly in the message 
 TRANSCRIPT:
 {transcript[:14000]}
 
-Return ONLY a valid JSON object with exactly two fields:
+Return ONLY a valid JSON object with exactly three fields:
 - "robot_score": float
 - "message": string (full Telegram HTML message)
+- "perps_thesis": object for a deterministic BTCUSDT perpetual futures bot. Use English enum values and numeric prices only. If the transcript is ambiguous, set preferred_setup to "wait" and leave long_zones and short_zones empty. Supported preferred_setup values are: wait, short_resistance_bearish_regime, short_resistance, short_rejection, long_support_sweep_reclaim, long_support, sweep_reclaim_long. Include exactly these fields: schema_version, symbol, video_id, generated_at, valid_until, macro_bias, preferred_setup, confidence, long_zones, short_zones, invalidation_levels, no_trade_conditions, notes. Each zone must contain low, high, stop_loss, targets, label. Long targets must be above the zone and long stop_loss below the zone. Short targets must be below the zone and short stop_loss above the zone. valid_until must be no more than 48 hours after generated_at. Never invent precise levels not supported by the transcript; prefer wait when unsure.
 
 Do not include timestamp, video_id, video_url, btc_usd, etc. — the script adds those.
 Do not wrap the JSON in markdown code blocks.
@@ -430,8 +661,13 @@ def git_commit_and_push(video_id: str, transcript: str) -> None:
     transcript_path.write_text(transcript, encoding='utf-8')
 
     env = git_env()
+    files_to_add = [str(ANALYSES_LOG), str(transcript_path)]
+    files_to_add.extend(str(path) for path in PERPS_THESES_DIR.glob(f'*_{video_id}.json'))
+    if LATEST_PERPS_THESIS_FILE.exists():
+        files_to_add.append(str(LATEST_PERPS_THESIS_FILE))
+
     subprocess.run(
-        ['git', '-C', str(REPO_DIR), 'add', str(ANALYSES_LOG), str(transcript_path)],
+        ['git', '-C', str(REPO_DIR), 'add', *files_to_add],
         check=True, env=env,
     )
     subprocess.run(
@@ -476,7 +712,7 @@ def git_pull_rebase_if_configured() -> None:
         print(f'[summarizer] git pull skipped: {exc}')
 
 
-def build_summary_entry(video_id: str) -> tuple[dict, str]:
+def build_summary_entry(video_id: str) -> tuple[dict, str, dict]:
     print('[summarizer] Downloading transcript...')
     transcript = get_transcript(video_id)
     print(f'[summarizer] Transcript length: {len(transcript)} chars')
@@ -494,6 +730,7 @@ def build_summary_entry(video_id: str) -> tuple[dict, str]:
     prompt = build_prompt(transcript, examples, prices, prev_prices, video_id)
     result = run_copilot(prompt)
     print('[summarizer] Copilot done.')
+    perps_thesis = normalize_perps_thesis(result.get('perps_thesis'), video_id)
 
     entry = {
         'timestamp': now_utc(),
@@ -507,16 +744,16 @@ def build_summary_entry(video_id: str) -> tuple[dict, str]:
         'robot_score': result.get('robot_score', 0.0),
         'message': result['message'],
     }
-    return entry, transcript
+    return entry, transcript, perps_thesis
 
 
-def build_summary_entry_with_retry(video_id: str) -> tuple[dict, str, int]:
+def build_summary_entry_with_retry(video_id: str) -> tuple[dict, str, dict, int]:
     last_exc: Exception | None = None
 
     for attempt in range(1, TRANSCRIPT_RETRY_ATTEMPTS + 1):
         try:
-            entry, transcript = build_summary_entry(video_id)
-            return entry, transcript, attempt
+            entry, transcript, perps_thesis = build_summary_entry(video_id)
+            return entry, transcript, perps_thesis, attempt
         except Exception as exc:
             last_exc = exc
             if attempt >= TRANSCRIPT_RETRY_ATTEMPTS or not is_retryable_transcript_error(exc):
@@ -547,7 +784,7 @@ def build_summary_entry_with_retry(video_id: str) -> tuple[dict, str, int]:
     raise RuntimeError('Unexpected summarizer retry flow without a result')
 
 
-def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_processed: bool) -> None:
+def write_entry(entry: dict, transcript: str, perps_thesis: dict, send_telegram: bool, update_last_processed: bool) -> None:
     git_pull_rebase_if_configured()
     log = load_log()
     if any(existing.get('video_id') == entry['video_id'] for existing in log):
@@ -561,6 +798,7 @@ def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_p
     log.append(entry)
     ANALYSES_LOG.write_text(json.dumps(log, ensure_ascii=False, indent=2), encoding='utf-8')
     save_transcript(entry['video_id'], transcript)
+    save_perps_thesis(entry['video_id'], perps_thesis)
     print('[summarizer] Entry appended to analyses_log.json')
 
     if update_last_processed:
@@ -569,8 +807,8 @@ def write_entry(entry: dict, transcript: str, send_telegram: bool, update_last_p
 
 def backfill_video(video_id: str) -> None:
     print(f'[summarizer] Backfill mode for {video_id}')
-    entry, transcript = build_summary_entry(video_id)
-    write_entry(entry, transcript, send_telegram=False, update_last_processed=False)
+    entry, transcript, perps_thesis = build_summary_entry(video_id)
+    write_entry(entry, transcript, perps_thesis, send_telegram=False, update_last_processed=False)
     print('[summarizer] Backfill done.')
 
 
@@ -605,8 +843,8 @@ def main() -> None:
         send_server_log('phone.summarizer', 'backfill_completed', 'Backfill stored without Telegram send', payload={'video_id': video_id})
         return
 
-    entry, transcript, attempts = build_summary_entry_with_retry(video_id)
-    write_entry(entry, transcript, send_telegram=True, update_last_processed=True)
+    entry, transcript, perps_thesis, attempts = build_summary_entry_with_retry(video_id)
+    write_entry(entry, transcript, perps_thesis, send_telegram=True, update_last_processed=True)
     if attempts > 1:
         send_server_log(
             'phone.summarizer',
@@ -619,6 +857,8 @@ def main() -> None:
 
     print('[summarizer] Committing and pushing...')
     git_commit_and_push(video_id, transcript)
+    print('[summarizer] Asking server to pull latest summary...')
+    request_server_git_pull(video_id)
     print('[summarizer] Done.')
 
 
