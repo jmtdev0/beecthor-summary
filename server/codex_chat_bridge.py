@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -13,14 +15,18 @@ HistoryLoader = Callable[[], list[dict[str, Any]]]
 HistorySaver = Callable[[list[dict[str, Any]]], None]
 EventLogger = Callable[[str, str, str, str, dict[str, Any] | None], Any]
 
-BRIDGE_DIR = Path(os.environ.get('CODEX_CHAT_BRIDGE_DIR', '/var/lib/codex-chat-bridge'))
+BRIDGE_DIR = Path(os.environ.get('CODEX_CLI_BRIDGE_DIR') or os.environ.get('CODEX_CHAT_BRIDGE_DIR', '/var/lib/codex-cli-bridge'))
 BRIDGE_DIR.mkdir(parents=True, exist_ok=True)
-VSCODE_CHAT_SEND_SCRIPT = Path(os.environ.get('CODEX_CHAT_SEND_SCRIPT', '/root/scripts/vscode_chat_send.sh'))
-BRIDGE_REPLY_WRITER = Path(os.environ.get('CODEX_BRIDGE_REPLY_WRITER', '/root/scripts/codex_bridge_write_reply.sh'))
+SESSION_STATE_PATH = Path(os.environ.get('CODEX_CLI_BRIDGE_SESSION_STATE') or (BRIDGE_DIR / 'session.json'))
+CODEX_CLI = os.environ.get('CODEX_CLI', '/usr/bin/codex')
+CODEX_WORKDIR = Path(os.environ.get('CODEX_CLI_BRIDGE_WORKDIR', '/root'))
+CODEX_MODEL = os.environ.get('CODEX_CLI_BRIDGE_MODEL', 'gpt-5.5')
+CODEX_REASONING_EFFORT = os.environ.get('CODEX_CLI_BRIDGE_REASONING_EFFORT', 'xhigh')
 BRIDGE_TIMEOUT_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_TIMEOUT_SECONDS', '600'))
 BRIDGE_STALE_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_STALE_SECONDS', '1800'))
 BRIDGE_POLL_INTERVAL_MS = int(os.environ.get('CODEX_CHAT_BRIDGE_POLL_INTERVAL_MS', '1500'))
-BRIDGE_SEND_TIMEOUT_SECONDS = int(os.environ.get('CODEX_CHAT_BRIDGE_SEND_TIMEOUT_SECONDS', '90'))
+
+_WORKER_LOCK = threading.Lock()
 
 
 def utc_now() -> str:
@@ -48,6 +54,7 @@ def request_paths(request_id: str) -> dict[str, Path]:
         'prompt': BRIDGE_DIR / f'prompt_{request_id}.txt',
         'reply': BRIDGE_DIR / f'reply_{request_id}.md',
         'meta': BRIDGE_DIR / f'request_{request_id}.json',
+        'log': BRIDGE_DIR / f'codex_{request_id}.log',
     }
 
 
@@ -73,6 +80,16 @@ def iter_request_meta() -> list[dict[str, Any]]:
     return items
 
 
+def load_session_state() -> dict[str, Any]:
+    state = load_json(SESSION_STATE_PATH, {})
+    return state if isinstance(state, dict) else {}
+
+
+def save_session_state(state: dict[str, Any]) -> None:
+    state['updated_at'] = utc_now()
+    save_json(SESSION_STATE_PATH, state)
+
+
 def parse_iso_utc(value: str) -> datetime | None:
     try:
         return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC)
@@ -94,16 +111,19 @@ def active_request_meta() -> dict[str, Any] | None:
     return None
 
 
-def build_bridge_prompt(message: str, request_id: str, reply_file: Path, source_label: str = '/private/chat') -> str:
-    return f"""[webchat request_id={request_id} reply_file={reply_file}]
+def build_bridge_prompt(message: str, request_id: str, source_label: str = '/private/chat') -> str:
+    return f"""[codex-cli-bridge request_id={request_id} source={source_label}]
 
-This message comes from {source_label} and should be treated as part of the same ongoing conversation with Javier.
-Reply normally in this VS Code conversation, and also write the same final user-facing answer as plain UTF-8 text to reply_file.
-If useful, you can write it with this helper:
-{BRIDGE_REPLY_WRITER} {reply_file} <<'EOF'
-<your final answer here>
-EOF
+This prompt comes from Javier through {source_label}. Treat it as part of the same long-running server-side Codex conversation.
 
+Operational context:
+- You are running on Javier's VPS through Codex CLI.
+- Your working root is /root, so you can inspect beecthor-summary, beecthor-perps, and other cloned repositories.
+- When a request targets a repository, read its AGENTS.md or doc/AGENTS.md before changing behavior.
+- You may use the full power of Codex CLI for Javier's requests. Be careful with destructive operations and explain important results clearly.
+- Reply in the user's language unless the user asks otherwise.
+
+User message:
 {message}
 """
 
@@ -165,7 +185,7 @@ def reconcile_bridge_requests(
             continue
         reply_path = Path(meta.get('reply_file') or request_paths(meta['request_id'])['reply'])
         if reply_path.exists():
-            text = reply_path.read_text(encoding='utf-8').strip()
+            text = reply_path.read_text(encoding='utf-8', errors='replace').strip()
             if text:
                 finalize_request(
                     meta,
@@ -177,14 +197,14 @@ def reconcile_bridge_requests(
                     logger=logger,
                     event_type='bridge_completed',
                     level='info',
-                    message='Bridge response captured from Codex session',
+                    message='Bridge response captured from Codex CLI',
                 )
                 continue
         if meta.get('status') == 'pending' and age_seconds(meta.get('created_at', '')) > BRIDGE_TIMEOUT_SECONDS:
             finalize_request(
                 meta,
                 status='timeout',
-                response_text='(timeout — Codex bridge did not produce a reply file in time)',
+                response_text='(timeout - Codex CLI did not produce a reply in time)',
                 timestamp=history_timestamp(),
                 history_loader=history_loader,
                 history_saver=history_saver,
@@ -208,6 +228,160 @@ def prune_stale_bridge_files() -> None:
                 pass
 
 
+def parse_session_id(output: str) -> str:
+    match = re.search(r'session id:\s*([0-9a-fA-F-]{16,})', output or '')
+    return match.group(1) if match else ''
+
+
+def completed_output(stdout: str | bytes | None, stderr: str | bytes | None) -> str:
+    def as_text(value: str | bytes | None) -> str:
+        if value is None:
+            return ''
+        if isinstance(value, bytes):
+            return value.decode('utf-8', errors='replace')
+        return value
+
+    return (as_text(stdout) + '\n' + as_text(stderr)).strip()
+
+
+def codex_command(session_id: str, reply_file: Path) -> list[str]:
+    common = [
+        '--dangerously-bypass-approvals-and-sandbox',
+        '--skip-git-repo-check',
+        '--model',
+        CODEX_MODEL,
+        '-c',
+        f'model_reasoning_effort="{CODEX_REASONING_EFFORT}"',
+        '--output-last-message',
+        str(reply_file),
+    ]
+    if session_id:
+        return [CODEX_CLI, 'exec', 'resume', *common, session_id, '-']
+    return [CODEX_CLI, 'exec', *common, '-C', str(CODEX_WORKDIR), '-']
+
+
+def run_codex_worker(
+    request_id: str,
+    *,
+    history_loader: HistoryLoader,
+    history_saver: HistorySaver,
+    logger: EventLogger | None = None,
+) -> None:
+    with _WORKER_LOCK:
+        meta = load_request_meta(request_id)
+        if not meta or meta.get('status') != 'pending':
+            return
+        paths = request_paths(request_id)
+        session_state = load_session_state()
+        session_id = str(session_state.get('session_id') or '')
+        cmd = codex_command(session_id, paths['reply'])
+        meta['codex_command_mode'] = 'resume' if session_id else 'new'
+        meta['codex_session_id'] = session_id
+        save_request_meta(meta)
+        if logger:
+            logger(
+                'app.chat',
+                'bridge_cli_started',
+                'info',
+                'Codex CLI bridge request started',
+                {'request_id': request_id, 'mode': meta['codex_command_mode'], 'workdir': str(CODEX_WORKDIR), 'model': CODEX_MODEL},
+            )
+        try:
+            prompt_text = paths['prompt'].read_text(encoding='utf-8')
+            result = subprocess.run(
+                cmd,
+                input=prompt_text,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                timeout=BRIDGE_TIMEOUT_SECONDS,
+                cwd=str(CODEX_WORKDIR),
+                env={**os.environ, 'HOME': os.environ.get('HOME', str(Path.home())), 'LANG': os.environ.get('LANG', 'en_US.UTF-8'), 'PYTHONIOENCODING': 'utf-8'},
+                check=False,
+            )
+        except FileNotFoundError:
+            finalize_request(
+                meta,
+                status='failed',
+                response_text='(error - Codex CLI was not found on the server)',
+                timestamp=history_timestamp(),
+                history_loader=history_loader,
+                history_saver=history_saver,
+                logger=logger,
+                event_type='bridge_cli_missing',
+                level='error',
+                message='Codex CLI bridge executable not found',
+            )
+            return
+        except subprocess.TimeoutExpired as exc:
+            paths['log'].write_text(completed_output(exc.stdout, exc.stderr), encoding='utf-8')
+            finalize_request(
+                meta,
+                status='timeout',
+                response_text='(timeout - Codex CLI did not finish in time)',
+                timestamp=history_timestamp(),
+                history_loader=history_loader,
+                history_saver=history_saver,
+                logger=logger,
+                event_type='bridge_cli_timeout',
+                level='warning',
+                message='Codex CLI bridge request timed out',
+            )
+            return
+
+        combined_output = completed_output(result.stdout, result.stderr)
+        paths['log'].write_text(combined_output + ('\n' if combined_output else ''), encoding='utf-8')
+        new_session_id = parse_session_id(combined_output)
+        if new_session_id:
+            session_state.update({
+                'session_id': new_session_id,
+                'created_at': session_state.get('created_at') or utc_now(),
+                'last_request_id': request_id,
+                'workdir': str(CODEX_WORKDIR),
+                'model': CODEX_MODEL,
+                'reasoning_effort': CODEX_REASONING_EFFORT,
+            })
+            save_session_state(session_state)
+            meta['codex_session_id'] = new_session_id
+
+        if result.returncode != 0:
+            error_text = combined_output[-2000:] or f'Codex CLI exited with {result.returncode}'
+            finalize_request(
+                meta,
+                status='failed',
+                response_text=f'(error - Codex CLI failed: {error_text})',
+                timestamp=history_timestamp(),
+                history_loader=history_loader,
+                history_saver=history_saver,
+                logger=logger,
+                event_type='bridge_cli_failed',
+                level='error',
+                message='Codex CLI bridge returned a non-zero exit code',
+            )
+            return
+
+        response_text = ''
+        if paths['reply'].exists():
+            response_text = paths['reply'].read_text(encoding='utf-8', errors='replace').strip()
+        if not response_text:
+            response_text = combined_output.strip()
+        if not response_text:
+            response_text = '(sin respuesta)'
+        finalize_request(
+            meta,
+            status='completed',
+            response_text=response_text,
+            timestamp=history_timestamp(),
+            history_loader=history_loader,
+            history_saver=history_saver,
+            logger=logger,
+            event_type='bridge_cli_completed',
+            level='info',
+            message='Codex CLI bridge request completed',
+        )
+
+
 def start_bridge_request(
     message: str,
     *,
@@ -220,11 +394,11 @@ def start_bridge_request(
     prune_stale_bridge_files()
     active = active_request_meta()
     if active:
-        return None, 'Codex bridge busy — wait for the current reply to finish.'
+        return None, 'Codex bridge busy - wait for the current reply to finish.'
 
     request_id = f'bridge-{datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")}-{uuid4().hex[:8]}'
     paths = request_paths(request_id)
-    prompt = build_bridge_prompt(message, request_id, paths['reply'], source_label=source_label)
+    prompt = build_bridge_prompt(message, request_id, source_label=source_label)
     paths['prompt'].write_text(prompt, encoding='utf-8')
 
     timestamp = history_timestamp()
@@ -246,66 +420,20 @@ def start_bridge_request(
         'user_timestamp': timestamp,
         'prompt_file': str(paths['prompt']),
         'reply_file': str(paths['reply']),
+        'log_file': str(paths['log']),
         'source_label': source_label,
         'history_saved': False,
+        'bridge_backend': 'codex_cli',
     }
     save_request_meta(meta)
 
-    try:
-        result = subprocess.run(
-            [str(VSCODE_CHAT_SEND_SCRIPT), '--file', str(paths['prompt'])],
-            capture_output=True,
-            text=True,
-            timeout=BRIDGE_SEND_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except FileNotFoundError:
-        meta = finalize_request(
-            meta,
-            status='failed',
-            response_text='(error — bridge sender script not found)',
-            timestamp=history_timestamp(),
-            history_loader=history_loader,
-            history_saver=history_saver,
-            logger=logger,
-            event_type='bridge_send_failed',
-            level='error',
-            message='Bridge sender script not found',
-        )
-        return meta, None
-    except subprocess.TimeoutExpired:
-        meta = finalize_request(
-            meta,
-            status='failed',
-            response_text='(error — timed out while sending the message to the VS Code Codex session)',
-            timestamp=history_timestamp(),
-            history_loader=history_loader,
-            history_saver=history_saver,
-            logger=logger,
-            event_type='bridge_send_timeout',
-            level='error',
-            message='Bridge sender script timed out',
-        )
-        return meta, None
-
-    if result.returncode != 0:
-        error_text = result.stderr.strip() or result.stdout.strip() or '(unknown bridge sender error)'
-        meta = finalize_request(
-            meta,
-            status='failed',
-            response_text=f'(error — could not deliver the message to the VS Code Codex session: {error_text})',
-            timestamp=history_timestamp(),
-            history_loader=history_loader,
-            history_saver=history_saver,
-            logger=logger,
-            event_type='bridge_send_failed',
-            level='error',
-            message='Bridge sender returned a non-zero exit code',
-        )
-        return meta, None
-
-    if logger:
-        logger('app.chat', 'bridge_sent', 'info', 'Bridge message sent to VS Code Codex session', {'request_id': request_id})
+    thread = threading.Thread(
+        target=run_codex_worker,
+        kwargs={'request_id': request_id, 'history_loader': history_loader, 'history_saver': history_saver, 'logger': logger},
+        name=f'codex-cli-bridge-{request_id}',
+        daemon=True,
+    )
+    thread.start()
     return meta, None
 
 
