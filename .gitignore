@@ -23,6 +23,7 @@ flask.log
 server/*.log
 server/*.bak
 server/copilot_chat.py.*.bak
+data/transcripts/
 data/bitcoinaldia_transcripts/*.vtt
 TIP.md
 # Polymarket assistant secrets

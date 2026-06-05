@@ -3965,6 +3965,28 @@ def api_mobile_beecthor_transcript():
         )
         return jsonify({'ok': False, 'error': 'Transcript too short'}), 400
 
+    if summary_already_exists(video_id):
+        existing_path = find_existing_transcript_path(video_id)
+        append_jsonl_event(
+            'api.mobile',
+            'transcript_duplicate',
+            'Accepted Beecthor transcript upload for an already summarized video',
+            {
+                'source': source,
+                'video_id': video_id,
+                'chars': len(transcript),
+                'transcript_path': display_path(existing_path) if existing_path else '',
+                'job_status': 'already_summarized',
+            },
+        )
+        return jsonify({
+            'ok': True,
+            'video_id': video_id,
+            'transcript_path': display_path(existing_path) if existing_path else '',
+            'metadata': {},
+            'job_status': 'already_summarized',
+        })
+
     transcript_path, metadata = save_uploaded_transcript(video_id, transcript, data)
     status = start_beecthor_summary_job(video_id, transcript_path)
     append_jsonl_event(
@@ -4017,6 +4039,11 @@ def summary_already_exists(video_id: str) -> bool:
         isinstance(entry, dict) and entry.get('video_id') == video_id
         for entry in entries
     )
+
+
+def find_existing_transcript_path(video_id: str) -> Path | None:
+    matches = sorted(TRANSCRIPTS_DIR.glob(f'{video_id}_*.txt'), reverse=True)
+    return matches[0] if matches else None
 
 
 def display_path(path: Path) -> str:
