@@ -45,6 +45,7 @@ load_dotenv()
 
 CHANNEL_URL = "https://www.youtube.com/@Beecthor"
 REPO_ROOT = Path(__file__).parent.parent
+load_dotenv(REPO_ROOT / "polymarket_assistant" / ".env", override=False)
 LAST_VIDEO_FILE = REPO_ROOT / "last_video_id.txt"
 LOG_FILE = REPO_ROOT / "analyses_log.json"
 TRANSCRIPTS_DIR = REPO_ROOT / "transcripts"
