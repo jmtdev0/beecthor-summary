@@ -48,6 +48,8 @@ GH_TOKEN = os.environ.get('GH_TOKEN', '')
 SERVER_LOG_API_URL = os.environ.get('SERVER_LOG_API_URL', '').strip()
 SERVER_LOG_API_SECRET = os.environ.get('SERVER_LOG_API_SECRET', '').strip()
 SERVER_GIT_PULL_API_URL = os.environ.get('SERVER_GIT_PULL_API_URL', '').strip()
+SERVER_TRANSCRIPT_UPLOAD_API_URL = os.environ.get('SERVER_TRANSCRIPT_UPLOAD_API_URL', '').strip()
+SERVER_TRANSCRIPT_UPLOAD_SECRET = os.environ.get('SERVER_TRANSCRIPT_UPLOAD_SECRET', SERVER_LOG_API_SECRET).strip()
 refresh_log_client_config()
 
 
@@ -433,6 +435,86 @@ def request_server_git_pull(video_id: str) -> bool:
 
     print(f"[summarizer] Server git pull rejected: {data.get('error') or data.get('stderr') or data}")
     return False
+
+
+def server_transcript_upload_url() -> str:
+    if SERVER_TRANSCRIPT_UPLOAD_API_URL:
+        return SERVER_TRANSCRIPT_UPLOAD_API_URL
+    if not SERVER_LOG_API_URL:
+        return ''
+    parts = urlsplit(SERVER_LOG_API_URL)
+    if not parts.scheme or not parts.netloc:
+        return ''
+    return urlunsplit((parts.scheme, parts.netloc, '/api/mobile/beecthor-transcript', '', ''))
+
+
+def upload_transcript_to_server(video_id: str, transcript: str) -> dict:
+    url = server_transcript_upload_url()
+    if not url or not SERVER_TRANSCRIPT_UPLOAD_SECRET:
+        raise RuntimeError('Server transcript upload URL/secret not configured.')
+
+    payload = {
+        'secret': SERVER_TRANSCRIPT_UPLOAD_SECRET,
+        'source': 'phone.summarizer',
+        'video_id': video_id,
+        'video_url': f'https://www.youtube.com/watch?v={video_id}',
+        'transcript': transcript,
+        'transcript_chars': len(transcript),
+        'collected_at': now_utc(),
+    }
+    response = requests.post(
+        url,
+        json=payload,
+        headers={
+            'X-Transcript-Secret': SERVER_TRANSCRIPT_UPLOAD_SECRET,
+            'X-Log-Secret': SERVER_TRANSCRIPT_UPLOAD_SECRET,
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    data = response.json()
+    if not data.get('ok'):
+        raise RuntimeError(f"Server transcript upload rejected: {data.get('error') or data}")
+    return data
+
+
+def fetch_transcript_with_retry(video_id: str) -> tuple[str, int]:
+    last_exc: Exception | None = None
+
+    for attempt in range(1, TRANSCRIPT_RETRY_ATTEMPTS + 1):
+        try:
+            transcript = get_transcript(video_id)
+            if not transcript.strip():
+                raise TranscriptRetryableError('Transcript is empty.')
+            return transcript, attempt
+        except Exception as exc:
+            last_exc = exc
+            if attempt >= TRANSCRIPT_RETRY_ATTEMPTS or not is_retryable_transcript_error(exc):
+                raise
+
+            wait_minutes = TRANSCRIPT_RETRY_DELAY_SECONDS // 60
+            print(
+                '[summarizer] Transcript not ready yet. '
+                f'Waiting {wait_minutes} minutes before retry {attempt + 1}/{TRANSCRIPT_RETRY_ATTEMPTS}...'
+            )
+            send_server_log(
+                'phone.summarizer',
+                'transcript_retry_scheduled',
+                'Transcript not ready yet; upload retry scheduled',
+                level='warning',
+                payload={
+                    'video_id': video_id,
+                    'attempt': attempt,
+                    'retry_attempt': attempt + 1,
+                    'retry_in_seconds': TRANSCRIPT_RETRY_DELAY_SECONDS,
+                    'reason': shorten_error(exc),
+                },
+            )
+            time.sleep(TRANSCRIPT_RETRY_DELAY_SECONDS)
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError('Unexpected transcript retry flow without a result')
 
 
 # ---------------------------------------------------------------------------
@@ -843,22 +925,29 @@ def main() -> None:
         send_server_log('phone.summarizer', 'backfill_completed', 'Backfill stored without Telegram send', payload={'video_id': video_id})
         return
 
-    entry, transcript, perps_thesis, attempts = build_summary_entry_with_retry(video_id)
-    write_entry(entry, transcript, perps_thesis, send_telegram=True, update_last_processed=True)
+    print('[summarizer] Downloading transcript for server upload...')
+    transcript, attempts = fetch_transcript_with_retry(video_id)
+    transcript_path = save_transcript(video_id, transcript)
+    print(f'[summarizer] Transcript saved locally: {transcript_path} ({len(transcript)} chars)')
+
+    print('[summarizer] Uploading transcript to server...')
+    upload_result = upload_transcript_to_server(video_id, transcript)
+    save_last_processed_id(video_id)
     if attempts > 1:
         send_server_log(
             'phone.summarizer',
             'retry_succeeded',
-            'Transcript retry succeeded; daily summary stored and sent to Telegram',
-            payload={'video_id': video_id, 'robot_score': entry['robot_score'], 'attempts': attempts},
+            'Transcript retry succeeded; transcript uploaded to server',
+            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': upload_result.get('job_status', '')},
         )
     else:
-        send_server_log('phone.summarizer', 'summary_stored', 'Daily summary stored and sent to Telegram', payload={'video_id': video_id, 'robot_score': entry['robot_score'], 'attempts': attempts})
-
-    print('[summarizer] Committing and pushing...')
-    git_commit_and_push(video_id, transcript)
-    print('[summarizer] Asking server to pull latest summary...')
-    request_server_git_pull(video_id)
+        send_server_log(
+            'phone.summarizer',
+            'transcript_uploaded',
+            'Transcript uploaded to server',
+            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': upload_result.get('job_status', '')},
+        )
+    print(f"[summarizer] Server accepted transcript; job_status={upload_result.get('job_status')}")
     print('[summarizer] Done.')
 
 

@@ -26,6 +26,7 @@ import copy
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,9 @@ TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 MAX_TRANSCRIPT_CHARS = 80_000  # ~80K chars stays safely within the 128K-token context
 MAX_PERPS_THESIS_VALID_HOURS = 48
+MAX_LLM_TRANSCRIPT_CHARS = 14_000
+BEECTHOR_SUMMARY_LLM_PROVIDER = os.environ.get("BEECTHOR_SUMMARY_LLM_PROVIDER", "codex").strip().lower()
+BEECTHOR_CODEX_MODEL = os.environ.get("BEECTHOR_CODEX_MODEL", "").strip()
 
 COINGECKO_PRICE_URL = (
     "https://api.coingecko.com/api/v3/simple/price"
@@ -563,8 +567,149 @@ def save_perps_thesis(video_id: str, thesis: dict) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Copilot CLI summary generation
+# LLM summary generation
 # ---------------------------------------------------------------------------
+
+SUMMARY_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["macro_summary", "resumen", "full_analysis", "perps_thesis"],
+    "properties": {
+        "macro_summary": {"type": "string"},
+        "resumen": {"type": "string"},
+        "full_analysis": {"type": "string"},
+        "perps_thesis": {
+            "type": "object",
+            "additionalProperties": True,
+        },
+    },
+}
+
+
+def build_llm_summary_prompt(
+    transcript: str,
+    robot_score: float,
+    robot_comment: str,
+    video_id: str,
+) -> str:
+    excerpt = transcript[:MAX_LLM_TRANSCRIPT_CHARS]
+    if len(transcript) > MAX_LLM_TRANSCRIPT_CHARS:
+        excerpt += "\n[transcript truncated]"
+
+    return (
+        "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
+        "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
+        f"(robot score: {robot_score:.1f}/10 - {robot_comment}).\n\n"
+        "Return ONLY a valid JSON object with exactly these four fields:\n"
+        '  "macro_summary": 1-2 sentences in Spanish on the macro BTC outlook '
+        "(direction, key levels, bias).\n"
+        '  "resumen": 3-5 bullet lines in Spanish covering macro view, Elliott count/structure, '
+        "key levels, liquidations, and the operational conclusion. Each bullet starts with •\n"
+        '  "full_analysis": a detailed Spanish paragraph covering all technical aspects: Elliott '
+        "wave count, Fibonacci levels, liquidations, Value Area/POC, EMAs, AVWAP, "
+        "supports/resistances, and the operational conclusion.\n"
+        '  "perps_thesis": an object for a deterministic BTCUSDT perpetual futures bot. '
+        "Use English enum values and numeric prices only. If the transcript is ambiguous, "
+        'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
+        "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
+        "short_resistance, short_rejection, long_support_sweep_reclaim, long_support, "
+        "sweep_reclaim_long. The perps_thesis object must contain exactly these fields: "
+        "schema_version, symbol, video_id, generated_at, valid_until, macro_bias, "
+        "preferred_setup, confidence, long_zones, short_zones, invalidation_levels, "
+        "no_trade_conditions, notes. Each zone must contain low, high, stop_loss, targets, label. "
+        "Long targets must be above the zone and long stop_loss below the zone. "
+        "Short targets must be below the zone and short stop_loss above the zone. "
+        "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
+        f'Use video_id "{video_id}" and symbol "BTCUSDT". valid_until must be no more than '
+        f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
+        "The first three fields must be in Spanish. perps_thesis enum/string fields must be in English.\n"
+        "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
+        f"TRANSCRIPT:\n{excerpt}"
+    )
+
+
+def parse_llm_json(raw: str) -> dict:
+    raw = raw.strip()
+    raw = re.sub(r"^```(?:json)?", "", raw).strip()
+    raw = re.sub(r"```$", "", raw).strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        decoder = json.JSONDecoder()
+        for index, char in enumerate(raw):
+            if char != "{":
+                continue
+            try:
+                value, _ = decoder.raw_decode(raw[index:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict):
+                return value
+        raise RuntimeError(f"LLM output did not contain valid JSON:\n{raw[:500]}")
+
+
+def normalize_summary_payload(data: dict, video_id: str) -> tuple[str, str, str, dict]:
+    macro_summary = data.get("macro_summary", "")
+    resumen = data.get("resumen", "")
+    full_analysis = data.get("full_analysis", "")
+    perps_thesis = normalize_perps_thesis(data.get("perps_thesis"), video_id)
+    if not macro_summary or not resumen or not full_analysis:
+        raise RuntimeError(f"LLM JSON missing required fields: {list(data.keys())}")
+    return macro_summary, resumen, full_analysis, perps_thesis
+
+
+def generate_summary_via_codex(
+    transcript: str,
+    robot_score: float,
+    robot_comment: str,
+    video_id: str,
+) -> tuple[str, str, str, dict]:
+    """Call Codex CLI non-interactively to generate the Beecthor summary fields."""
+    codex_bin = shutil.which("codex") or shutil.which("codex.cmd")
+    if not codex_bin:
+        raise RuntimeError("Codex CLI not found in PATH")
+
+    prompt = build_llm_summary_prompt(transcript, robot_score, robot_comment, video_id)
+    env = os.environ.copy()
+    env.setdefault("LANG", "en_US.UTF-8")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+
+    last_message_raw = ""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        schema_path = Path(tmpdir) / "summary_schema.json"
+        last_message_path = Path(tmpdir) / "last_message.json"
+        schema_path.write_text(json.dumps(SUMMARY_OUTPUT_SCHEMA), encoding="utf-8")
+        cmd = [
+            codex_bin,
+            "exec",
+            "--sandbox",
+            "read-only",
+            "--output-schema",
+            str(schema_path),
+            "--output-last-message",
+            str(last_message_path),
+        ]
+        if BEECTHOR_CODEX_MODEL:
+            cmd.extend(["--model", BEECTHOR_CODEX_MODEL])
+        cmd.append("-")
+        result = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=600,
+            check=False,
+        )
+        if last_message_path.exists():
+            last_message_raw = last_message_path.read_text(encoding="utf-8").strip()
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Codex exited {result.returncode}: stdout={result.stdout[:500]} stderr={result.stderr[:500]}"
+        )
+    return normalize_summary_payload(parse_llm_json(last_message_raw or result.stdout), video_id)
+
 
 MAX_COPILOT_TRANSCRIPT_CHARS = 6_000
 
@@ -653,6 +798,22 @@ def generate_summary_via_copilot(
     return macro_summary, resumen, full_analysis, perps_thesis
 
 
+def generate_summary_via_llm(
+    transcript: str,
+    robot_score: float,
+    robot_comment: str,
+    video_id: str,
+) -> tuple[str, str, str, dict]:
+    if BEECTHOR_SUMMARY_LLM_PROVIDER == "copilot":
+        return generate_summary_via_copilot(transcript, robot_score, robot_comment, video_id)
+    if BEECTHOR_SUMMARY_LLM_PROVIDER == "codex":
+        return generate_summary_via_codex(transcript, robot_score, robot_comment, video_id)
+    raise RuntimeError(
+        "Unsupported BEECTHOR_SUMMARY_LLM_PROVIDER: "
+        f"{BEECTHOR_SUMMARY_LLM_PROVIDER!r}. Use 'codex' or 'copilot'."
+    )
+
+
 # ---------------------------------------------------------------------------
 # Message builder
 # ---------------------------------------------------------------------------
@@ -735,10 +896,17 @@ def build_message(
     return "\n".join(lines)
 
 
-def collect_video_context(video_id: str, save_to_disk: bool = True) -> dict:
+def collect_video_context(
+    video_id: str,
+    save_to_disk: bool = True,
+    transcript: str | None = None,
+) -> dict:
     """Collect transcript, prices, and local robot score for agent-authored summaries."""
-    print("Fetching transcript...")
-    transcript = get_transcript(video_id)
+    if transcript is None:
+        print("Fetching transcript...")
+        transcript = get_transcript(video_id)
+    else:
+        print(f"Using provided transcript ({len(transcript)} chars).")
 
     if save_to_disk:
         print("Saving transcript...")
@@ -821,6 +989,9 @@ def append_log_entry(
         entries = json.loads(LOG_FILE.read_text(encoding="utf-8"))
     else:
         entries = []
+    if any(existing.get("video_id") == video_id for existing in entries if isinstance(existing, dict)):
+        print(f"Log entry for {video_id} already exists. Skipping append.")
+        return
 
     entry = {
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -900,12 +1071,38 @@ def run_daily(video_id: str, send_telegram: bool = True) -> None:
     )
 
 
-def run_auto(video_id: str) -> None:
-    """Fully automated flow: collect context, generate summary via Copilot CLI, send and commit."""
-    context = collect_video_context(video_id, save_to_disk=True)
+def log_entry_exists(video_id: str) -> bool:
+    if not LOG_FILE.exists():
+        return False
+    try:
+        entries = json.loads(LOG_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+    return any(entry.get("video_id") == video_id for entry in entries if isinstance(entry, dict))
 
-    print("Generating summary via Copilot CLI...")
-    macro_summary, resumen, full_analysis, perps_thesis = generate_summary_via_copilot(
+
+def infer_video_id_from_transcript_path(path: Path) -> str:
+    stem = path.stem
+    match = re.match(r"(?P<video_id>[A-Za-z0-9_-]+)_\d{4}-\d{2}-\d{2}$", stem)
+    return match.group("video_id") if match else stem
+
+
+def run_auto(video_id: str, transcript_path: Path | None = None) -> None:
+    """Fully automated flow: collect context, generate summary via configured LLM, send and commit."""
+    if log_entry_exists(video_id):
+        print(f"Entry for {video_id} already exists in analyses_log.json. Nothing to do.")
+        return
+
+    provided_transcript = None
+    save_to_disk = True
+    if transcript_path is not None:
+        provided_transcript = transcript_path.read_text(encoding="utf-8")
+        save_to_disk = False
+
+    context = collect_video_context(video_id, save_to_disk=save_to_disk, transcript=provided_transcript)
+
+    print(f"Generating summary via {BEECTHOR_SUMMARY_LLM_PROVIDER}...")
+    macro_summary, resumen, full_analysis, perps_thesis = generate_summary_via_llm(
         context["transcript"],
         context["robot_score"],
         context["robot_comment"],
@@ -949,13 +1146,31 @@ def main() -> None:
         "--auto",
         action="store_true",
         help=(
-            "Fully automated mode: generate summary via Copilot CLI, send to Telegram, "
+            "Fully automated mode: generate summary via the configured LLM, send to Telegram, "
             "and commit without manual intervention."
         ),
+    )
+    parser.add_argument(
+        "--from-transcript",
+        type=Path,
+        help="Use an already saved transcript file instead of downloading from YouTube.",
+    )
+    parser.add_argument(
+        "--video-id",
+        help="Video ID to use with --from-transcript.",
     )
     args = parser.parse_args()
 
     print("=== Beecthor Bitcoin Summary ===")
+
+    if args.from_transcript:
+        transcript_path = args.from_transcript
+        if not transcript_path.exists():
+            raise FileNotFoundError(f"Transcript file not found: {transcript_path}")
+        video_id = args.video_id or infer_video_id_from_transcript_path(transcript_path)
+        print(f"Transcript mode: {transcript_path} -> {video_id}")
+        run_auto(video_id, transcript_path=transcript_path)
+        return
 
     if args.backfill:
         print(f"Backfill mode: {args.backfill}")

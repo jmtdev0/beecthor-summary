@@ -6,6 +6,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -41,6 +42,8 @@ HISTORY_FILE = Path(__file__).resolve().parent / 'copilot_chat_history.json'
 FAVICON_PATH = Path(__file__).resolve().parent / 'favicon.png'
 FAVICON_SOURCE_PATH = Path(__file__).resolve().parent / 'channels4_profile.jpg'
 ANALYSES_LOG_PATH = REPO_ROOT / 'analyses_log.json'
+TRANSCRIPTS_DIR = REPO_ROOT / 'transcripts'
+TRANSCRIPT_METADATA_DIR = REPO_ROOT / 'data' / 'transcripts'
 SIMULATED_SUMMARIES_PATH = REPO_ROOT / 'doc' / 'beecthor_simulations.json'
 BITCOINALDIA_SUMMARIES_PATH = REPO_ROOT / 'data' / 'bitcoinaldia_summaries.json'
 TIP_PATH = REPO_ROOT / 'TIP.md'
@@ -67,6 +70,7 @@ load_dotenv(ENV_FILE)
 CHAT_PASSWORD = os.environ.get('COPILOT_CHAT_PASSWORD', '')
 SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'change-me-in-env')
 MOBILE_LOG_API_SECRET = os.environ.get('MOBILE_LOG_API_SECRET', '')
+MOBILE_TRANSCRIPT_API_SECRET = os.environ.get('MOBILE_TRANSCRIPT_API_SECRET', MOBILE_LOG_API_SECRET)
 POLY_FUNDER = os.environ.get('POLY_FUNDER', '')
 POLY_SIGNER_ADDRESS = os.environ.get('POLY_SIGNER_ADDRESS', '')
 POLY_PRIVATE_KEY = os.environ.get('POLY_PRIVATE_KEY', '')
@@ -3932,6 +3936,59 @@ def api_mobile_log():
     return jsonify({'ok': True, 'stored': stored})
 
 
+@app.route('/api/mobile/beecthor-transcript', methods=['POST'])
+def api_mobile_beecthor_transcript():
+    data = request.get_json(silent=True) or {}
+    provided_secret = (
+        request.headers.get('X-Transcript-Secret', '').strip()
+        or request.headers.get('X-Log-Secret', '').strip()
+        or request.args.get('secret', '').strip()
+        or str(data.get('secret') or '').strip()
+    )
+    if not MOBILE_TRANSCRIPT_API_SECRET or provided_secret != MOBILE_TRANSCRIPT_API_SECRET:
+        append_jsonl_event('api.mobile', 'transcript_rejected', 'warning', 'Rejected Beecthor transcript upload due to invalid secret')
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
+
+    video_id = safe_youtube_video_id(data.get('video_id'))
+    transcript = str(data.get('transcript') or '').strip()
+    source = str(data.get('source') or 'phone.summarizer').strip()
+    if not video_id:
+        append_jsonl_event('api.mobile', 'transcript_invalid', 'warning', 'Rejected Beecthor transcript upload due to invalid video_id', {'source': source})
+        return jsonify({'ok': False, 'error': 'Invalid video_id'}), 400
+    if len(transcript) < 500:
+        append_jsonl_event(
+            'api.mobile',
+            'transcript_invalid',
+            'warning',
+            'Rejected Beecthor transcript upload because transcript is too short',
+            {'source': source, 'video_id': video_id, 'chars': len(transcript)},
+        )
+        return jsonify({'ok': False, 'error': 'Transcript too short'}), 400
+
+    transcript_path, metadata = save_uploaded_transcript(video_id, transcript, data)
+    status = start_beecthor_summary_job(video_id, transcript_path)
+    append_jsonl_event(
+        'api.mobile',
+        'transcript_received',
+        'info',
+        'Accepted Beecthor transcript upload',
+        {
+            'source': source,
+            'video_id': video_id,
+            'chars': len(transcript),
+            'transcript_path': str(transcript_path),
+            'job_status': status,
+        },
+    )
+    return jsonify({
+        'ok': True,
+        'video_id': video_id,
+        'transcript_path': display_path(transcript_path),
+        'metadata': metadata,
+        'job_status': status,
+    })
+
+
 def git_head(ref: str = 'HEAD') -> str:
     try:
         result = subprocess.run(
@@ -3945,6 +4002,163 @@ def git_head(ref: str = 'HEAD') -> str:
     if result.returncode != 0:
         return ''
     return (result.stdout or '').strip()
+
+
+def safe_youtube_video_id(value: object) -> str:
+    video_id = str(value or '').strip()
+    if not re.fullmatch(r'[A-Za-z0-9_-]{6,32}', video_id):
+        return ''
+    return video_id
+
+
+def summary_already_exists(video_id: str) -> bool:
+    entries = load_json(ANALYSES_LOG_PATH, [])
+    return any(
+        isinstance(entry, dict) and entry.get('video_id') == video_id
+        for entry in entries
+    )
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
+def transcript_metadata(video_id: str, transcript_path: Path, data: dict[str, Any]) -> dict[str, Any]:
+    now = utc_now()
+    return {
+        'video_id': video_id,
+        'video_url': f'https://www.youtube.com/watch?v={video_id}',
+        'transcript_path': display_path(transcript_path),
+        'transcript_chars': len(transcript_path.read_text(encoding='utf-8')),
+        'received_at': now,
+        'collected_at': str(data.get('collected_at') or now),
+        'source': str(data.get('source') or 'phone.summarizer'),
+        'title': str(data.get('title') or '').strip(),
+        'published_at': str(data.get('published_at') or '').strip(),
+    }
+
+
+def save_uploaded_transcript(video_id: str, transcript: str, data: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
+    TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+    TRANSCRIPT_METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    date_str = datetime.now(UTC).strftime('%Y-%m-%d')
+    transcript_path = TRANSCRIPTS_DIR / f'{video_id}_{date_str}.txt'
+    transcript_path.write_text(transcript.rstrip() + '\n', encoding='utf-8')
+    metadata = transcript_metadata(video_id, transcript_path, data)
+    metadata_path = TRANSCRIPT_METADATA_DIR / f'{date_str}_{video_id}.json'
+    serialized = json.dumps(metadata, ensure_ascii=False, indent=2) + '\n'
+    metadata_path.write_text(serialized, encoding='utf-8')
+    (TRANSCRIPT_METADATA_DIR / 'latest.json').write_text(serialized, encoding='utf-8')
+    return transcript_path, metadata
+
+
+def beecthor_summary_lock_path(video_id: str) -> Path:
+    return LOG_DIR / f'beecthor_summary_{video_id}.lock'
+
+
+def beecthor_summary_log_path(video_id: str) -> Path:
+    return LOG_DIR / f'beecthor_summary_{video_id}.log'
+
+
+def beecthor_summary_job_is_running(video_id: str) -> bool:
+    lock_path = beecthor_summary_lock_path(video_id)
+    if not lock_path.exists():
+        return False
+    try:
+        payload = json.loads(lock_path.read_text(encoding='utf-8'))
+        started_at = datetime.fromisoformat(str(payload.get('started_at', '')).replace('Z', '+00:00'))
+        if datetime.now(UTC) - started_at > timedelta(hours=2):
+            lock_path.unlink(missing_ok=True)
+            return False
+    except Exception:
+        return True
+    return True
+
+
+def run_beecthor_summary_job(video_id: str, transcript_path: Path) -> None:
+    lock_path = beecthor_summary_lock_path(video_id)
+    log_path = beecthor_summary_log_path(video_id)
+    cmd = [
+        sys.executable,
+        str(REPO_ROOT / 'scripts' / 'summarize_beecthor.py'),
+        '--from-transcript',
+        str(transcript_path),
+        '--video-id',
+        video_id,
+    ]
+    env = os.environ.copy()
+    env.setdefault('BEECTHOR_SUMMARY_LLM_PROVIDER', 'codex')
+    lock_payload = {
+        'video_id': video_id,
+        'transcript_path': str(transcript_path),
+        'started_at': utc_now(),
+        'cmd': cmd,
+    }
+    lock_path.write_text(json.dumps(lock_payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    append_jsonl_event(
+        'api.mobile',
+        'beecthor_summary_started',
+        'info',
+        'Started Beecthor summary job from uploaded transcript',
+        {'video_id': video_id, 'transcript_path': str(transcript_path), 'log_path': str(log_path)},
+    )
+    try:
+        with log_path.open('a', encoding='utf-8') as handle:
+            handle.write(f'\n[{utc_now()}] START {" ".join(shlex.quote(part) for part in cmd)}\n')
+            result = subprocess.run(
+                cmd,
+                cwd=REPO_ROOT,
+                env=env,
+                stdout=handle,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=900,
+            )
+            handle.write(f'[{utc_now()}] EXIT {result.returncode}\n')
+        if result.returncode == 0:
+            append_jsonl_event(
+                'api.mobile',
+                'beecthor_summary_completed',
+                'info',
+                'Beecthor summary job completed',
+                {'video_id': video_id, 'log_path': str(log_path)},
+            )
+        else:
+            append_jsonl_event(
+                'api.mobile',
+                'beecthor_summary_failed',
+                'error',
+                'Beecthor summary job exited with a non-zero code',
+                {'video_id': video_id, 'exit_code': result.returncode, 'log_path': str(log_path)},
+            )
+    except Exception as exc:
+        append_jsonl_event(
+            'api.mobile',
+            'beecthor_summary_error',
+            'error',
+            f'Beecthor summary job crashed: {exc}',
+            {'video_id': video_id, 'log_path': str(log_path)},
+        )
+    finally:
+        lock_path.unlink(missing_ok=True)
+
+
+def start_beecthor_summary_job(video_id: str, transcript_path: Path) -> str:
+    if summary_already_exists(video_id):
+        return 'already_summarized'
+    if beecthor_summary_job_is_running(video_id):
+        return 'already_running'
+    thread = threading.Thread(
+        target=run_beecthor_summary_job,
+        args=(video_id, transcript_path),
+        name=f'beecthor-summary-{video_id}',
+        daemon=True,
+    )
+    thread.start()
+    return 'started'
 
 
 @app.route('/api/mobile/git-pull', methods=['POST'])
@@ -4024,5 +4238,7 @@ if __name__ == '__main__':
         print('[dashboard] WARNING: COPILOT_CHAT_PASSWORD not set — private area is unsafe.')
     if not MOBILE_LOG_API_SECRET:
         print('[dashboard] WARNING: MOBILE_LOG_API_SECRET not set — mobile log endpoint will reject all events.')
+    if not MOBILE_TRANSCRIPT_API_SECRET:
+        print('[dashboard] WARNING: MOBILE_TRANSCRIPT_API_SECRET not set — mobile transcript endpoint will reject uploads.')
     start_telegram_bridge_thread()
     app.run(host='0.0.0.0', port=5050, debug=False)
