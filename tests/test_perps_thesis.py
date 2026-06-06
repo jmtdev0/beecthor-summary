@@ -19,7 +19,7 @@ class PerpsThesisTests(unittest.TestCase):
         thesis = summary.normalize_perps_thesis(
             {
                 "schema_version": 1,
-                "symbol": "BTCUSDT",
+                "symbol": "BTCUSDC",
                 "video_id": "abc123",
                 "generated_at": "2026-05-31T10:00:00Z",
                 "valid_until": "2026-06-01T10:00:00Z",
@@ -44,8 +44,19 @@ class PerpsThesisTests(unittest.TestCase):
         )
 
         self.assertEqual(thesis["preferred_setup"], "short_resistance_bearish_regime")
+        self.assertEqual(thesis["symbol"], "BTCUSDC")
         self.assertEqual(thesis["short_zones"][0]["targets"], [75500.0, 73000.0])
         self.assertEqual(thesis["long_zones"], [])
+
+    def test_summary_schema_is_strict_for_perps_thesis(self):
+        perps_schema = summary.SUMMARY_OUTPUT_SCHEMA["properties"]["perps_thesis"]
+
+        self.assertEqual(perps_schema["additionalProperties"], False)
+        self.assertEqual(perps_schema["properties"]["symbol"]["enum"], ["BTCUSDC"])
+        self.assertEqual(
+            perps_schema["properties"]["long_zones"]["items"]["additionalProperties"],
+            False,
+        )
 
     def test_falls_back_to_wait_when_setup_has_no_valid_zone(self):
         thesis = summary.normalize_perps_thesis(

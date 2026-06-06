@@ -60,6 +60,7 @@ MAX_PERPS_THESIS_VALID_HOURS = 48
 MAX_LLM_TRANSCRIPT_CHARS = 14_000
 BEECTHOR_SUMMARY_LLM_PROVIDER = os.environ.get("BEECTHOR_SUMMARY_LLM_PROVIDER", "codex").strip().lower()
 BEECTHOR_CODEX_MODEL = os.environ.get("BEECTHOR_CODEX_MODEL", "").strip()
+BEECTHOR_PERPS_SYMBOL = os.environ.get("BEECTHOR_PERPS_SYMBOL", "BTCUSDC").strip().upper() or "BTCUSDC"
 
 COINGECKO_PRICE_URL = (
     "https://api.coingecko.com/api/v3/simple/price"
@@ -458,7 +459,7 @@ def _wait_perps_thesis(video_id: str, reason: str, generated_at: datetime | None
     return {
         "schema_version": 1,
         "source": "beecthor-summary",
-        "symbol": "BTCUSDT",
+        "symbol": BEECTHOR_PERPS_SYMBOL,
         "video_id": video_id,
         "video_url": f"https://www.youtube.com/watch?v={video_id}" if video_id else "",
         "generated_at": _utc_iso(now),
@@ -536,7 +537,7 @@ def normalize_perps_thesis(payload: object, video_id: str) -> dict:
     return {
         "schema_version": 1,
         "source": "beecthor-summary",
-        "symbol": "BTCUSDT",
+        "symbol": BEECTHOR_PERPS_SYMBOL,
         "video_id": safe_video_id,
         "video_url": f"https://www.youtube.com/watch?v={safe_video_id}" if safe_video_id else "",
         "generated_at": _utc_iso(generated_at),
@@ -571,6 +572,56 @@ def save_perps_thesis(video_id: str, thesis: dict) -> Path:
 # LLM summary generation
 # ---------------------------------------------------------------------------
 
+PERPS_ZONE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["low", "high", "stop_loss", "targets", "label"],
+    "properties": {
+        "low": {"type": "number"},
+        "high": {"type": "number"},
+        "stop_loss": {"type": "number"},
+        "targets": {"type": "array", "items": {"type": "number"}},
+        "label": {"type": "string"},
+    },
+}
+
+
+PERPS_THESIS_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "schema_version",
+        "symbol",
+        "video_id",
+        "generated_at",
+        "valid_until",
+        "macro_bias",
+        "preferred_setup",
+        "confidence",
+        "long_zones",
+        "short_zones",
+        "invalidation_levels",
+        "no_trade_conditions",
+        "notes",
+    ],
+    "properties": {
+        "schema_version": {"type": "integer"},
+        "symbol": {"type": "string", "enum": [BEECTHOR_PERPS_SYMBOL]},
+        "video_id": {"type": "string"},
+        "generated_at": {"type": "string"},
+        "valid_until": {"type": "string"},
+        "macro_bias": {"type": "string"},
+        "preferred_setup": {"type": "string"},
+        "confidence": {"type": "number"},
+        "long_zones": {"type": "array", "items": PERPS_ZONE_OUTPUT_SCHEMA},
+        "short_zones": {"type": "array", "items": PERPS_ZONE_OUTPUT_SCHEMA},
+        "invalidation_levels": {"type": "array", "items": {"type": "number"}},
+        "no_trade_conditions": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"},
+    },
+}
+
+
 SUMMARY_OUTPUT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -579,10 +630,7 @@ SUMMARY_OUTPUT_SCHEMA = {
         "macro_summary": {"type": "string"},
         "resumen": {"type": "string"},
         "full_analysis": {"type": "string"},
-        "perps_thesis": {
-            "type": "object",
-            "additionalProperties": True,
-        },
+        "perps_thesis": PERPS_THESIS_OUTPUT_SCHEMA,
     },
 }
 
@@ -609,7 +657,7 @@ def build_llm_summary_prompt(
         '  "full_analysis": a detailed Spanish paragraph covering all technical aspects: Elliott '
         "wave count, Fibonacci levels, liquidations, Value Area/POC, EMAs, AVWAP, "
         "supports/resistances, and the operational conclusion.\n"
-        '  "perps_thesis": an object for a deterministic BTCUSDT perpetual futures bot. '
+        f'  "perps_thesis": an object for a deterministic {BEECTHOR_PERPS_SYMBOL} perpetual futures bot. '
         "Use English enum values and numeric prices only. If the transcript is ambiguous, "
         'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
         "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
@@ -621,7 +669,7 @@ def build_llm_summary_prompt(
         "Long targets must be above the zone and long stop_loss below the zone. "
         "Short targets must be below the zone and short stop_loss above the zone. "
         "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
-        f'Use video_id "{video_id}" and symbol "BTCUSDT". valid_until must be no more than '
+        f'Use video_id "{video_id}" and symbol "{BEECTHOR_PERPS_SYMBOL}". valid_until must be no more than '
         f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
         "The first three fields must be in Spanish. perps_thesis enum/string fields must be in English.\n"
         "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
@@ -707,7 +755,7 @@ def generate_summary_via_codex(
 
     if result.returncode != 0:
         raise RuntimeError(
-            f"Codex exited {result.returncode}: stdout={result.stdout[:500]} stderr={result.stderr[:500]}"
+            f"Codex exited {result.returncode}: stdout={result.stdout[:4000]} stderr={result.stderr[:4000]}"
         )
     return normalize_summary_payload(parse_llm_json(last_message_raw or result.stdout), video_id)
 
@@ -741,7 +789,7 @@ def generate_summary_via_copilot(
         '  "full_analysis": a detailed paragraph covering all technical aspects: Elliott wave count, '
         "Fibonacci levels, liquidations, Value Area/POC, EMAs, AVWAP, supports/resistances, "
         "and the operational conclusion\n"
-        '  "perps_thesis": an object for a deterministic BTCUSDT perpetual futures bot. '
+        f'  "perps_thesis": an object for a deterministic {BEECTHOR_PERPS_SYMBOL} perpetual futures bot. '
         "Use English enum values and numeric prices only. If the transcript is ambiguous, "
         'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
         "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
@@ -753,7 +801,7 @@ def generate_summary_via_copilot(
         "Long targets must be above the zone and long stop_loss below the zone. "
         "Short targets must be below the zone and short stop_loss above the zone. "
         "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
-        f'Use video_id "{video_id}" and symbol "BTCUSDT". valid_until must be no more than '
+        f'Use video_id "{video_id}" and symbol "{BEECTHOR_PERPS_SYMBOL}". valid_until must be no more than '
         f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
         "The first three fields must be in Spanish. perps_thesis enum/string fields must be in English.\n"
         "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
