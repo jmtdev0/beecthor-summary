@@ -19,6 +19,7 @@ This project summarizes Beecthor's daily Bitcoin videos and turns them into Tele
 - Do not send Telegram messages during preview-only requests.
 - If the user asks to see the message first, generate and paste the preview in chat, then wait for approval before sending.
 - Keep the visible message header useful: prices, explicit macro view, robot score, and a short operational summary.
+- Include a visible `Perps Tip` above the macro view when the transcript supports a conditional setup. If not, say there is no clear long/short opening and recommend waiting.
 - Keep commits and changelog entries focused on relevant daily or structural changes.
 
 ## Message Quality Bar
@@ -35,6 +36,7 @@ This project summarizes Beecthor's daily Bitcoin videos and turns them into Tele
   - EMAs
   - anchored AVWAP
   - strategy and invalidation levels
+- `doc/BEECThOR_SUMMARY_STYLE.md` is the canonical structure guide for this spoiler block.
 - Include only the sections that are clearly supported by the transcript.
 - Avoid generic market filler that could fit any Bitcoin video.
 - Robot score and justification must come from local transcript-based reasoning.

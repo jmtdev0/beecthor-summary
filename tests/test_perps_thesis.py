@@ -51,6 +51,7 @@ class PerpsThesisTests(unittest.TestCase):
     def test_summary_schema_is_strict_for_perps_thesis(self):
         perps_schema = summary.SUMMARY_OUTPUT_SCHEMA["properties"]["perps_thesis"]
 
+        self.assertIn("perps_tip", summary.SUMMARY_OUTPUT_SCHEMA["required"])
         self.assertEqual(perps_schema["additionalProperties"], False)
         self.assertEqual(perps_schema["properties"]["symbol"]["enum"], ["BTCUSDC"])
         self.assertEqual(
@@ -90,6 +91,25 @@ class PerpsThesisTests(unittest.TestCase):
             finally:
                 summary.PERPS_THESES_DIR = original_dir
                 summary.LATEST_PERPS_THESIS_FILE = original_latest
+
+    def test_summary_style_accepts_structured_spoiler(self):
+        full_analysis = (
+            "📊 <b>Situación actual</b>\nBTC está en zona de decisión.\n\n"
+            "🎯 <b>Escenario principal</b>\nEsperar rechazo en resistencia.\n\n"
+            "⚠️ <b>Niveles clave</b>\nSoporte 61.000; resistencia 65.000."
+        )
+
+        self.assertEqual(summary.count_summary_section_headings(full_analysis), 3)
+        summary.validate_summary_style(full_analysis)
+
+    def test_summary_style_rejects_unstructured_paragraph(self):
+        full_analysis = (
+            "El análisis plantea que BTC sigue dentro de una estructura correctiva bajista mayor, "
+            "con zonas relevantes en <b>65.000</b> y <b>67.800</b>, pero sin separar los apartados."
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "section format"):
+            summary.validate_summary_style(full_analysis)
 
 
 if __name__ == "__main__":

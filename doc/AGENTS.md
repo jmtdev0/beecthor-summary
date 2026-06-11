@@ -33,7 +33,9 @@ When the user asks for a new daily run:
 - Tier 2 (`yt-dlp` VTT) is usually the reliable path.
 - Without Groq, there is no audio transcription fallback; if Tiers 1-3 fail, the agent must report that the transcript could not be obtained automatically.
 - The Telegram message should keep prices, a visible short-term summary, a visible macro view, and the robot score above the `<tg-spoiler>` block.
+- When possible, include a visible `Perps Tip` above the macro view: one concise conditional long/short idea derived only from Beecthor's video thesis. If no clear setup exists, it should say to wait / keep hands off.
 - The spoiler block should summarize the usual Beecthor sections adaptively: context for newcomers, macro count, current 4h count, liquidations, Fibonacci, Value Area/POC, EMAs, AVWAP, and operational conclusion when they are clearly present.
+- Use `doc/BEECThOR_SUMMARY_STYLE.md` as the canonical editorial guide for the spoiler section. Preserve its section order when the transcript supports it, but do not force unsupported sections.
 - The robot score and justification should be computed locally from the transcript, and the actual summary text should be written by the agent in chat.
 
 ## Repo-Specific Context

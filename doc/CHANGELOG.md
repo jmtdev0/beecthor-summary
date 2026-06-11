@@ -1,5 +1,11 @@
 # Changelog
 
+### 10/06/2026
+* Añadida `doc/BEECThOR_SUMMARY_STYLE.md` como guía editorial canónica para los resúmenes diarios de Beecthor: el spoiler debe intentar mantener apartados como situación actual, escenario principal, alternativa, macro, niveles técnicos, liquidaciones, niveles clave y estrategia cuando la transcripción lo permita.
+* El prompt automático de `scripts/summarize_beecthor.py` para Codex/Copilot vuelve a pedir `full_analysis` estructurado en HTML por apartados, evitando el párrafo único que apareció tras el cambio de proveedor.
+* Añadido `Perps Tip` al resumen automático: Codex/Copilot debe proponer una frase operativa condicionada por la tesis del vídeo, o recomendar manos quietas si no hay setup claro; el tip se muestra por encima de la visión macro en Telegram.
+* Validación de formato añadida: el flujo automático rechaza antes de enviar a Telegram cualquier `full_analysis` que no contenga al menos tres encabezados HTML reconocibles.
+
 ### 23/05/2026
 * Estrategia `beecthor-simulation` añadida al selector privado, al prompt operativo y a los mensajes/metadata del ciclo para distinguir tesis sintética de Beecthor real.
 * Monitor de take-profit refinado: las posiciones compradas con precio medio `>=65%` ya no salen al `75%`; se dejan correr hasta `100%` o resolución.
