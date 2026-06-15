@@ -23,6 +23,7 @@ Environment variables (loaded from .env automatically):
 """
 
 import copy
+import html
 import json
 import os
 import re
@@ -61,6 +62,7 @@ MAX_LLM_TRANSCRIPT_CHARS = 14_000
 BEECTHOR_SUMMARY_LLM_PROVIDER = os.environ.get("BEECTHOR_SUMMARY_LLM_PROVIDER", "codex").strip().lower()
 BEECTHOR_CODEX_MODEL = os.environ.get("BEECTHOR_CODEX_MODEL", "").strip()
 BEECTHOR_PERPS_SYMBOL = os.environ.get("BEECTHOR_PERPS_SYMBOL", "BTCUSDC").strip().upper() or "BTCUSDC"
+TELEGRAM_MAX_MESSAGE_CHARS = 3900
 
 COINGECKO_PRICE_URL = (
     "https://api.coingecko.com/api/v3/simple/price"
@@ -970,6 +972,26 @@ def generate_summary_via_llm(
 # ---------------------------------------------------------------------------
 
 
+ALLOWED_TELEGRAM_TAG_RE = re.compile(r"</?(?:b|i|u|s|code|pre)>", flags=re.IGNORECASE)
+
+
+def sanitize_telegram_html_fragment(text: object) -> str:
+    """Escape dynamic LLM text while preserving the small HTML subset we allow."""
+    value = str(text or "")
+    placeholders: dict[str, str] = {}
+
+    def hold_allowed_tag(match: re.Match[str]) -> str:
+        placeholder = f"__TG_HTML_TAG_{len(placeholders)}__"
+        placeholders[placeholder] = match.group(0)
+        return placeholder
+
+    protected = ALLOWED_TELEGRAM_TAG_RE.sub(hold_allowed_tag, value)
+    escaped = html.escape(protected, quote=False)
+    for placeholder, tag in placeholders.items():
+        escaped = escaped.replace(placeholder, tag)
+    return escaped
+
+
 def _fmt_btc(usd: float, eur: float) -> str:
     """Format a BTC price pair with European thousands separator (e.g. 70.492$)."""
     return f"<b>{usd:,.0f}$</b> / <b>{eur:,.0f}€</b>".replace(",", ".")
@@ -1033,22 +1055,22 @@ def build_message(
 
     if perps_tip:
         lines.append("⚡ <b>Perps Tip</b>")
-        lines.append(perps_tip)
+        lines.append(sanitize_telegram_html_fragment(perps_tip))
         lines.append("")
 
     if macro_summary:
         lines.append("🧭 <b>Visión macro</b>")
-        lines.append(macro_summary)
+        lines.append(sanitize_telegram_html_fragment(macro_summary))
         lines.append("")
 
     lines.append(f"🤖 <b>Índice robot: {robot_score:.1f} / 10</b>")
-    lines.append(f"<i>{robot_comment}</i>")
+    lines.append(f"<i>{sanitize_telegram_html_fragment(robot_comment)}</i>")
     lines.append("")
     lines.append("📌 <b>Resumen</b>")
-    lines.append(resumen)
+    lines.append(sanitize_telegram_html_fragment(resumen))
     lines.append("")
     lines.append("🔍 <b>Análisis completo</b> <i>(toca para ver)</i>")
-    lines.append(f"<tg-spoiler>{full_analysis}</tg-spoiler>")
+    lines.append(f"<tg-spoiler>{sanitize_telegram_html_fragment(full_analysis)}</tg-spoiler>")
 
     return "\n".join(lines)
 
@@ -1116,17 +1138,82 @@ def finalize_daily_message(
 # ---------------------------------------------------------------------------
 
 
+def compact_telegram_message(message: str, max_chars: int = TELEGRAM_MAX_MESSAGE_CHARS) -> str:
+    """Keep Telegram delivery under its practical HTML limit without losing the saved full log."""
+    if len(message) <= max_chars:
+        return message
+
+    marker = "\n🔍 <b>Análisis completo</b>"
+    fallback_analysis = (
+        "\n\n🔍 <b>Análisis completo</b>\n"
+        "<tg-spoiler>Resumen completo disponible en la aplicación Flask.</tg-spoiler>"
+    )
+    if marker in message:
+        head = message.split(marker, 1)[0].rstrip()
+        compact = f"{head}{fallback_analysis}"
+        if len(compact) <= max_chars:
+            return compact
+
+    suffix = "\n\n<i>Mensaje recortado por límite de Telegram; resumen completo en la aplicación Flask.</i>"
+    budget = max_chars - len(suffix)
+    cut = message[: max(0, budget)].rstrip()
+    paragraph_cut = cut.rfind("\n\n")
+    if paragraph_cut > 0:
+        cut = cut[:paragraph_cut].rstrip()
+    return f"{cut}{suffix}"
+
+
+def telegram_plain_text_fallback(message: str, max_chars: int = TELEGRAM_MAX_MESSAGE_CHARS) -> str:
+    """Plain text fallback for rare Telegram HTML parser failures."""
+    plain = re.sub(r"</?tg-spoiler>", "", message)
+    plain = re.sub(r"<a\s+href=\"[^\"]+\">([^<]+)</a>", r"\1", plain, flags=re.IGNORECASE)
+    plain = re.sub(r"</?(?:b|i|u|s|code|pre)>", "", plain, flags=re.IGNORECASE)
+    plain = html.unescape(plain)
+    if len(plain) <= max_chars:
+        return plain
+    suffix = "\n\n[Mensaje recortado por límite de Telegram; resumen completo en la aplicación Flask.]"
+    return plain[: max(0, max_chars - len(suffix))].rstrip() + suffix
+
+
+def raise_telegram_error(response: requests.Response) -> None:
+    """Raise a sanitized Telegram error without leaking the bot token in the URL."""
+    try:
+        details = response.json()
+    except ValueError:
+        details = response.text
+    details_text = str(details).replace(TELEGRAM_BOT_TOKEN, "[redacted]")[:500]
+    raise RuntimeError(f"Telegram sendMessage failed with HTTP {response.status_code}: {details_text}")
+
+
 def send_telegram_message(message: str) -> None:
     """Send an HTML-formatted message to the configured Telegram group."""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    safe_message = compact_telegram_message(message)
+    if safe_message != message:
+        print(
+            "Telegram message compacted "
+            f"from {len(message)} to {len(safe_message)} chars before sending."
+        )
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
+        "text": safe_message,
         "parse_mode": "HTML",
         "disable_web_page_preview": False,
     }
     response = requests.post(url, json=payload, timeout=30)
-    response.raise_for_status()
+    if response.ok:
+        print("Message sent to Telegram successfully.")
+        return
+
+    print(f"Telegram HTML send failed with HTTP {response.status_code}; trying plain text fallback.")
+    fallback_payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": telegram_plain_text_fallback(safe_message),
+        "disable_web_page_preview": False,
+    }
+    fallback_response = requests.post(url, json=fallback_payload, timeout=30)
+    if not fallback_response.ok:
+        raise_telegram_error(fallback_response)
     print("Message sent to Telegram successfully.")
 
 

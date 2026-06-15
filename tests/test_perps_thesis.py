@@ -111,6 +111,42 @@ class PerpsThesisTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "section format"):
             summary.validate_summary_style(full_analysis)
 
+    def test_build_message_escapes_llm_text_for_telegram_html(self):
+        message = summary.build_message(
+            video_id="abc123",
+            prices_now={"btc_usd": 63000, "btc_eur": 59000, "sol_usd": 140, "sol_eur": 131},
+            prices_yesterday=None,
+            robot_score=5.5,
+            robot_comment="Riesgo si BTC < 60.000 & volatilidad alta.",
+            resumen="Manos quietas si BTC < 60.000.",
+            macro_summary="BTC < resistencia & sin reclaim.",
+            perps_tip="Si BTC < 60.000, no perseguir el movimiento.",
+            full_analysis=(
+                "📊 <b>Situación actual</b>\nBTC < resistencia.\n\n"
+                "🎯 <b>Escenario principal</b>\nEsperar confirmación.\n\n"
+                "⚠️ <b>Niveles clave</b>\n60.000 & 65.000."
+            ),
+        )
+
+        self.assertIn("BTC &lt; 60.000 &amp; volatilidad alta.", message)
+        self.assertIn("BTC &lt; resistencia &amp; sin reclaim.", message)
+        self.assertIn("📊 <b>Situación actual</b>", message)
+        self.assertIn("BTC &lt; resistencia.", message)
+
+    def test_compact_telegram_message_keeps_visible_summary(self):
+        message = (
+            "🎯 <b>Beecthor — Último vídeo</b>\n\n"
+            "📌 <b>Resumen</b>\nResumen visible.\n\n"
+            "🔍 <b>Análisis completo</b> <i>(toca para ver)</i>\n"
+            f"<tg-spoiler>{'Detalle largo. ' * 500}</tg-spoiler>"
+        )
+
+        compact = summary.compact_telegram_message(message, max_chars=500)
+
+        self.assertLessEqual(len(compact), 500)
+        self.assertIn("Resumen visible.", compact)
+        self.assertIn("Resumen completo disponible en la aplicación Flask.", compact)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -932,22 +932,30 @@ def main() -> None:
 
     print('[summarizer] Uploading transcript to server...')
     upload_result = upload_transcript_to_server(video_id, transcript)
-    save_last_processed_id(video_id)
+    server_job_status = upload_result.get('job_status', '')
+    if server_job_status == 'already_summarized':
+        save_last_processed_id(video_id)
+        print('[summarizer] Server confirms summary already exists; video marked as processed locally.')
+    else:
+        print(
+            '[summarizer] Transcript uploaded; local processed marker will wait '
+            f"for server success (job_status={server_job_status})."
+        )
     if attempts > 1:
         send_server_log(
             'phone.summarizer',
             'retry_succeeded',
             'Transcript retry succeeded; transcript uploaded to server',
-            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': upload_result.get('job_status', '')},
+            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': server_job_status},
         )
     else:
         send_server_log(
             'phone.summarizer',
             'transcript_uploaded',
             'Transcript uploaded to server',
-            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': upload_result.get('job_status', '')},
+            payload={'video_id': video_id, 'attempts': attempts, 'server_job_status': server_job_status},
         )
-    print(f"[summarizer] Server accepted transcript; job_status={upload_result.get('job_status')}")
+    print(f"[summarizer] Server accepted transcript; job_status={server_job_status}")
     print('[summarizer] Done.')
 
 
