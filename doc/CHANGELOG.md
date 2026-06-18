@@ -1,5 +1,9 @@
 # Changelog
 
+### 18/06/2026
+* Completado el backfill histórico de `Perps Tip` para los 60 resúmenes de abril, mayo y junio de 2026 que aún no lo incluían, reconstruyendo cada idea únicamente desde la información disponible en su fecha y sin reenvíos a Telegram.
+* Añadida `scripts/backfill_perps_tips.py`, una utilidad idempotente con generación Codex, manifiesto reanudable, validación de niveles históricos y aplicación atómica sobre `analyses_log.json`.
+
 ### 10/06/2026
 * Añadida `doc/BEECThOR_SUMMARY_STYLE.md` como guía editorial canónica para los resúmenes diarios de Beecthor: el spoiler debe intentar mantener apartados como situación actual, escenario principal, alternativa, macro, niveles técnicos, liquidaciones, niveles clave y estrategia cuando la transcripción lo permita.
 * El prompt automático de `scripts/summarize_beecthor.py` para Codex/Copilot vuelve a pedir `full_analysis` estructurado en HTML por apartados, evitando el párrafo único que apareció tras el cambio de proveedor.

@@ -17,6 +17,17 @@ def historical_message(levels: str = "65.000 y 63.000") -> str:
 
 
 class BackfillPerpsTipTests(unittest.TestCase):
+    def test_repository_q2_summaries_all_have_perps_tip(self):
+        entries = backfill.load_json(backfill.DEFAULT_ANALYSES_LOG)
+        relevant = [
+            entry
+            for entry in entries
+            if str(entry.get("timestamp") or "")[:7] in backfill.DEFAULT_MONTHS
+        ]
+
+        self.assertGreaterEqual(len(relevant), 60)
+        self.assertEqual(backfill.missing_tip_entries(entries, backfill.DEFAULT_MONTHS), [])
+
     def test_selects_only_target_months_without_tip(self):
         entries = [
             {"timestamp": "2026-04-01T10:00:00Z", "message": historical_message()},
