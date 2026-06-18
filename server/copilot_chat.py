@@ -307,6 +307,16 @@ img{display:block;max-width:100%}
 .detail-title{font-size:2.15rem;line-height:1.05;font-weight:800;letter-spacing:-.04em;margin:0 0 10px}
 .detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
 .detail-summary-card{margin-top:22px;padding:22px 24px}
+.detail-perps-tip{
+  margin:-22px -24px 22px;padding:18px 24px 20px;
+  border-bottom:1px solid rgba(245,158,11,.28);
+  border-radius:22px 22px 0 0;background:rgba(245,158,11,.075)
+}
+.detail-perps-tip-label{
+  font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;
+  color:#fbbf24;font-weight:900;margin-bottom:8px
+}
+.detail-perps-tip-text{font-size:1.08rem;line-height:1.65;color:#fff7d6;font-weight:650}
 .detail-summary-label{font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#8fb9ff;font-weight:800;margin-bottom:10px}
 .detail-summary-text{font-size:1.08rem;line-height:1.72;color:#eef4ff}
 .detail-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
@@ -589,6 +599,7 @@ img{display:block;max-width:100%}
   .metric-value{font-size:2.35rem}
   .detail-title{font-size:1.7rem}
   .detail-panel,.detail-summary-card,.detail-section-card,.stream-card,.surface-card,.chat-card,.metric-card,.metric-panel,.pnl-panel,.trace-lane{padding:18px}
+  .detail-perps-tip{margin:-18px -18px 18px;padding:16px 18px 18px}
   .detail-actions{flex-direction:column;align-items:stretch}
   .button-link,button{width:100%;text-align:center}
   .table th,.table td{padding:10px 10px;font-size:.92rem}
@@ -1710,6 +1721,26 @@ def extract_message_section(message: str, start_label: str, end_label: str | Non
     return message[start:end].strip()
 
 
+def extract_perps_tip_html(message: str) -> str:
+    start_label = '⚡ <b>Perps Tip</b>'
+    start = message.find(start_label)
+    if start == -1:
+        return ''
+    start += len(start_label)
+    end_positions = [
+        message.find(label, start)
+        for label in (
+            '🧭 <b>Visión macro</b>',
+            '🤖 <b>Índice robot:',
+            '📌 <b>Resumen</b>',
+            '🔍 <b>Análisis completo</b>',
+        )
+    ]
+    valid_end_positions = [position for position in end_positions if position >= 0]
+    end = min(valid_end_positions) if valid_end_positions else len(message)
+    return normalize_html_text_block(message[start:end].strip())
+
+
 def strip_html_tags(text: str) -> str:
     return re.sub(r'<[^>]+>', '', text or '').strip()
 
@@ -1789,6 +1820,7 @@ def load_summary_entries() -> list[dict[str, Any]]:
             'timestamp_local': timestamp_to_local(entry.get('timestamp', '')),
             'timestamp_date': timestamp_to_local_date(entry.get('timestamp', '')),
             'sort_timestamp': entry.get('timestamp', ''),
+            'perps_tip_html': extract_perps_tip_html(message),
             'summary_html': extract_message_section(message, '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>') or '<span class="muted">Sin resumen visible</span>',
             'message_html': message,
             'public_title': derive_public_title(entry),
@@ -2338,6 +2370,7 @@ def public_video_detail(video_id: str):
     item = find_summary(video_id)
     if not item:
         return ('Not found', 404)
+    perps_tip_html = item.get('perps_tip_html', '')
     summary_html = extract_message_section(item.get('message_html', ''), '📌 <b>Resumen</b>', '🔍 <b>Análisis completo</b>') or '<span class="muted">Sin resumen visible.</span>'
     analysis_sections = parse_analysis_sections(item.get('message_html', ''))
     fallback_analysis_html = ''
@@ -2372,6 +2405,12 @@ def public_video_detail(video_id: str):
         </aside>
       </div>
       <section class="surface-card detail-summary-card">
+        {% if perps_tip_html %}
+        <div class="detail-perps-tip">
+          <div class="detail-perps-tip-label">⚡ Perps Tip</div>
+          <div class="detail-perps-tip-text">{{ perps_tip_html|safe }}</div>
+        </div>
+        {% endif %}
         <div class="detail-summary-label">Resumen visible</div>
         <div class="detail-summary-text">{{ summary_html|safe }}</div>
       </section>
@@ -2397,6 +2436,7 @@ def public_video_detail(video_id: str):
     return render_template_string(
         html,
         item=item,
+        perps_tip_html=perps_tip_html,
         summary_html=summary_html,
         analysis_sections=analysis_sections,
         fallback_analysis_html=fallback_analysis_html,
@@ -3879,7 +3919,17 @@ def private_chat_display():
 @app.route('/api/public/summaries')
 def api_public_summaries():
     items = load_summary_entries()
-    payload = [{'timestamp': item.get('timestamp'), 'video_id': item.get('video_id'), 'video_url': item.get('video_url'), 'robot_score': item.get('robot_score'), 'summary_html': item.get('summary_html')} for item in items]
+    payload = [
+        {
+            'timestamp': item.get('timestamp'),
+            'video_id': item.get('video_id'),
+            'video_url': item.get('video_url'),
+            'robot_score': item.get('robot_score'),
+            'perps_tip_html': item.get('perps_tip_html'),
+            'summary_html': item.get('summary_html'),
+        }
+        for item in items
+    ]
     return jsonify(payload)
 
 
