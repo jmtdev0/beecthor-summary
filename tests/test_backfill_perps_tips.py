@@ -64,6 +64,14 @@ class BackfillPerpsTipTests(unittest.TestCase):
 
         self.assertEqual(backfill.validate_tip(tip, "Tesis ambigua sin niveles."), [])
 
+    def test_orders_partial_manifest_without_requiring_future_entries(self):
+        targets = [{"video_id": "first"}, {"video_id": "second"}]
+        first = {"video_id": "first", "status": "valid"}
+
+        ordered = backfill.ordered_manifest_entries(targets, {"first": first})
+
+        self.assertEqual(ordered, [first])
+
     def test_insertion_preserves_original_message_bytes(self):
         message = historical_message()
         tip = "Si BTC rechaza 65.000, buscar short hacia 63.000."

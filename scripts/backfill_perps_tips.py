@@ -362,7 +362,7 @@ def generate_manifest(
         if runtime_error:
             item["runtime_error"] = runtime_error
         by_video_id[video_id] = item
-        manifest["entries"] = [by_video_id[str(target.get("video_id") or "")] for target in targets]
+        manifest["entries"] = ordered_manifest_entries(targets, by_video_id)
         save_manifest(manifest_path, manifest)
         print(f"[{index}/{len(targets)}] {video_id}: {item['status']}")
 
@@ -377,6 +377,17 @@ def manifest_entries_by_id(manifest: dict[str, Any]) -> dict[str, dict[str, Any]
         for item in manifest.get("entries") or []
         if isinstance(item, dict) and item.get("video_id")
     }
+
+
+def ordered_manifest_entries(
+    targets: list[dict[str, Any]],
+    entries_by_video_id: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        entries_by_video_id[video_id]
+        for target in targets
+        if (video_id := str(target.get("video_id") or "")) in entries_by_video_id
+    ]
 
 
 def insert_perps_tip(message: str, tip: str) -> tuple[str, bool]:
