@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "vb9-6WAppAQ",
+  "video_url": "https://www.youtube.com/watch?v=vb9-6WAppAQ",
+  "generated_at": "2026-06-24T16:27:54Z",
+  "created_at": "2026-06-24T16:27:54Z",
+  "valid_until": "2026-06-26T16:27:54Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.56,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    74000
+  ],
+  "no_trade_conditions": [
+    "No confirmed sweep and reclaim around the lower liquidity area",
+    "Price falls in a clear impulsive five-wave decline without reclaiming structure",
+    "Price reaches 66,500-69,000 without a clear rejection or completed corrective structure",
+    "Wave count remains ambiguous on lower timeframes"
+  ],
+  "notes": "Beecthor's main idea is a possible lower liquidity sweep near 61,600-61,700 or around 60,000 before a relief wave toward 66,500-69,000, but he requires price reaction and structure confirmation before any entry. No deterministic zone with supported stop-loss is provided, so the bot should wait."
+}
