@@ -1334,7 +1334,14 @@ def infer_video_id_from_transcript_path(path: Path) -> str:
     return match.group("video_id") if match else stem
 
 
-def run_auto(video_id: str, transcript_path: Path | None = None) -> None:
+def run_auto(
+    video_id: str,
+    transcript_path: Path | None = None,
+    *,
+    send_telegram: bool = True,
+    update_last_processed: bool = True,
+    commit_and_push: bool = True,
+) -> None:
     """Fully automated flow: collect context, generate summary via configured LLM, send and commit."""
     if log_entry_exists(video_id):
         print(f"Entry for {video_id} already exists in analyses_log.json. Nothing to do.")
@@ -1369,13 +1376,22 @@ def run_auto(video_id: str, transcript_path: Path | None = None) -> None:
         full_analysis=full_analysis,
     )
 
-    print("Sending message to Telegram...")
-    send_telegram_message(message)
+    if send_telegram:
+        print("Sending message to Telegram...")
+        send_telegram_message(message)
+    else:
+        print("Telegram send skipped by request.")
 
-    save_last_processed_id(video_id)
+    if update_last_processed:
+        save_last_processed_id(video_id)
+    else:
+        print("last_video_id.txt update skipped by request.")
     append_log_entry(video_id, context["prices_now"], context["robot_score"], message)
     save_perps_thesis(video_id, perps_thesis)
-    git_commit_and_push(video_id)
+    if commit_and_push:
+        git_commit_and_push(video_id)
+    else:
+        print("Git commit/push skipped by request.")
     print("Done.")
 
 
@@ -1405,7 +1421,22 @@ def main() -> None:
     )
     parser.add_argument(
         "--video-id",
-        help="Video ID to use with --from-transcript.",
+        help="Specific video ID to process with --auto, or to use with --from-transcript.",
+    )
+    parser.add_argument(
+        "--no-telegram",
+        action="store_true",
+        help="With --auto, generate and store the summary without sending it to Telegram.",
+    )
+    parser.add_argument(
+        "--no-update-last",
+        action="store_true",
+        help="With --auto, do not update last_video_id.txt.",
+    )
+    parser.add_argument(
+        "--no-git",
+        action="store_true",
+        help="With --auto, do not create or push a git commit.",
     )
     args = parser.parse_args()
 
@@ -1417,7 +1448,23 @@ def main() -> None:
             raise FileNotFoundError(f"Transcript file not found: {transcript_path}")
         video_id = args.video_id or infer_video_id_from_transcript_path(transcript_path)
         print(f"Transcript mode: {transcript_path} -> {video_id}")
-        run_auto(video_id, transcript_path=transcript_path)
+        run_auto(
+            video_id,
+            transcript_path=transcript_path,
+            send_telegram=not args.no_telegram,
+            update_last_processed=not args.no_update_last,
+            commit_and_push=not args.no_git,
+        )
+        return
+
+    if args.video_id and args.auto:
+        print(f"Auto mode for explicit video ID: {args.video_id}")
+        run_auto(
+            args.video_id,
+            send_telegram=not args.no_telegram,
+            update_last_processed=not args.no_update_last,
+            commit_and_push=not args.no_git,
+        )
         return
 
     if args.backfill:
@@ -1438,7 +1485,12 @@ def main() -> None:
 
     print(f"New video detected: {latest_id}")
     if args.auto:
-        run_auto(latest_id)
+        run_auto(
+            latest_id,
+            send_telegram=not args.no_telegram,
+            update_last_processed=not args.no_update_last,
+            commit_and_push=not args.no_git,
+        )
     else:
         run_daily(latest_id, send_telegram=True)
 

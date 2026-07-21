@@ -2,6 +2,7 @@
 
 ### 21/07/2026
 * Ajustada la guía del `Perps Tip`: pasa de priorizar frases condicionales de entrada a resumir de forma directa y muy clara el siguiente movimiento de corto plazo que Beecthor plantea, usando condiciones solo cuando la tesis del vídeo lo exija.
+* `scripts/summarize_beecthor.py --auto` ahora permite procesar un `--video-id` explícito y saltar Telegram, `last_video_id.txt` o Git con flags dedicados, útil para backfills controlados.
 
 ### 18/06/2026
 * Completado el backfill histórico de `Perps Tip` para los 60 resúmenes de abril, mayo y junio de 2026 que aún no lo incluían, reconstruyendo cada idea únicamente desde la información disponible en su fecha y sin reenvíos a Telegram.
