@@ -678,18 +678,34 @@ SUMMARY_MIN_SECTION_HEADINGS = 3
 
 PERPS_TIP_GUIDE = (
     "A single concise Spanish sentence for a visible Telegram section called Perps Tip. "
-    "It should be maximally easy to understand: summarize the next short-term BTC move that Beecthor "
-    "expects, using plain Spanish and only levels or direction supported by the transcript. Prefer a direct "
-    "forecast when the transcript supports it, e.g. "
-    '"Lo siguiente que espera es un rebote hacia 68.000 antes de decidir si cae otra vez." '
-    "or "
-    '"El escenario que plantea es otra caída hacia 62.000 si pierde el soporte actual." '
-    "Use a conditional sentence only when Beecthor's thesis is explicitly conditional. "
-    "If the transcript does not support a clear short-term path, say in plain Spanish that the next move "
-    "is not clear and that it is better to wait. Do not mention live BTC price unless the transcript "
-    "itself makes that reference useful. The tip must be consistent with perps_thesis; if preferred_setup "
-    'is "wait", the tip should not recommend opening a trade.'
+    "It must answer this practical question: 'what should we do today from the current BTC price?' "
+    "Use the provided current BTC market context to anchor the sentence, while deriving direction, targets, "
+    "entry zones, and invalidation only from Beecthor's transcript. Prefer this structure when possible: "
+    '"BTC ronda X; hoy tocaría abrir/mantener long hacia Y", '
+    '"BTC ronda X; no perseguiría long aquí, esperaría short en Y si rechaza", '
+    'or "BTC ronda X; no hay trade claro y toca esperar". '
+    "If Beecthor expects a move toward a resistance/support before the main reversal, state the tactical "
+    "trade for that path first, then the later reaction trade. For example: "
+    '"BTC ronda 66.300; la jugada táctica sería long hacia 69.000, y allí buscar short si rechaza." '
+    "Use a conditional sentence only when the action truly depends on confirmation. The tip must be "
+    'consistent with perps_thesis; if preferred_setup is "wait", it should not recommend opening a trade.'
 )
+
+
+def build_current_market_context(prices_now: dict | None) -> str:
+    if not prices_now:
+        return "Current BTC market context is unavailable."
+    btc_usd = prices_now.get("btc_usd")
+    btc_eur = prices_now.get("btc_eur")
+    if btc_usd is None:
+        return "Current BTC market context is unavailable."
+    context = f"Current BTC reference for the Perps Tip: BTC is approximately {btc_usd}$"
+    if btc_eur is not None:
+        context += f" / {btc_eur}€"
+    return (
+        context
+        + ". For Perps Tip wording, BTCUSDC can be treated as approximately the same USD reference."
+    )
 
 
 def build_llm_summary_prompt(
@@ -697,6 +713,7 @@ def build_llm_summary_prompt(
     robot_score: float,
     robot_comment: str,
     video_id: str,
+    prices_now: dict | None = None,
 ) -> str:
     excerpt = transcript[:MAX_LLM_TRANSCRIPT_CHARS]
     if len(transcript) > MAX_LLM_TRANSCRIPT_CHARS:
@@ -706,6 +723,7 @@ def build_llm_summary_prompt(
         "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
         "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
         f"(robot score: {robot_score:.1f}/10 - {robot_comment}).\n\n"
+        f"{build_current_market_context(prices_now)}\n\n"
         "Return ONLY a valid JSON object with exactly these five fields:\n"
         '  "macro_summary": 1-2 sentences in Spanish on the macro BTC outlook '
         "(direction, key levels, bias).\n"
@@ -816,13 +834,14 @@ def generate_summary_via_codex(
     robot_score: float,
     robot_comment: str,
     video_id: str,
+    prices_now: dict | None = None,
 ) -> tuple[str, str, str, str, dict]:
     """Call Codex CLI non-interactively to generate the Beecthor summary fields."""
     codex_bin = shutil.which("codex") or shutil.which("codex.cmd")
     if not codex_bin:
         raise RuntimeError("Codex CLI not found in PATH")
 
-    prompt = build_llm_summary_prompt(transcript, robot_score, robot_comment, video_id)
+    prompt = build_llm_summary_prompt(transcript, robot_score, robot_comment, video_id, prices_now)
     env = os.environ.copy()
     env.setdefault("LANG", "en_US.UTF-8")
     env.setdefault("PYTHONIOENCODING", "utf-8")
@@ -872,6 +891,7 @@ def generate_summary_via_copilot(
     robot_score: float,
     robot_comment: str,
     video_id: str,
+    prices_now: dict | None = None,
 ) -> tuple[str, str, str, str, dict]:
     """Call Copilot CLI to generate the Beecthor summary fields.
 
@@ -886,6 +906,7 @@ def generate_summary_via_copilot(
         "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
         "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
         f"(robot score: {robot_score:.1f}/10 — {robot_comment}).\n\n"
+        f"{build_current_market_context(prices_now)}\n\n"
         "Return ONLY a valid JSON object with exactly these five fields:\n"
         '  "macro_summary": 1-2 sentences on the macro BTC outlook (direction, key levels, bias)\n'
         f'  "perps_tip": {PERPS_TIP_GUIDE}\n'
@@ -959,11 +980,12 @@ def generate_summary_via_llm(
     robot_score: float,
     robot_comment: str,
     video_id: str,
+    prices_now: dict | None = None,
 ) -> tuple[str, str, str, str, dict]:
     if BEECTHOR_SUMMARY_LLM_PROVIDER == "copilot":
-        return generate_summary_via_copilot(transcript, robot_score, robot_comment, video_id)
+        return generate_summary_via_copilot(transcript, robot_score, robot_comment, video_id, prices_now)
     if BEECTHOR_SUMMARY_LLM_PROVIDER == "codex":
-        return generate_summary_via_codex(transcript, robot_score, robot_comment, video_id)
+        return generate_summary_via_codex(transcript, robot_score, robot_comment, video_id, prices_now)
     raise RuntimeError(
         "Unsupported BEECTHOR_SUMMARY_LLM_PROVIDER: "
         f"{BEECTHOR_SUMMARY_LLM_PROVIDER!r}. Use 'codex' or 'copilot'."
@@ -1361,6 +1383,7 @@ def run_auto(
         context["robot_score"],
         context["robot_comment"],
         context["video_id"],
+        context["prices_now"],
     )
     print("Summary generated.")
 
