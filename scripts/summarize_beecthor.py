@@ -678,14 +678,17 @@ SUMMARY_MIN_SECTION_HEADINGS = 3
 
 PERPS_TIP_GUIDE = (
     "A single concise Spanish sentence for a visible Telegram section called Perps Tip. "
-    "It must be conditional and based only on Beecthor's transcript: e.g. "
-    '"Si BTC llega a 65.000 y rechaza la zona, el setup sería buscar short hacia 62.000." '
+    "It should be maximally easy to understand: summarize the next short-term BTC move that Beecthor "
+    "expects, using plain Spanish and only levels or direction supported by the transcript. Prefer a direct "
+    "forecast when the transcript supports it, e.g. "
+    '"Lo siguiente que espera es un rebote hacia 68.000 antes de decidir si cae otra vez." '
     "or "
-    '"Si pierde 61.000 con intención, aumenta la probabilidad de continuación hacia 58.000." '
-    "If the transcript does not support a clear long/short setup, say that there is no clear opening "
-    "and that the correct action is manos quietas. Do not mention live BTC price unless the transcript "
+    '"El escenario que plantea es otra caída hacia 62.000 si pierde el soporte actual." '
+    "Use a conditional sentence only when Beecthor's thesis is explicitly conditional. "
+    "If the transcript does not support a clear short-term path, say in plain Spanish that the next move "
+    "is not clear and that it is better to wait. Do not mention live BTC price unless the transcript "
     "itself makes that reference useful. The tip must be consistent with perps_thesis; if preferred_setup "
-    'is "wait", the tip must also recommend waiting.'
+    'is "wait", the tip should not recommend opening a trade.'
 )
 
 

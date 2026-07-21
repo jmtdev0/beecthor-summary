@@ -653,6 +653,7 @@ Generate a JSON object following EXACTLY the format of the examples below. Pay c
 - The HTML structure of the "message" field (Telegram HTML — use <b>, <i>, <a>, <tg-spoiler>)
 - The 🤖 robot_score (float 0-10): how robotic/technical vs human the video felt
 - The witty one-liner under the robot score (ironic, concise, in Spanish)
+- The ⚡ Perps Tip section: one very clear short-term expectation from Beecthor's thesis. Prefer plain direct wording such as "Lo siguiente que espera es una subida hacia 68.000" or "El escenario que plantea es otra caída hacia 62.000"; use "si pasa X..." only when the video thesis is explicitly conditional. If the next move is unclear, say plainly that there is no clear path and it is better to wait.
 - The 🧭 Visión macro section: MAXIMUM 2 lines. Just the medium/long-term directional bias, nothing more. No wave counts, no Fibonacci levels, no targets — only the big-picture direction.
 - The 📌 Resumen section: 2-3 direct lines with the key SHORT-TERM trade idea and the most important price levels.
 - The full detailed analysis inside <tg-spoiler>
