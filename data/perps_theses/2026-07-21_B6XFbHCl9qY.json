@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "B6XFbHCl9qY",
+  "video_url": "https://www.youtube.com/watch?v=B6XFbHCl9qY",
+  "generated_at": "2026-07-21T00:00:00Z",
+  "created_at": "2026-07-21T00:00:00Z",
+  "valid_until": "2026-07-23T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.52,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    63500,
+    61000,
+    71060
+  ],
+  "no_trade_conditions": [
+    "No trade while price remains in the middle of the range without a confirmed sweep or rejection.",
+    "Do not short before a clear rejection from the 69000-71060 resistance area.",
+    "Do not long the 60500-62000 liquidity area without a sweep and reclaim confirmation."
+  ],
+  "notes": "The transcript supports downside liquidity targets at 63500 and 60500-62000 plus a major resistance area at 69000-71060, but it does not provide a complete deterministic entry, stop, and confirmation model. Waiting is preferred."
+}

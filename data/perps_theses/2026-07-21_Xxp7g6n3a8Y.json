@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "Xxp7g6n3a8Y",
+  "video_url": "https://www.youtube.com/watch?v=Xxp7g6n3a8Y",
+  "generated_at": "2026-07-21T00:00:00Z",
+  "created_at": "2026-07-21T00:00:00Z",
+  "valid_until": "2026-07-23T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.55,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    65000,
+    69000,
+    71000,
+    72000,
+    62000,
+    61000
+  ],
+  "no_trade_conditions": [
+    "price remains in the middle of the range without reacting at supported liquidity or resistance levels",
+    "rebound structure is unclear and does not confirm a five-wave move or rejection",
+    "liquidation sweep occurs without reclaim or rejection confirmation"
+  ],
+  "notes": "Transcript supports a transition/range environment. Beecthor mentions possible upside liquidity near 65000, resistance around 69000-71000/72000, and downside liquidity near 62000/61000, but does not give a precise executable entry with stop and targets. Preferred setup is wait."
+}

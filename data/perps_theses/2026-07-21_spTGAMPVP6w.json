@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "spTGAMPVP6w",
+  "video_url": "https://www.youtube.com/watch?v=spTGAMPVP6w",
+  "generated_at": "2026-07-21T00:00:00Z",
+  "created_at": "2026-07-21T00:00:00Z",
+  "valid_until": "2026-07-23T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "long_support_sweep_reclaim",
+  "confidence": 0.66,
+  "long_zones": [
+    {
+      "low": 60000.0,
+      "high": 61000.0,
+      "stop_loss": 59000.0,
+      "targets": [
+        69000.0,
+        71000.0
+      ],
+      "label": "60k-61k support sweep and reclaim"
+    }
+  ],
+  "short_zones": [
+    {
+      "low": 69000.0,
+      "high": 71000.0,
+      "stop_loss": 74000.0,
+      "targets": [
+        65000.0,
+        61000.0
+      ],
+      "label": "69k-71k resistance reaction"
+    }
+  ],
+  "invalidation_levels": [
+    59000,
+    74000
+  ],
+  "no_trade_conditions": [
+    "price remains between 63000 and 65000 without reclaim or breakdown",
+    "no confirmed sweep and reclaim at 60000-61000 support",
+    "price breaks above 74000 before any resistance rejection"
+  ],
+  "notes": "Transcript supports a possible liquidity sweep into 60000-61000 followed by a bounce toward 69000-71000; shorts are only considered if price reaches the upper resistance and rejects. Broader cycle risk remains bearish."
+}
