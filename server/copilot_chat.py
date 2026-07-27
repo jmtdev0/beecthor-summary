@@ -4155,17 +4155,20 @@ def beecthor_summary_job_is_running(video_id: str) -> bool:
     return True
 
 
-def run_beecthor_summary_job(video_id: str, transcript_path: Path) -> None:
-    lock_path = beecthor_summary_lock_path(video_id)
-    log_path = beecthor_summary_log_path(video_id)
-    cmd = [
+def build_beecthor_summary_cmd(video_id: str, transcript_path: Path) -> list[str]:
+    return [
         sys.executable,
         str(REPO_ROOT / 'scripts' / 'summarize_beecthor.py'),
         '--from-transcript',
         str(transcript_path),
-        '--video-id',
-        video_id,
+        f'--video-id={video_id}',
     ]
+
+
+def run_beecthor_summary_job(video_id: str, transcript_path: Path) -> None:
+    lock_path = beecthor_summary_lock_path(video_id)
+    log_path = beecthor_summary_log_path(video_id)
+    cmd = build_beecthor_summary_cmd(video_id, transcript_path)
     env = os.environ.copy()
     env.setdefault('BEECTHOR_SUMMARY_LLM_PROVIDER', 'codex')
     lock_payload = {
