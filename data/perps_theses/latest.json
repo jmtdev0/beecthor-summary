@@ -2,22 +2,26 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "D7a1fMMD7Ww",
-  "video_url": "https://www.youtube.com/watch?v=D7a1fMMD7Ww",
-  "generated_at": "2026-10-11T00:00:00Z",
-  "created_at": "2026-10-11T00:00:00Z",
-  "valid_until": "2026-10-12T23:59:59Z",
-  "macro_bias": "neutral",
+  "video_id": "TrtrMG-YzR0",
+  "video_url": "https://www.youtube.com/watch?v=TrtrMG-YzR0",
+  "generated_at": "2026-10-12T00:00:00Z",
+  "created_at": "2026-10-12T00:00:00Z",
+  "valid_until": "2026-10-13T23:59:59Z",
+  "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.82,
+  "confidence": 0.76,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [],
-  "no_trade_conditions": [
-    "Current price is not a long entry zone according to the transcript.",
-    "Do not open a short before a confirmed rejection or liquidity sweep in the 90000-92000 resistance area.",
-    "If lower liquidity near 74000 is cleared first, reduce confidence in the later 90000-92000 short.",
-    "No exact stop-loss level was specified for the conditional setups."
+  "invalidation_levels": [
+    57700,
+    81800,
+    92000
   ],
-  "notes": "Wait is mandatory because the transcript gives conditional paths but no exact current entry, stop, or target. Near term is defensive after the 87000 impulse, while the macro may be bullish from the 57700 low but remains unconfirmed."
+  "no_trade_conditions": [
+    "No position at the current price without confirmation.",
+    "Do not chase longs before a sweep into 81,800-80,700/81,000 followed by a reclaim.",
+    "Do not short the 81,800-80,000 support area without a confirmed breakdown and retest.",
+    "Do not short 90,000-92,000 without a clear rejection."
+  ],
+  "notes": "The transcript does not give a clean immediate entry at 82,656; it favors waiting for a lower liquidity sweep and reclaim, or a confirmed rejection in the explicitly watched 90,000-92,000 short area. The broader Elliott bias remains bullish while a wave-2 correction is possible."
 }
