@@ -2,36 +2,23 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "Spr7SLF6kg0",
-  "video_url": "https://www.youtube.com/watch?v=Spr7SLF6kg0",
-  "generated_at": "2026-10-13T00:00:00Z",
-  "created_at": "2026-10-13T00:00:00Z",
-  "valid_until": "2026-10-15T00:00:00Z",
+  "video_id": "oZv2m7l8TH8",
+  "video_url": "https://www.youtube.com/watch?v=oZv2m7l8TH8",
+  "generated_at": "2026-10-14T00:00:00Z",
+  "created_at": "2026-10-14T00:00:00Z",
+  "valid_until": "2026-10-16T00:00:00Z",
   "macro_bias": "unknown",
-  "preferred_setup": "short_rejection",
-  "confidence": 0.68,
+  "preferred_setup": "wait",
+  "confidence": 0.58,
   "long_zones": [],
-  "short_zones": [
-    {
-      "low": 84000.0,
-      "high": 85600.0,
-      "stop_loss": 87590.0,
-      "targets": [
-        82000.0,
-        77200.0,
-        74000.0
-      ],
-      "label": "liquidity sweep and value area high rejection"
-    }
-  ],
+  "short_zones": [],
   "invalidation_levels": [
-    87590
+    82700
   ],
   "no_trade_conditions": [
-    "No short before a clear rejection inside 84000-85600.",
-    "Do not chase a long from 83301 without a fresh support retest and reclaim.",
-    "Cancel the short setup if price reclaims 87590 and confirms a bullish structure break.",
-    "If 81600-82000 breaks before entry, do not chase the move; reassess near 77200."
+    "No clear five-wave decline has been confirmed",
+    "Price remains in the stated near-50/50 decision zone",
+    "Do not trade an unclear three-wave decline or chase price away from support"
   ],
-  "notes": "The near-term path may sweep upside liquidity at 84000-85600 before the broader ABC correction resumes. The general POC is 77200 and the larger corrective area is 73000-74000."
+  "notes": "Wait for a clean five-wave decline into a transcript-supported support area before considering a long; a later short requires a clearly corrective three-wave rebound."
 }
