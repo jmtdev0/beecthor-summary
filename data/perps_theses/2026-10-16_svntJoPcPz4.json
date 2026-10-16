@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "svntJoPcPz4",
+  "video_url": "https://www.youtube.com/watch?v=svntJoPcPz4",
+  "generated_at": "2026-10-16T00:00:00Z",
+  "created_at": "2026-10-16T00:00:00Z",
+  "valid_until": "2026-10-18T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.76,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [],
+  "no_trade_conditions": [
+    "Price remains between competing liquidation clusters without confirmation",
+    "Resistance has not produced a confirmed rejection and support has not been decisively reclaimed",
+    "The Elliott downside bias conflicts with the short-term upside liquidation magnet"
+  ],
+  "notes": "Near-term Elliott structure favors another downside leg, but upper liquidity may be swept first; the transcript provides no deterministic entry confirmation or exact stop."
+}

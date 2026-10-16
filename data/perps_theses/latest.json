@@ -2,36 +2,21 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "o5h92ZATh-0",
-  "video_url": "https://www.youtube.com/watch?v=o5h92ZATh-0",
-  "generated_at": "2026-10-15T12:00:00Z",
-  "created_at": "2026-10-15T12:00:00Z",
-  "valid_until": "2026-10-17T00:00:00Z",
+  "video_id": "svntJoPcPz4",
+  "video_url": "https://www.youtube.com/watch?v=svntJoPcPz4",
+  "generated_at": "2026-10-16T00:00:00Z",
+  "created_at": "2026-10-16T00:00:00Z",
+  "valid_until": "2026-10-18T00:00:00Z",
   "macro_bias": "unknown",
-  "preferred_setup": "short_rejection",
-  "confidence": 0.78,
+  "preferred_setup": "wait",
+  "confidence": 0.76,
   "long_zones": [],
-  "short_zones": [
-    {
-      "low": 82000.0,
-      "high": 82300.0,
-      "stop_loss": 83000.0,
-      "targets": [
-        78700.0,
-        75000.0,
-        74000.0,
-        73000.0
-      ],
-      "label": "4h value_area_low_and_ema_resistance_rejection"
-    }
-  ],
-  "invalidation_levels": [
-    83000
-  ],
+  "short_zones": [],
+  "invalidation_levels": [],
   "no_trade_conditions": [
-    "No short entry without a confirmed rejection and move back below 82300.",
-    "No short if BTC sustains above 83000.",
-    "Do not chase a short after a direct move into 78700."
+    "Price remains between competing liquidation clusters without confirmation",
+    "Resistance has not produced a confirmed rejection and support has not been decisively reclaimed",
+    "The Elliott downside bias conflicts with the short-term upside liquidation magnet"
   ],
-  "notes": "Wave A is considered incomplete. The base case is a developing wave 3 down, a three-wave wave 4 bounce into resistance, and a final five-wave decline. Upside liquidation clusters at 84600-88000 belong to the alternative scenario after invalidation."
+  "notes": "Near-term Elliott structure favors another downside leg, but upper liquidity may be swept first; the transcript provides no deterministic entry confirmation or exact stop."
 }
