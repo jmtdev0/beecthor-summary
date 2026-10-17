@@ -2,21 +2,24 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "svntJoPcPz4",
-  "video_url": "https://www.youtube.com/watch?v=svntJoPcPz4",
-  "generated_at": "2026-10-16T00:00:00Z",
-  "created_at": "2026-10-16T00:00:00Z",
-  "valid_until": "2026-10-18T00:00:00Z",
+  "video_id": "Y1aAhE1bVtM",
+  "video_url": "https://www.youtube.com/watch?v=Y1aAhE1bVtM",
+  "generated_at": "2026-10-17T00:00:00Z",
+  "created_at": "2026-10-17T00:00:00Z",
+  "valid_until": "2026-10-18T23:59:59Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.76,
+  "confidence": 0.78,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [],
-  "no_trade_conditions": [
-    "Price remains between competing liquidation clusters without confirmation",
-    "Resistance has not produced a confirmed rejection and support has not been decisively reclaimed",
-    "The Elliott downside bias conflicts with the short-term upside liquidation magnet"
+  "invalidation_levels": [
+    57700
   ],
-  "notes": "Near-term Elliott structure favors another downside leg, but upper liquidity may be swept first; the transcript provides no deterministic entry confirmation or exact stop."
+  "no_trade_conditions": [
+    "BTC remains inside the 81000-82000 decision area without a completed directional wave structure",
+    "Weekend volatility and liquidity remain compressed",
+    "A decline into 77000-78000 forms only three waves instead of a completed five-wave impulse",
+    "Price reaches 90000-92000 without a clear rejection"
+  ],
+  "notes": "Current price is inside a weekend decision area. The video supports prioritizing longs only after a completed five-wave decline near 77000-78000 and considering shorts only after a rejection near 90000-92000; no immediate entry is supported."
 }
