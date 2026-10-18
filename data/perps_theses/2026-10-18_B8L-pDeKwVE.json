@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "B8L-pDeKwVE",
+  "video_url": "https://www.youtube.com/watch?v=B8L-pDeKwVE",
+  "generated_at": "2026-10-18T00:00:00Z",
+  "created_at": "2026-10-18T00:00:00Z",
+  "valid_until": "2026-10-20T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.82,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    83800
+  ],
+  "no_trade_conditions": [
+    "The five-wave decline is not yet complete.",
+    "Price remains inside the 78000-84400 liquidity range without structural confirmation.",
+    "A move above 83800 invalidates the current lower-degree bearish count."
+  ],
+  "notes": "Wait for a completed five-wave decline before considering a wave-B long. The transcript does not provide a confirmed entry, stop-loss, or reversal trigger; a later short is relevant only after a three-wave wave-B rebound completes."
+}
