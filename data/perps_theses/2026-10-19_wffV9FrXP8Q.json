@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "wffV9FrXP8Q",
+  "video_url": "https://www.youtube.com/watch?v=wffV9FrXP8Q",
+  "generated_at": "2026-10-19T00:00:00Z",
+  "created_at": "2026-10-19T00:00:00Z",
+  "valid_until": "2026-10-20T23:59:59Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.76,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    83700
+  ],
+  "no_trade_conditions": [
+    "The five-wave decline is not yet complete.",
+    "Price remains inside the decision area without structural confirmation.",
+    "A break above 83700 requires recounting the internal Elliott structure."
+  ],
+  "notes": "Wait for a structurally complete five-wave decline before considering a long. A later B-wave rebound may offer a short, but the transcript provides no confirmed entry and stop levels."
+}
