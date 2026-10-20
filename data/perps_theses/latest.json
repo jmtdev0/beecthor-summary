@@ -2,23 +2,24 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "wffV9FrXP8Q",
-  "video_url": "https://www.youtube.com/watch?v=wffV9FrXP8Q",
-  "generated_at": "2026-10-19T00:00:00Z",
-  "created_at": "2026-10-19T00:00:00Z",
-  "valid_until": "2026-10-20T23:59:59Z",
+  "video_id": "ci7n3V5qjyE",
+  "video_url": "https://www.youtube.com/watch?v=ci7n3V5qjyE",
+  "generated_at": "2026-10-20T00:00:00Z",
+  "created_at": "2026-10-20T00:00:00Z",
+  "valid_until": "2026-10-22T00:00:00Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.76,
+  "confidence": 0.84,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [
-    83700
+    83800,
+    57700
   ],
   "no_trade_conditions": [
-    "The five-wave decline is not yet complete.",
-    "Price remains inside the decision area without structural confirmation.",
-    "A break above 83700 requires recounting the internal Elliott structure."
+    "Price remains between the 80600 liquidity level and the 83800 internal-count threshold without a confirmed five-wave move",
+    "No completed five-wave decline into the 77000-78000 area",
+    "No confirmed rejection in the 90000-92000 resistance area"
   ],
-  "notes": "Wait for a structurally complete five-wave decline before considering a long. A later B-wave rebound may offer a short, but the transcript provides no confirmed entry and stop levels."
+  "notes": "Wait at the current price. A tactical long becomes relevant only after a completed five-wave decline toward 77000-78000 and is intended for the corrective wave-B rebound. A short becomes relevant after a three-wave rebound or a confirmed rejection at 90000-92000. The transcript provides no precise stop levels, so no executable zones are defined."
 }
