@@ -2,22 +2,21 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "yTsLb8w4vZU",
-  "video_url": "https://www.youtube.com/watch?v=yTsLb8w4vZU",
-  "generated_at": "2026-10-22T00:00:00Z",
-  "created_at": "2026-10-22T00:00:00Z",
-  "valid_until": "2026-10-24T00:00:00Z",
+  "video_id": "dFAGX4qT9WU",
+  "video_url": "https://www.youtube.com/watch?v=dFAGX4qT9WU",
+  "generated_at": "2026-10-23T00:00:00Z",
+  "created_at": "2026-10-23T00:00:00Z",
+  "valid_until": "2026-10-25T00:00:00Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.68,
+  "confidence": 0.78,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [],
   "no_trade_conditions": [
-    "No confirmed rejection in the 87700-92000 resistance area",
-    "Wave B may still be developing and wave C has not been confirmed",
-    "No transcript-supported stop-loss level is available",
-    "An impulsive advance through the prior highs would require a wave-count reassessment"
+    "No confirmed rejection at resistance",
+    "No transcript-supported stop-loss for an immediate entry",
+    "Price remains between nearby opposing liquidity pools"
   ],
-  "notes": "The near-term base case is a corrective wave C toward 74000 and 70000, with 66000-67000 as a deeper area. The long-term outlook remains bullish. No deterministic trade zone is emitted because the transcript provides no precise stop-loss or confirmed entry trigger."
+  "notes": "Wait for confirmation. The transcript anticipates a possible liquidity sweep above the current price before the corrective decline, but it does not provide a precise stop-loss for an immediate deterministic setup."
 }
