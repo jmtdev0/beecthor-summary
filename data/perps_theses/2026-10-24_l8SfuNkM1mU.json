@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "l8SfuNkM1mU",
+  "video_url": "https://www.youtube.com/watch?v=l8SfuNkM1mU",
+  "generated_at": "2026-10-24T00:00:00Z",
+  "created_at": "2026-10-24T00:00:00Z",
+  "valid_until": "2026-10-25T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "short_rejection",
+  "confidence": 0.72,
+  "long_zones": [],
+  "short_zones": [
+    {
+      "low": 81000.0,
+      "high": 82000.0,
+      "stop_loss": 84800.0,
+      "targets": [
+        80000.0,
+        78000.0,
+        77000.0,
+        74500.0
+      ],
+      "label": "value_area_retest_rejection"
+    }
+  ],
+  "invalidation_levels": [
+    84800
+  ],
+  "no_trade_conditions": [
+    "Do not chase a short while price remains below 81000 and close to the downside liquidity targets.",
+    "No entry without a confirmed rejection after a retest of the 81000-82000 zone.",
+    "Cancel the short setup if price accepts above 84800; an extension toward 90000-92000 becomes possible."
+  ],
+  "notes": "Potential wave B high at 84800. The primary thesis is a five-wave C decline, with 77000 as the nearest stated downside objective and 74500 as the first major Fibonacci retracement."
+}
