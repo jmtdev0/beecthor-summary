@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "4u1rl4cdml8",
+  "video_url": "https://www.youtube.com/watch?v=4u1rl4cdml8",
+  "generated_at": "2026-10-25T00:00:00Z",
+  "created_at": "2026-10-25T00:00:00Z",
+  "valid_until": "2026-10-26T23:59:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "short_resistance_bearish_regime",
+  "confidence": 0.76,
+  "long_zones": [],
+  "short_zones": [
+    {
+      "low": 81000.0,
+      "high": 82000.0,
+      "stop_loss": 84900.0,
+      "targets": [
+        79300.0,
+        77200.0
+      ],
+      "label": "4h EMA and value-area resistance rejection"
+    }
+  ],
+  "invalidation_levels": [
+    84500,
+    84900
+  ],
+  "no_trade_conditions": [
+    "Do not short near the current 80529 price before a resistance test",
+    "Do not enter without a confirmed rejection inside the 81000-82000 zone",
+    "Cancel the bearish setup after a sustained reclaim above 84500"
+  ],
+  "notes": "The transcript favors a short-term wave-C decline but allows an upper-liquidity sweep first. Spot accumulation mentioned in the video is separate from this perpetual-futures setup."
+}
