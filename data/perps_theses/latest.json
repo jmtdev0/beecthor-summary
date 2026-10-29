@@ -2,37 +2,36 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "J0MmBTo79Vk",
-  "video_url": "https://www.youtube.com/watch?v=J0MmBTo79Vk",
-  "generated_at": "2026-10-28T00:00:00Z",
-  "created_at": "2026-10-28T00:00:00Z",
-  "valid_until": "2026-10-29T23:59:59Z",
+  "video_id": "2Nb-6QkhDDQ",
+  "video_url": "https://www.youtube.com/watch?v=2Nb-6QkhDDQ",
+  "generated_at": "2026-10-29T00:00:00Z",
+  "created_at": "2026-10-29T00:00:00Z",
+  "valid_until": "2026-10-30T00:00:00Z",
   "macro_bias": "unknown",
   "preferred_setup": "short_rejection",
-  "confidence": 0.76,
+  "confidence": 0.78,
   "long_zones": [],
   "short_zones": [
     {
-      "low": 82000.0,
-      "high": 82700.0,
-      "stop_loss": 84800.0,
+      "low": 81100.0,
+      "high": 82000.0,
+      "stop_loss": 84000.0,
       "targets": [
-        79200.0,
-        78500.0,
-        77000.0,
-        74000.0
+        79500.0,
+        78000.0,
+        74500.0
       ],
-      "label": "Golden-pocket resistance rejection"
+      "label": "81.1k-82k resistance rejection"
     }
   ],
   "invalidation_levels": [
-    84800
+    84000,
+    85000
   ],
   "no_trade_conditions": [
-    "No confirmed rejection inside the 82000-82700 resistance zone.",
-    "Price trades at or above 84800.",
-    "Price breaks below 79200 before testing resistance; do not chase the move.",
-    "Late-session news volatility produces no stable confirmation."
+    "No bearish rejection and close back below the 81,100-82,000 resistance zone",
+    "Sustained reclaim of 82,000 with a bullish structure change",
+    "Price remains choppy around the 81,500 POC without confirmation"
   ],
-  "notes": "Primary plan is a confirmed short rejection at 82000-82700. The local top may already be in, so a direct breakdown should not be chased. Downside liquidity is concentrated at 79200 and 78500-79150, with further targets near 77000 and 74000. The broader thesis turns bullish after the wave-two correction."
+  "notes": "The setup requires a wick or rejection inside the 81,100-82,000 confluence followed by a close back below it; the author is not entering at market. Downside liquidity is concentrated at 79,500 and lower, with 77,000-78,000 and 74,500 identified as reaction areas."
 }
