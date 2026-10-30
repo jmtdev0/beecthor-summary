@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "bvZk7UPEm6k",
+  "video_url": "https://www.youtube.com/watch?v=bvZk7UPEm6k",
+  "generated_at": "2026-10-30T00:00:00Z",
+  "created_at": "2026-10-30T00:00:00Z",
+  "valid_until": "2026-11-01T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.82,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    57700
+  ],
+  "no_trade_conditions": [
+    "Wave C has not completed a clear five-wave decline.",
+    "No confirmed bullish reversal or five-up/three-down retest is present.",
+    "Do not open a long while price remains below strong resistance during the active selloff."
+  ],
+  "notes": "Macro bias remains bullish after corrective wave 2, but the short-term structure is bearish. Watch 74600 and 73000 as nearby supports and 67600 as the deeper high-probability reversal area. No active futures entry until the decline completes and a bullish reversal confirms."
+}
