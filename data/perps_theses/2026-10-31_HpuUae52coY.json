@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "HpuUae52coY",
+  "video_url": "https://www.youtube.com/watch?v=HpuUae52coY",
+  "generated_at": "2026-10-31T00:00:00Z",
+  "created_at": "2026-10-31T00:00:00Z",
+  "valid_until": "2026-11-01T23:59:59Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.82,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    80000
+  ],
+  "no_trade_conditions": [
+    "Price remains compressed around the POC and anchored VWAP.",
+    "The five-wave corrective decline is not complete.",
+    "No confirmed wave-four rebound or support reversal is present.",
+    "A move to or above 80000 would materially weaken the local bearish count."
+  ],
+  "notes": "Wait for another downside leg toward the 76000-74000 liquidity area. Prioritize longs only after a complete five-wave decline and reversal confirmation within the broader 74500-67500 support region; a later wave-four rejection may create a short setup, but it is not confirmed now."
+}
