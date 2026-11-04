@@ -2,22 +2,21 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "fFwGYMkobmQ",
-  "video_url": "https://www.youtube.com/watch?v=fFwGYMkobmQ",
-  "generated_at": "2026-11-03T00:00:00Z",
-  "created_at": "2026-11-03T00:00:00Z",
-  "valid_until": "2026-11-04T00:00:00Z",
+  "video_id": "lnSJ_MhKWq8",
+  "video_url": "https://www.youtube.com/watch?v=lnSJ_MhKWq8",
+  "generated_at": "2026-11-04T00:00:00Z",
+  "created_at": "2026-11-04T00:00:00Z",
+  "valid_until": "2026-11-05T23:59:59Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.86,
+  "confidence": 0.88,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [],
   "no_trade_conditions": [
-    "High event-driven volatility remains unresolved",
-    "The five-wave decline is not complete",
-    "Price remains between nearby liquidation clusters without structural confirmation",
-    "No confirmed reclaim or rejection setup is present"
+    "The current rise has not confirmed a five-wave impulse.",
+    "No three-wave pullback has formed after a confirmed five-wave advance.",
+    "A three-wave rise followed by a five-wave decline would signal a larger corrective leg."
   ],
-  "notes": "Wait for a complete five-wave decline and confirmed reversal before considering a long. The transcript allows an upside liquidity sweep toward 78000 or 79000 before renewed downside, so no deterministic entry is justified."
+  "notes": "Do not chase BTC near 80229. Wait for a confirmed five-wave advance followed by a three-wave pullback before considering longs. The 74500 and 71000 levels are Fibonacci references, not validated entry zones."
 }
