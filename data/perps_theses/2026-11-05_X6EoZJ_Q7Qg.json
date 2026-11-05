@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "X6EoZJ_Q7Qg",
+  "video_url": "https://www.youtube.com/watch?v=X6EoZJ_Q7Qg",
+  "generated_at": "2026-11-05T00:00:00Z",
+  "created_at": "2026-11-05T00:00:00Z",
+  "valid_until": "2026-11-07T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.84,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    87000
+  ],
+  "no_trade_conditions": [
+    "Price remains above the 74000-71000 preferred retracement area without a confirmed corrective low",
+    "Price is falling impulsively without a confirmed reversal structure",
+    "No transcript-supported resistance entry and stop loss are available for a deterministic short"
+  ],
+  "notes": "The long-term cycle bias is bullish from the approximately 57000 bear-market low, but the wave-2 correction is considered incomplete. The transcript favors a move toward 74000 and potentially 71000-70000 before a confirmed wave-3 long; because no deterministic stop loss is stated, the bot must wait."
+}

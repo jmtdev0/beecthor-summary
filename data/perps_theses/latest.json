@@ -2,21 +2,23 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "lnSJ_MhKWq8",
-  "video_url": "https://www.youtube.com/watch?v=lnSJ_MhKWq8",
-  "generated_at": "2026-11-04T00:00:00Z",
-  "created_at": "2026-11-04T00:00:00Z",
-  "valid_until": "2026-11-05T23:59:59Z",
+  "video_id": "X6EoZJ_Q7Qg",
+  "video_url": "https://www.youtube.com/watch?v=X6EoZJ_Q7Qg",
+  "generated_at": "2026-11-05T00:00:00Z",
+  "created_at": "2026-11-05T00:00:00Z",
+  "valid_until": "2026-11-07T00:00:00Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.88,
+  "confidence": 0.84,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [],
-  "no_trade_conditions": [
-    "The current rise has not confirmed a five-wave impulse.",
-    "No three-wave pullback has formed after a confirmed five-wave advance.",
-    "A three-wave rise followed by a five-wave decline would signal a larger corrective leg."
+  "invalidation_levels": [
+    87000
   ],
-  "notes": "Do not chase BTC near 80229. Wait for a confirmed five-wave advance followed by a three-wave pullback before considering longs. The 74500 and 71000 levels are Fibonacci references, not validated entry zones."
+  "no_trade_conditions": [
+    "Price remains above the 74000-71000 preferred retracement area without a confirmed corrective low",
+    "Price is falling impulsively without a confirmed reversal structure",
+    "No transcript-supported resistance entry and stop loss are available for a deterministic short"
+  ],
+  "notes": "The long-term cycle bias is bullish from the approximately 57000 bear-market low, but the wave-2 correction is considered incomplete. The transcript favors a move toward 74000 and potentially 71000-70000 before a confirmed wave-3 long; because no deterministic stop loss is stated, the bot must wait."
 }
