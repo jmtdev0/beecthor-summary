@@ -2,23 +2,24 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "X6EoZJ_Q7Qg",
-  "video_url": "https://www.youtube.com/watch?v=X6EoZJ_Q7Qg",
-  "generated_at": "2026-11-05T00:00:00Z",
-  "created_at": "2026-11-05T00:00:00Z",
-  "valid_until": "2026-11-07T00:00:00Z",
+  "video_id": "OSOCK-RbfS0",
+  "video_url": "https://www.youtube.com/watch?v=OSOCK-RbfS0",
+  "generated_at": "2026-11-08T00:00:00Z",
+  "created_at": "2026-11-08T00:00:00Z",
+  "valid_until": "2026-11-10T00:00:00Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.84,
+  "confidence": 0.78,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [
-    87000
+    77000,
+    57700
   ],
   "no_trade_conditions": [
-    "Price remains above the 74000-71000 preferred retracement area without a confirmed corrective low",
-    "Price is falling impulsively without a confirmed reversal structure",
-    "No transcript-supported resistance entry and stop loss are available for a deterministic short"
+    "Price remains between 74500 and 77000 without a confirmed structural break.",
+    "No confirmed reversal follows a sweep of the 74500-72800 liquidity area.",
+    "The transcript does not provide a precise futures stop-loss for an immediate entry."
   ],
-  "notes": "The long-term cycle bias is bullish from the approximately 57000 bear-market low, but the wave-2 correction is considered incomplete. The transcript favors a move toward 74000 and potentially 71000-70000 before a confirmed wave-3 long; because no deterministic stop loss is stated, the bot must wait."
+  "notes": "Near-term pressure remains bearish below the 77000 POC, with greater two-week liquidation liquidity at 74500-72800. The preferred eventual trade is a confirmed long from support, but no deterministic entry and stop pair is available yet."
 }

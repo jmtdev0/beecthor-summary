@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "OSOCK-RbfS0",
+  "video_url": "https://www.youtube.com/watch?v=OSOCK-RbfS0",
+  "generated_at": "2026-11-08T00:00:00Z",
+  "created_at": "2026-11-08T00:00:00Z",
+  "valid_until": "2026-11-10T00:00:00Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.78,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    77000,
+    57700
+  ],
+  "no_trade_conditions": [
+    "Price remains between 74500 and 77000 without a confirmed structural break.",
+    "No confirmed reversal follows a sweep of the 74500-72800 liquidity area.",
+    "The transcript does not provide a precise futures stop-loss for an immediate entry."
+  ],
+  "notes": "Near-term pressure remains bearish below the 77000 POC, with greater two-week liquidation liquidity at 74500-72800. The preferred eventual trade is a confirmed long from support, but no deterministic entry and stop pair is available yet."
+}
