@@ -2,24 +2,35 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "OSOCK-RbfS0",
-  "video_url": "https://www.youtube.com/watch?v=OSOCK-RbfS0",
-  "generated_at": "2026-11-08T00:00:00Z",
-  "created_at": "2026-11-08T00:00:00Z",
-  "valid_until": "2026-11-10T00:00:00Z",
+  "video_id": "lMCiOztcRJs",
+  "video_url": "https://www.youtube.com/watch?v=lMCiOztcRJs",
+  "generated_at": "2026-11-09T00:00:00Z",
+  "created_at": "2026-11-09T00:00:00Z",
+  "valid_until": "2026-11-10T23:59:59Z",
   "macro_bias": "unknown",
-  "preferred_setup": "wait",
-  "confidence": 0.78,
+  "preferred_setup": "short_rejection",
+  "confidence": 0.74,
   "long_zones": [],
-  "short_zones": [],
+  "short_zones": [
+    {
+      "low": 76300.0,
+      "high": 77800.0,
+      "stop_loss": 78500.0,
+      "targets": [
+        73500.0,
+        70000.0
+      ],
+      "label": "three_wave_bounce_rejection"
+    }
+  ],
   "invalidation_levels": [
-    77000,
-    57700
+    77800,
+    78500
   ],
   "no_trade_conditions": [
-    "Price remains between 74500 and 77000 without a confirmed structural break.",
-    "No confirmed reversal follows a sweep of the 74500-72800 liquidity area.",
-    "The transcript does not provide a precise futures stop-loss for an immediate entry."
+    "No short before a clear rejection inside the 76300-77800 resistance zone.",
+    "No new short if price reclaims and holds above 77800.",
+    "Do not chase a position around 74565 inside the current lateral range."
   ],
-  "notes": "Near-term pressure remains bearish below the 77000 POC, with greater two-week liquidation liquidity at 74500-72800. The preferred eventual trade is a confirmed long from support, but no deterministic entry and stop pair is available yet."
+  "notes": "Primary setup is a short after a corrective bounce and rejection. The 70000 target combines the wave C one-to-one projection with the 0.5 Fibonacci retracement; a sustained reclaim of 77800 weakens the bearish count, while 78500 is the hard stop above the defined zone."
 }
