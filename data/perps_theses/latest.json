@@ -2,35 +2,25 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "lMCiOztcRJs",
-  "video_url": "https://www.youtube.com/watch?v=lMCiOztcRJs",
-  "generated_at": "2026-11-09T00:00:00Z",
-  "created_at": "2026-11-09T00:00:00Z",
-  "valid_until": "2026-11-10T23:59:59Z",
+  "video_id": "stQByPeNp_U",
+  "video_url": "https://www.youtube.com/watch?v=stQByPeNp_U",
+  "generated_at": "2026-11-10T00:00:00Z",
+  "created_at": "2026-11-10T00:00:00Z",
+  "valid_until": "2026-11-11T23:59:59Z",
   "macro_bias": "unknown",
-  "preferred_setup": "short_rejection",
-  "confidence": 0.74,
+  "preferred_setup": "wait",
+  "confidence": 0.84,
   "long_zones": [],
-  "short_zones": [
-    {
-      "low": 76300.0,
-      "high": 77800.0,
-      "stop_loss": 78500.0,
-      "targets": [
-        73500.0,
-        70000.0
-      ],
-      "label": "three_wave_bounce_rejection"
-    }
-  ],
+  "short_zones": [],
   "invalidation_levels": [
-    77800,
-    78500
+    81000,
+    57700
   ],
   "no_trade_conditions": [
-    "No short before a clear rejection inside the 76300-77800 resistance zone.",
-    "No new short if price reclaims and holds above 77800.",
-    "Do not chase a position around 74565 inside the current lateral range."
+    "The five-wave decline toward 70000-71000 is not complete.",
+    "No confirmed bullish reversal has formed after testing support.",
+    "The internal Elliott structure remains ambiguous between 71000 and 81000.",
+    "Do not short a direct rally toward 90000-92000 without a newly confirmed bearish structure."
   ],
-  "notes": "Primary setup is a short after a corrective bounce and rejection. The 70000 target combines the wave C one-to-one projection with the 0.5 Fibonacci retracement; a sustained reclaim of 77800 weakens the bearish count, while 78500 is the hard stop above the defined zone."
+  "notes": "Wait at the current price. The preferred path is a corrective five-wave decline toward 70000-71000, followed by bullish reversal confirmation before considering a long. The 66700-67600 Golden Pocket is the deeper high-probability reversal area, but no transcript-supported stop level is available, so no executable zone is defined."
 }
