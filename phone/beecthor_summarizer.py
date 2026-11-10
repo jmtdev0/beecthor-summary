@@ -966,9 +966,6 @@ if __name__ == '__main__':
     except Exception as exc:
         import traceback
         traceback.print_exc()
-        try:
-            send_telegram_message(f'❌ Beecthor summarizer failed:\n{exc}')
-        except Exception:
-            pass
+        print('[summarizer] Run failed; details are in the server log.')
         send_server_log('phone.summarizer', 'run_failed', f'Unhandled exception: {exc}', level='error')
         sys.exit(1)
