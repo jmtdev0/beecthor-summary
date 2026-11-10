@@ -51,7 +51,8 @@ class PerpsThesisTests(unittest.TestCase):
     def test_summary_schema_is_strict_for_perps_thesis(self):
         perps_schema = summary.SUMMARY_OUTPUT_SCHEMA["properties"]["perps_thesis"]
 
-        self.assertIn("perps_tip", summary.SUMMARY_OUTPUT_SCHEMA["required"])
+        for field in summary.SHORT_SUMMARY_FIELDS:
+            self.assertIn(field, summary.SUMMARY_OUTPUT_SCHEMA["required"])
         self.assertEqual(perps_schema["additionalProperties"], False)
         self.assertEqual(perps_schema["properties"]["symbol"]["enum"], ["BTCUSDC"])
         self.assertEqual(
@@ -92,46 +93,44 @@ class PerpsThesisTests(unittest.TestCase):
                 summary.PERPS_THESES_DIR = original_dir
                 summary.LATEST_PERPS_THESIS_FILE = original_latest
 
-    def test_summary_style_accepts_structured_spoiler(self):
-        full_analysis = (
-            "📊 <b>Situación actual</b>\nBTC está en zona de decisión.\n\n"
-            "🎯 <b>Escenario principal</b>\nEsperar rechazo en resistencia.\n\n"
-            "⚠️ <b>Niveles clave</b>\nSoporte 61.000; resistencia 65.000."
+    def test_normalize_summary_payload_cleans_short_fields(self):
+        short_summary, thesis = summary.normalize_summary_payload(
+            {
+                "expected_move": "• que siga <b>bajando</b> hasta 70.000 $.",
+                "if_lower": "rebote en 66.700 $.",
+                "if_higher": "recupera 81.000 $.",
+                "his_plan": "esperar.",
+                "long_term": "sigue siendo alcista.",
+                "perps_thesis": {"preferred_setup": "wait"},
+            },
+            "abc123",
         )
 
-        self.assertEqual(summary.count_summary_section_headings(full_analysis), 3)
-        summary.validate_summary_style(full_analysis)
+        self.assertEqual(short_summary["expected_move"], "que siga bajando hasta 70.000 $.")
+        self.assertEqual(thesis["preferred_setup"], "wait")
 
-    def test_summary_style_rejects_unstructured_paragraph(self):
-        full_analysis = (
-            "El análisis plantea que BTC sigue dentro de una estructura correctiva bajista mayor, "
-            "con zonas relevantes en <b>65.000</b> y <b>67.800</b>, pero sin separar los apartados."
-        )
-
-        with self.assertRaisesRegex(RuntimeError, "section format"):
-            summary.validate_summary_style(full_analysis)
+    def test_normalize_summary_payload_rejects_missing_fields(self):
+        with self.assertRaisesRegex(RuntimeError, "missing required summary fields"):
+            summary.normalize_summary_payload({"expected_move": "subir."}, "abc123")
 
     def test_build_message_escapes_llm_text_for_telegram_html(self):
         message = summary.build_message(
             video_id="abc123",
             prices_now={"btc_usd": 63000, "btc_eur": 59000, "sol_usd": 140, "sol_eur": 131},
-            prices_yesterday=None,
-            robot_score=5.5,
-            robot_comment="Riesgo si BTC < 60.000 & volatilidad alta.",
-            resumen="Manos quietas si BTC < 60.000.",
-            macro_summary="BTC < resistencia & sin reclaim.",
-            perps_tip="Si BTC < 60.000, no perseguir el movimiento.",
-            full_analysis=(
-                "📊 <b>Situación actual</b>\nBTC < resistencia.\n\n"
-                "🎯 <b>Escenario principal</b>\nEsperar confirmación.\n\n"
-                "⚠️ <b>Niveles clave</b>\n60.000 & 65.000."
-            ),
+            prices_yesterday={"btc_usd": 64000, "btc_eur": 60000},
+            short_summary={
+                "expected_move": "que baje si BTC < 60.000 & haya volatilidad.",
+                "if_lower": "rebote en 58.000 $.",
+                "if_higher": "recupera 65.000 $.",
+                "his_plan": "esperar.",
+                "long_term": "alcista.",
+            },
         )
 
-        self.assertIn("BTC &lt; 60.000 &amp; volatilidad alta.", message)
-        self.assertIn("BTC &lt; resistencia &amp; sin reclaim.", message)
-        self.assertIn("📊 <b>Situación actual</b>", message)
-        self.assertIn("BTC &lt; resistencia.", message)
+        self.assertIn("👉 <b>Qué espera:</b> que baje si BTC &lt; 60.000 &amp; haya volatilidad.", message)
+        self.assertIn("BTC ahora: <b>63.000 $</b> (-1,6 % desde ayer)", message)
+        self.assertIn("🧭 <b>A largo plazo:</b> alcista.", message)
+        self.assertNotIn("Análisis completo", message)
 
     def test_compact_telegram_message_keeps_visible_summary(self):
         message = (

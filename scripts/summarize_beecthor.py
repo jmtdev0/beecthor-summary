@@ -60,7 +60,8 @@ MAX_TRANSCRIPT_CHARS = 80_000  # ~80K chars stays safely within the 128K-token c
 MAX_PERPS_THESIS_VALID_HOURS = 48
 MAX_LLM_TRANSCRIPT_CHARS = 14_000
 BEECTHOR_SUMMARY_LLM_PROVIDER = os.environ.get("BEECTHOR_SUMMARY_LLM_PROVIDER", "codex").strip().lower()
-BEECTHOR_CODEX_MODEL = os.environ.get("BEECTHOR_CODEX_MODEL", "").strip()
+DEFAULT_BEECTHOR_CODEX_MODEL = "gpt-6-luna"
+BEECTHOR_CODEX_MODEL = os.environ.get("BEECTHOR_CODEX_MODEL", "").strip() or DEFAULT_BEECTHOR_CODEX_MODEL
 BEECTHOR_PERPS_SYMBOL = os.environ.get("BEECTHOR_PERPS_SYMBOL", "BTCUSDC").strip().upper() or "BTCUSDC"
 TELEGRAM_MAX_MESSAGE_CHARS = 3900
 
@@ -624,71 +625,50 @@ PERPS_THESIS_OUTPUT_SCHEMA = {
 }
 
 
+SHORT_SUMMARY_FIELDS = ("expected_move", "if_lower", "if_higher", "his_plan", "long_term")
+
 SUMMARY_OUTPUT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["macro_summary", "perps_tip", "resumen", "full_analysis", "perps_thesis"],
+    "required": [*SHORT_SUMMARY_FIELDS, "perps_thesis"],
     "properties": {
-        "macro_summary": {"type": "string"},
-        "perps_tip": {"type": "string"},
-        "resumen": {"type": "string"},
-        "full_analysis": {"type": "string"},
+        **{field: {"type": "string"} for field in SHORT_SUMMARY_FIELDS},
         "perps_thesis": PERPS_THESIS_OUTPUT_SCHEMA,
     },
 }
 
 
-SUMMARY_STYLE_GUIDE = (
-    "For full_analysis, preserve this Telegram-compatible HTML structure whenever the transcript supports it. "
-    "Do not force unsupported sections and never invent levels or indicators:\n"
-    "📊 <b>Situación actual</b>\n"
-    "🎯 <b>Escenario principal</b>\n"
-    "🔻 <b>Escenario alternativo</b>\n"
-    "📉 <b>Macro (largo plazo)</b>\n"
-    "🧮 <b>Conteo y niveles técnicos</b> "
-    "(Elliott, Fibonacci, Value Area/POC, EMAs, AVWAP, CME gap, order blocks, supports/resistances)\n"
-    "💧 <b>Liquidaciones</b> (only if clearly mentioned)\n"
-    "⚠️ <b>Niveles clave</b>\n"
-    "💡 <b>Estrategia que plantea</b>\n"
-    "Mandatory format rule: full_analysis must contain at least three HTML section headings from this list. "
-    "Use short paragraphs or bullets under each heading. Omit headings that are not supported by the transcript. "
-    "Do not include <tg-spoiler>; build_message() wraps full_analysis."
-)
-
-
-SUMMARY_SECTION_TITLE_ALIASES = {
-    "situación actual",
-    "contexto para nuevos",
-    "escenario principal",
-    "escenario actual",
-    "escenario alternativo",
-    "macro",
-    "macro (largo plazo)",
-    "conteo",
-    "conteo y niveles técnicos",
-    "niveles técnicos",
-    "liquidaciones",
-    "niveles clave",
-    "estrategia",
-    "estrategia que plantea",
-    "conclusión operativa",
-}
-SUMMARY_MIN_SECTION_HEADINGS = 3
-
-
-PERPS_TIP_GUIDE = (
-    "A single concise Spanish sentence for a visible Telegram section called Perps Tip. "
-    "It must answer this practical question: 'what should we do today from the current BTC price?' "
-    "Use the provided current BTC market context to anchor the sentence, while deriving direction, targets, "
-    "entry zones, and invalidation only from Beecthor's transcript. Prefer this structure when possible: "
-    '"BTC ronda X; hoy tocaría abrir/mantener long hacia Y", '
-    '"BTC ronda X; no perseguiría long aquí, esperaría short en Y si rechaza", '
-    'or "BTC ronda X; no hay trade claro y toca esperar". '
-    "If Beecthor expects a move toward a resistance/support before the main reversal, state the tactical "
-    "trade for that path first, then the later reaction trade. For example: "
-    '"BTC ronda 66.300; la jugada táctica sería long hacia 69.000, y allí buscar short si rechaza." '
-    "Use a conditional sentence only when the action truly depends on confirmation. The tip must be "
-    'consistent with perps_thesis; if preferred_setup is "wait", it should not recommend opening a trade.'
+SHORT_SUMMARY_GUIDE = (
+    "The Telegram message is read by people who do NOT know technical analysis. "
+    "Write in plain, everyday Spanish, as if explaining it to a friend. "
+    "Strictly forbidden jargon in these five fields: ondas, Elliott, conteos, A-B-C, impulsos, "
+    "Fibonacci, retrocesos (0,382, 0,5...), Golden Pocket, Value Area, POC, EMAs, AVWAP, order blocks, "
+    "liquidaciones, gap del CME. Translate any of them into what it means for the price "
+    "(e.g. 'una zona donde suele rebotar').\n"
+    "Use at most three price levels across the whole summary: one for the expected move, "
+    "one for the downside case and one for the upside case. Write prices like 70.000 $ or "
+    "70.000–71.000 $. Never invent levels that are not in the transcript.\n"
+    "Each field is ONE short sentence (max ~25 words), no bullets, no HTML tags:\n"
+    '  "expected_move": where Beecthor expects BTC to go next in the short term (hours to a few days), '
+    "and what he expects after that. Example: 'que el precio siga bajando un poco más, hasta "
+    "70.000–71.000 $, y que desde ahí rebote.'\n"
+    '  "if_lower": what happens if the price falls further than expected: the next zone where he sees '
+    "a bounce. Example: 'la siguiente zona donde ve rebote está en 66.700–67.600 $.'\n"
+    '  "if_higher": what would change his mind upwards. Example: \'solo daría la bajada por terminada si '
+    "BTC recupera los 81.000 $.'\n"
+    '  "his_plan": what he would do himself, in plain words. Beecthor separates two activities and the '
+    "reader must never confuse them: (1) TRADING (perps): opening or holding longs/shorts; (2) CYCLE "
+    "ACCUMULATION (spot): his long-term 'compras de ciclo'. Never write a bare 'comprar' or 'vender': say "
+    "'abrir largos/cortos' or 'mantener el corto' for trading, and 'compras de ciclo' or 'acumular en "
+    "spot' for accumulation. If the video mentions both, include both in the same sentence. If he already "
+    "has an open trade, mention it. Example: 'para trading, no abrir largos todavía; esperar a que toque "
+    "70.000 $ y se dé la vuelta. Mientras tanto sigue con sus compras de ciclo en spot.' If the video "
+    "gives no clear trading path, say plainly that he sees no clear trade and prefers to wait.\n"
+    '  "long_term": the big-picture direction in one sentence, no levels. Example: \'sigue siendo alcista. '
+    "Ve esta caída como una corrección normal dentro de una subida mayor.'\n"
+    "Start each field in lowercase unless it begins with a proper noun or BTC, because the message "
+    "puts a bold label before it (e.g. 'Qué espera: ...'). Never repeat the label words at the start of the field (write 'la siguiente zona...', not 'si cae más, la siguiente zona...'; write 'sigue viendo más subida', not 'a largo plazo sigue...'). If the transcript does not cover a field, "
+    "say so briefly in plain words instead of guessing."
 )
 
 
@@ -699,40 +679,36 @@ def build_current_market_context(prices_now: dict | None) -> str:
     btc_eur = prices_now.get("btc_eur")
     if btc_usd is None:
         return "Current BTC market context is unavailable."
-    context = f"Current BTC reference for the Perps Tip: BTC is approximately {btc_usd}$"
+    context = f"Current BTC reference: BTC is approximately {btc_usd}$"
     if btc_eur is not None:
         context += f" / {btc_eur}€"
     return (
         context
-        + ". For Perps Tip wording, BTCUSDC can be treated as approximately the same USD reference."
+        + ". Use it only to phrase the summary relative to the current price; direction and levels "
+        "must come from Beecthor's transcript. BTCUSDC can be treated as the same USD reference."
     )
 
 
 def build_llm_summary_prompt(
     transcript: str,
-    robot_score: float,
-    robot_comment: str,
     video_id: str,
     prices_now: dict | None = None,
+    max_transcript_chars: int = MAX_LLM_TRANSCRIPT_CHARS,
 ) -> str:
-    excerpt = transcript[:MAX_LLM_TRANSCRIPT_CHARS]
-    if len(transcript) > MAX_LLM_TRANSCRIPT_CHARS:
+    excerpt = transcript[:max_transcript_chars]
+    if len(transcript) > max_transcript_chars:
         excerpt += "\n[transcript truncated]"
 
     return (
         "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
-        "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
-        f"(robot score: {robot_score:.1f}/10 - {robot_comment}).\n\n"
+        "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor and "
+        "explain his short-term price expectation in very simple terms.\n\n"
         f"{build_current_market_context(prices_now)}\n\n"
-        "Return ONLY a valid JSON object with exactly these five fields:\n"
-        '  "macro_summary": 1-2 sentences in Spanish on the macro BTC outlook '
-        "(direction, key levels, bias).\n"
-        f'  "perps_tip": {PERPS_TIP_GUIDE}\n'
-        '  "resumen": 3-5 bullet lines in Spanish covering macro view, Elliott count/structure, '
-        "key levels, liquidations, and the operational conclusion. Each bullet starts with •\n"
-        '  "full_analysis": structured Spanish Telegram-compatible HTML following this guide:\n'
-        f"{SUMMARY_STYLE_GUIDE}\n"
+        "Return ONLY a valid JSON object with exactly these six fields: "
+        f"{', '.join(SHORT_SUMMARY_FIELDS)}, perps_thesis.\n\n"
+        f"{SHORT_SUMMARY_GUIDE}\n\n"
         f'  "perps_thesis": an object for a deterministic {BEECTHOR_PERPS_SYMBOL} perpetual futures bot. '
+        "This object is NOT shown to readers, so technical precision is welcome here. "
         "Use English enum values and numeric prices only. If the transcript is ambiguous, "
         'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
         "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
@@ -745,9 +721,10 @@ def build_llm_summary_prompt(
         "Short targets must be below the zone and short stop_loss above the zone. "
         "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
         f'Use video_id "{video_id}" and symbol "{BEECTHOR_PERPS_SYMBOL}". valid_until must be no more than '
-        f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
-        "macro_summary, perps_tip, resumen, and full_analysis must be in Spanish. "
-        "perps_thesis enum/string fields must be in English.\n"
+        f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at. "
+        "The five summary fields must be consistent with perps_thesis: if preferred_setup is "
+        '"wait", his_plan must not suggest opening a trade.\n\n'
+        "The five summary fields must be in Spanish. perps_thesis enum/string fields must be in English.\n"
         "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
         f"TRANSCRIPT:\n{excerpt}"
     )
@@ -773,75 +750,34 @@ def parse_llm_json(raw: str) -> dict:
         raise RuntimeError(f"LLM output did not contain valid JSON:\n{raw[:500]}")
 
 
-def normalize_perps_tip(value: object, perps_thesis: dict) -> str:
-    tip = str(value or "").strip()
-    preferred_setup = str(perps_thesis.get("preferred_setup") or "wait").strip().lower()
-
-    if preferred_setup == "wait":
-        if not tip or not re.search(r"\b(manos quietas|esperar|no hay|sin .*clara|sin .*claro|no .*clara|no .*claro|no forzar)\b", tip.lower()):
-            return (
-                "Ahora mismo no hay una apertura clara de short o long según el vídeo; "
-                "manos quietas hasta que el precio confirme una zona operable."
-            )
-    elif not tip:
-        return (
-            "Hay una tesis operable, pero el vídeo no deja una frase limpia de ejecución; "
-            "esperar confirmación en las zonas indicadas."
-        )
-
-    return tip
+def _clean_summary_sentence(value: object) -> str:
+    """Strip HTML tags, bullets and stray whitespace from a one-sentence summary field."""
+    text = re.sub(r"<[^>]+>", "", str(value or ""))
+    text = re.sub(r"^\s*[•\-*]\s*", "", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
-def count_summary_section_headings(full_analysis: str) -> int:
-    """Count recognized HTML section headings in the LLM-generated spoiler body."""
-    titles = re.findall(r"<b>\s*([^<]+?)\s*</b>", full_analysis, flags=re.IGNORECASE)
-    normalized_titles = {
-        re.sub(r"\s+", " ", title.strip().lower())
-        for title in titles
-    }
-    return sum(
-        1
-        for alias in SUMMARY_SECTION_TITLE_ALIASES
-        if alias in normalized_titles
-    )
-
-
-def validate_summary_style(full_analysis: str) -> None:
-    if "<tg-spoiler" in full_analysis.lower():
-        raise RuntimeError("LLM full_analysis must not include <tg-spoiler>; build_message wraps it.")
-    heading_count = count_summary_section_headings(full_analysis)
-    if heading_count < SUMMARY_MIN_SECTION_HEADINGS:
-        raise RuntimeError(
-            "LLM full_analysis did not preserve the required section format: "
-            f"found {heading_count} recognized headings, expected at least {SUMMARY_MIN_SECTION_HEADINGS}."
-        )
-
-
-def normalize_summary_payload(data: dict, video_id: str) -> tuple[str, str, str, str, dict]:
-    macro_summary = data.get("macro_summary", "")
-    resumen = data.get("resumen", "")
-    full_analysis = data.get("full_analysis", "")
+def normalize_summary_payload(data: dict, video_id: str) -> tuple[dict[str, str], dict]:
+    """Return (short_summary, perps_thesis) from the LLM JSON payload."""
     perps_thesis = normalize_perps_thesis(data.get("perps_thesis"), video_id)
-    perps_tip = normalize_perps_tip(data.get("perps_tip"), perps_thesis)
-    if not macro_summary or not perps_tip or not resumen or not full_analysis:
-        raise RuntimeError(f"LLM JSON missing required fields: {list(data.keys())}")
-    validate_summary_style(full_analysis)
-    return macro_summary, perps_tip, resumen, full_analysis, perps_thesis
+    short_summary = {field: _clean_summary_sentence(data.get(field)) for field in SHORT_SUMMARY_FIELDS}
+    missing = [field for field, value in short_summary.items() if not value]
+    if missing:
+        raise RuntimeError(f"LLM JSON missing required summary fields: {missing}")
+    return short_summary, perps_thesis
 
 
 def generate_summary_via_codex(
     transcript: str,
-    robot_score: float,
-    robot_comment: str,
     video_id: str,
     prices_now: dict | None = None,
-) -> tuple[str, str, str, str, dict]:
-    """Call Codex CLI non-interactively to generate the Beecthor summary fields."""
+) -> tuple[dict[str, str], dict]:
+    """Call Codex CLI non-interactively; returns (short_summary, perps_thesis)."""
     codex_bin = shutil.which("codex") or shutil.which("codex.cmd")
     if not codex_bin:
         raise RuntimeError("Codex CLI not found in PATH")
 
-    prompt = build_llm_summary_prompt(transcript, robot_score, robot_comment, video_id, prices_now)
+    prompt = build_llm_summary_prompt(transcript, video_id, prices_now)
     env = os.environ.copy()
     env.setdefault("LANG", "en_US.UTF-8")
     env.setdefault("PYTHONIOENCODING", "utf-8")
@@ -888,50 +824,16 @@ MAX_COPILOT_TRANSCRIPT_CHARS = 6_000
 
 def generate_summary_via_copilot(
     transcript: str,
-    robot_score: float,
-    robot_comment: str,
     video_id: str,
     prices_now: dict | None = None,
-) -> tuple[str, str, str, str, dict]:
-    """Call Copilot CLI to generate the Beecthor summary fields.
+) -> tuple[dict[str, str], dict]:
+    """Call Copilot CLI to generate the short Beecthor summary.
 
-    Returns (macro_summary, perps_tip, resumen, full_analysis, perps_thesis).
+    Returns (short_summary, perps_thesis).
     Raises RuntimeError if Copilot auth is missing or output cannot be parsed.
     """
-    excerpt = transcript[:MAX_COPILOT_TRANSCRIPT_CHARS]
-    if len(transcript) > MAX_COPILOT_TRANSCRIPT_CHARS:
-        excerpt += "\n[transcript truncated]"
-
-    prompt = (
-        "You are a financial analyst assistant specialized in Bitcoin technical analysis.\n"
-        "Analyze the following transcript from a Spanish Bitcoin trading video by Beecthor "
-        f"(robot score: {robot_score:.1f}/10 — {robot_comment}).\n\n"
-        f"{build_current_market_context(prices_now)}\n\n"
-        "Return ONLY a valid JSON object with exactly these five fields:\n"
-        '  "macro_summary": 1-2 sentences on the macro BTC outlook (direction, key levels, bias)\n'
-        f'  "perps_tip": {PERPS_TIP_GUIDE}\n'
-        '  "resumen": 3-5 bullet lines covering macro view, Elliott count/structure, key levels, '
-        "liquidations, and the operational conclusion. Each bullet starts with •\n"
-        '  "full_analysis": structured Spanish Telegram-compatible HTML following this guide:\n'
-        f"{SUMMARY_STYLE_GUIDE}\n"
-        f'  "perps_thesis": an object for a deterministic {BEECTHOR_PERPS_SYMBOL} perpetual futures bot. '
-        "Use English enum values and numeric prices only. If the transcript is ambiguous, "
-        'set preferred_setup to "wait" and leave long_zones and short_zones empty. '
-        "Supported preferred_setup values are: wait, short_resistance_bearish_regime, "
-        "short_resistance, short_rejection, long_support_sweep_reclaim, long_support, "
-        "sweep_reclaim_long. The perps_thesis object must contain exactly these fields: "
-        "schema_version, symbol, video_id, generated_at, valid_until, macro_bias, "
-        "preferred_setup, confidence, long_zones, short_zones, invalidation_levels, "
-        "no_trade_conditions, notes. Each zone must contain low, high, stop_loss, targets, label. "
-        "Long targets must be above the zone and long stop_loss below the zone. "
-        "Short targets must be below the zone and short stop_loss above the zone. "
-        "Never invent precise levels not supported by the transcript; prefer wait when unsure. "
-        f'Use video_id "{video_id}" and symbol "{BEECTHOR_PERPS_SYMBOL}". valid_until must be no more than '
-        f"{MAX_PERPS_THESIS_VALID_HOURS} hours after generated_at.\n\n"
-        "macro_summary, perps_tip, resumen, and full_analysis must be in Spanish. "
-        "perps_thesis enum/string fields must be in English.\n"
-        "Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.\n\n"
-        f"TRANSCRIPT:\n{excerpt}"
+    prompt = build_llm_summary_prompt(
+        transcript, video_id, prices_now, max_transcript_chars=MAX_COPILOT_TRANSCRIPT_CHARS
     )
 
     env = os.environ.copy()
@@ -963,29 +865,18 @@ def generate_summary_via_copilot(
         raise RuntimeError(f"Copilot output did not contain valid JSON:\n{raw[:500]}")
     data = json.loads(match.group())
 
-    macro_summary = data.get("macro_summary", "")
-    resumen = data.get("resumen", "")
-    full_analysis = data.get("full_analysis", "")
-    perps_thesis = normalize_perps_thesis(data.get("perps_thesis"), video_id)
-    perps_tip = normalize_perps_tip(data.get("perps_tip"), perps_thesis)
-    if not macro_summary or not perps_tip or not resumen or not full_analysis:
-        raise RuntimeError(f"Copilot JSON missing required fields: {list(data.keys())}")
-    validate_summary_style(full_analysis)
-
-    return macro_summary, perps_tip, resumen, full_analysis, perps_thesis
+    return normalize_summary_payload(data, video_id)
 
 
 def generate_summary_via_llm(
     transcript: str,
-    robot_score: float,
-    robot_comment: str,
     video_id: str,
     prices_now: dict | None = None,
-) -> tuple[str, str, str, str, dict]:
+) -> tuple[dict[str, str], dict]:
     if BEECTHOR_SUMMARY_LLM_PROVIDER == "copilot":
-        return generate_summary_via_copilot(transcript, robot_score, robot_comment, video_id, prices_now)
+        return generate_summary_via_copilot(transcript, video_id, prices_now)
     if BEECTHOR_SUMMARY_LLM_PROVIDER == "codex":
-        return generate_summary_via_codex(transcript, robot_score, robot_comment, video_id, prices_now)
+        return generate_summary_via_codex(transcript, video_id, prices_now)
     raise RuntimeError(
         "Unsupported BEECTHOR_SUMMARY_LLM_PROVIDER: "
         f"{BEECTHOR_SUMMARY_LLM_PROVIDER!r}. Use 'codex' or 'copilot'."
@@ -1017,87 +908,42 @@ def sanitize_telegram_html_fragment(text: object) -> str:
     return escaped
 
 
-def _fmt_btc(usd: float, eur: float) -> str:
-    """Format a BTC price pair with European thousands separator (e.g. 70.492$)."""
-    return f"<b>{usd:,.0f}$</b> / <b>{eur:,.0f}€</b>".replace(",", ".")
+def _fmt_price(value: float) -> str:
+    """Format a BTC price with European thousands separator (e.g. 73.200)."""
+    return f"{value:,.0f}".replace(",", ".")
 
 
-def _fmt_sol(usd: float, eur: float) -> str:
-    """Format a SOL price pair with two decimal places."""
-    return f"<b>{usd:.2f}$</b> / <b>{eur:.2f}€</b>"
+SHORT_SUMMARY_LINES = (
+    ("expected_move", "👉", "Qué espera"),
+    ("if_lower", "🛑", "Si cae más"),
+    ("if_higher", "✅", "Si sube"),
+    ("his_plan", "💡", "Qué haría él"),
+    ("long_term", "🧭", "A largo plazo"),
+)
 
 
 def build_message(
     video_id: str,
     prices_now: dict,
     prices_yesterday: dict | None,
-    robot_score: float,
-    robot_comment: str,
-    resumen: str,
-    macro_summary: str,
-    perps_tip: str,
-    full_analysis: str,
+    short_summary: dict[str, str],
 ) -> str:
-    """Assemble the full HTML Telegram message."""
+    """Assemble the short, jargon-free HTML Telegram message."""
     video_url = f"https://www.youtube.com/watch?v={video_id}"
-    lines = [f'🎯 <b>Beecthor — Último vídeo</b> (<a href="{video_url}">ver</a>)', ""]
+    lines = [f'🎯 <b>Beecthor — vídeo de hoy</b> (<a href="{video_url}">ver</a>)']
 
-    if prices_yesterday:
-        btc_pct = (
-            (prices_now["btc_usd"] - prices_yesterday["btc_usd"])
-            / prices_yesterday["btc_usd"]
-            * 100
-        )
-        lines.append(
-            f"📈 BTC ayer: {_fmt_btc(prices_yesterday['btc_usd'], prices_yesterday['btc_eur'])}"
-        )
-        lines.append(
-            f"📈 BTC ahora: {_fmt_btc(prices_now['btc_usd'], prices_now['btc_eur'])}"
-            f"  (<b>{btc_pct:+.2f}%</b>)"
-        )
-        lines.append("")
+    price_line = f"BTC ahora: <b>{_fmt_price(prices_now['btc_usd'])} $</b>"
+    if prices_yesterday and prices_yesterday.get("btc_usd"):
+        btc_pct = (prices_now["btc_usd"] - prices_yesterday["btc_usd"]) / prices_yesterday["btc_usd"] * 100
+        price_line += f" ({btc_pct:+.1f} % desde ayer)".replace(".", ",")
+    lines.extend([price_line, ""])
 
-        if prices_yesterday.get("sol_usd") and prices_now.get("sol_usd"):
-            sol_pct = (
-                (prices_now["sol_usd"] - prices_yesterday["sol_usd"])
-                / prices_yesterday["sol_usd"]
-                * 100
-            )
-            lines.append(
-                f"📈 SOL ayer: {_fmt_sol(prices_yesterday['sol_usd'], prices_yesterday['sol_eur'])}"
-            )
-            lines.append(
-                f"📈 SOL ahora: {_fmt_sol(prices_now['sol_usd'], prices_now['sol_eur'])}"
-                f"  (<b>{sol_pct:+.2f}%</b>)"
-            )
-            lines.append("")
-    else:
-        # First run — no previous log entry to compare against
-        lines.append(f"💰 BTC ahora: {_fmt_btc(prices_now['btc_usd'], prices_now['btc_eur'])}")
-        if prices_now.get("sol_usd"):
-            lines.append(f"💰 SOL ahora: {_fmt_sol(prices_now['sol_usd'], prices_now['sol_eur'])}")
-        lines.append("")
+    for field, emoji, label in SHORT_SUMMARY_LINES:
+        text = sanitize_telegram_html_fragment(short_summary.get(field, ""))
+        if text:
+            lines.extend([f"{emoji} <b>{label}:</b> {text}", ""])
 
-    if perps_tip:
-        lines.append("⚡ <b>Perps Tip</b>")
-        lines.append(sanitize_telegram_html_fragment(perps_tip))
-        lines.append("")
-
-    if macro_summary:
-        lines.append("🧭 <b>Visión macro</b>")
-        lines.append(sanitize_telegram_html_fragment(macro_summary))
-        lines.append("")
-
-    lines.append(f"🤖 <b>Índice robot: {robot_score:.1f} / 10</b>")
-    lines.append(f"<i>{sanitize_telegram_html_fragment(robot_comment)}</i>")
-    lines.append("")
-    lines.append("📌 <b>Resumen</b>")
-    lines.append(sanitize_telegram_html_fragment(resumen))
-    lines.append("")
-    lines.append("🔍 <b>Análisis completo</b> <i>(toca para ver)</i>")
-    lines.append(f"<tg-spoiler>{sanitize_telegram_html_fragment(full_analysis)}</tg-spoiler>")
-
-    return "\n".join(lines)
+    return "\n".join(lines).rstrip()
 
 
 def collect_video_context(
@@ -1378,10 +1224,8 @@ def run_auto(
     context = collect_video_context(video_id, save_to_disk=save_to_disk, transcript=provided_transcript)
 
     print(f"Generating summary via {BEECTHOR_SUMMARY_LLM_PROVIDER}...")
-    macro_summary, perps_tip, resumen, full_analysis, perps_thesis = generate_summary_via_llm(
+    short_summary, perps_thesis = generate_summary_via_llm(
         context["transcript"],
-        context["robot_score"],
-        context["robot_comment"],
         context["video_id"],
         context["prices_now"],
     )
@@ -1391,12 +1235,7 @@ def run_auto(
         video_id=context["video_id"],
         prices_now=context["prices_now"],
         prices_yesterday=context["prices_yesterday"],
-        robot_score=context["robot_score"],
-        robot_comment=context["robot_comment"],
-        resumen=resumen,
-        macro_summary=macro_summary,
-        perps_tip=perps_tip,
-        full_analysis=full_analysis,
+        short_summary=short_summary,
     )
 
     if send_telegram:

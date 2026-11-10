@@ -1,5 +1,11 @@
 # Changelog
 
+### 10/11/2026
+* Nuevo formato de resumen diario corto y sin jerga: precio de BTC, "Qué espera", "Si cae más", "Si sube", "Qué haría él" y "A largo plazo" (~700 caracteres). Se eliminan del mensaje SOL, el índice robot, el Perps Tip, la Visión macro, el Resumen y el Análisis completo; `perps_thesis` se sigue generando para el bot.
+* Los resúmenes pasan a generarse con `gpt-6-luna` en Codex CLI 0.167.0 (antes el modelo por defecto `gpt-5.6-sol`); se puede sobrescribir con `BEECTHOR_CODEX_MODEL`.
+* El dashboard toma la línea "Qué espera" como tip cuando el mensaje no tiene `Perps Tip`.
+* "Qué haría él" distingue siempre trading (abrir largos/cortos) de las compras de ciclo en spot, sin usar "comprar" a secas.
+
 ### 21/07/2026
 * Ajustada la guía del `Perps Tip`: pasa de priorizar frases condicionales de entrada a resumir de forma directa y muy clara el siguiente movimiento de corto plazo que Beecthor plantea, usando condiciones solo cuando la tesis del vídeo lo exija.
 * `scripts/summarize_beecthor.py --auto` ahora permite procesar un `--video-id` explícito y saltar Telegram, `last_video_id.txt` o Git con flags dedicados, útil para backfills controlados.

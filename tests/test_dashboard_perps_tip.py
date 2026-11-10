@@ -23,6 +23,19 @@ class DashboardPerpsTipTests(unittest.TestCase):
             "Si BTC recupera 65.000, buscar long hacia 67.000.",
         )
 
+    def test_extracts_expected_move_from_short_format(self):
+        message = (
+            "🎯 <b>Beecthor — vídeo de hoy</b>\n"
+            "BTC ahora: <b>73.200 $</b>\n\n"
+            "👉 <b>Qué espera:</b> que baje hasta 70.000 $ y rebote.\n\n"
+            "🛑 <b>Si cae más:</b> rebote en 66.700 $."
+        )
+
+        self.assertEqual(
+            dashboard.extract_perps_tip_html(message),
+            "que baje hasta 70.000 $ y rebote.",
+        )
+
     def test_latest_summary_renders_perps_tip_before_summary(self):
         latest = dashboard.load_summary_entries()[0]
         self.assertTrue(latest["perps_tip_html"])

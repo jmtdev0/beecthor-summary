@@ -1725,7 +1725,9 @@ def extract_perps_tip_html(message: str) -> str:
     start_label = '⚡ <b>Perps Tip</b>'
     start = message.find(start_label)
     if start == -1:
-        return ''
+        # Short jargon-free format (since 2026-11-10): the tip is the "Qué espera" line.
+        match = re.search(r'👉 <b>Qué espera:</b>\s*(.+)', message)
+        return normalize_html_text_block(match.group(1).strip()) if match else ''
     start += len(start_label)
     end_positions = [
         message.find(label, start)
