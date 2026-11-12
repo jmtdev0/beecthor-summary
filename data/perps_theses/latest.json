@@ -2,22 +2,20 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "CIWpMSbHD3k",
-  "video_url": "https://www.youtube.com/watch?v=CIWpMSbHD3k",
-  "generated_at": "2026-11-11T16:45:30Z",
-  "created_at": "2026-11-11T16:45:30Z",
-  "valid_until": "2026-11-12T16:45:30Z",
+  "video_id": "M_la3pTSDFI",
+  "video_url": "https://www.youtube.com/watch?v=M_la3pTSDFI",
+  "generated_at": "2026-11-12T15:45:15Z",
+  "created_at": "2026-11-12T15:45:15Z",
+  "valid_until": "2026-11-13T15:45:15Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.65,
+  "confidence": 0.62,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [
-    57700
-  ],
+  "invalidation_levels": [],
   "no_trade_conditions": [
-    "No entry until a completed decline and a clear reversal are visible.",
-    "Avoid opening trades during sideways price action."
+    "Wait for a confirmed bullish reaction before considering a long.",
+    "The transcript does not provide a precise lower target if the stated support area fails."
   ],
-  "notes": "The near-term thesis allows one more decline toward 70000 and a possible reversal; a break below 66700 weakens the bullish structure. The 57700 macro low is the hard invalidation. No trade trigger is confirmed in this transcript."
+  "notes": "Potential long interest is around 70,000–71,000, but the decline has not clearly finished. No actionable entry, stop, or lower extension price is confirmed."
 }
