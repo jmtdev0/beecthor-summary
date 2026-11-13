@@ -2,20 +2,20 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "M_la3pTSDFI",
-  "video_url": "https://www.youtube.com/watch?v=M_la3pTSDFI",
-  "generated_at": "2026-11-12T15:45:15Z",
-  "created_at": "2026-11-12T15:45:15Z",
-  "valid_until": "2026-11-13T15:45:15Z",
+  "video_id": "HtMfrLrIrkI",
+  "video_url": "https://www.youtube.com/watch?v=HtMfrLrIrkI",
+  "generated_at": "2026-11-13T17:45:50Z",
+  "created_at": "2026-11-13T17:45:50Z",
+  "valid_until": "2026-11-14T17:45:50Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.62,
+  "confidence": 0.5,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [],
   "no_trade_conditions": [
-    "Wait for a confirmed bullish reaction before considering a long.",
-    "The transcript does not provide a precise lower target if the stated support area fails."
+    "No fresh setup is confirmed; price action around 67,000 and weekend volatility remain unresolved.",
+    "Wait for a clear reclaim or breakdown before considering a new position."
   ],
-  "notes": "Potential long interest is around 70,000–71,000, but the decline has not clearly finished. No actionable entry, stop, or lower extension price is confirmed."
+  "notes": "He reports a high-risk long with a 20% partial take-profit and stop at breakeven, plus a short from 86,000 also at breakeven. He has allocated about 40% of his spot accumulation liquidity; a dip and reclaim around 67,000 could support a bounce, while failure to reclaim near 62,000 worsens the outlook."
 }
