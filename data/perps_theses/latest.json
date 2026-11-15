@@ -2,21 +2,24 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "bxxcDAHX8iU",
-  "video_url": "https://www.youtube.com/watch?v=bxxcDAHX8iU",
-  "generated_at": "2026-11-14T15:45:49Z",
-  "created_at": "2026-11-14T15:45:49Z",
-  "valid_until": "2026-11-15T15:45:49Z",
+  "video_id": "ZQ8auRFf-zY",
+  "video_url": "https://www.youtube.com/watch?v=ZQ8auRFf-zY",
+  "generated_at": "2026-11-15T17:45:38Z",
+  "created_at": "2026-11-15T17:45:38Z",
+  "valid_until": "2026-11-16T17:45:38Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.87,
+  "confidence": 0.55,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [],
-  "no_trade_conditions": [
-    "No confirmed reversal signal",
-    "Low weekend liquidity",
-    "Avoid chasing shorts after an extended downside move"
+  "invalidation_levels": [
+    68000,
+    57700
   ],
-  "notes": "The speaker expects possible further downside, avoids shorts after an extended drop, and waits for a clear reversal before opening futures positions; spot DCA continues."
+  "no_trade_conditions": [
+    "No confirmed bullish reversal structure and pullback",
+    "Price has not reclaimed the 67,000–68,000 area",
+    "Short-term structure remains unclear"
+  ],
+  "notes": "The speaker identifies 60,000–62,000 as an area to seek longs, but prefers waiting for an upward move and pullback confirmation; half of his short remains open."
 }
