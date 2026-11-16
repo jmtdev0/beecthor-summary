@@ -2,24 +2,20 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "ZQ8auRFf-zY",
-  "video_url": "https://www.youtube.com/watch?v=ZQ8auRFf-zY",
-  "generated_at": "2026-11-15T17:45:38Z",
-  "created_at": "2026-11-15T17:45:38Z",
-  "valid_until": "2026-11-16T17:45:38Z",
+  "video_id": "YTJYJmfiWiQ",
+  "video_url": "https://www.youtube.com/watch?v=YTJYJmfiWiQ",
+  "generated_at": "2026-11-16T16:46:14Z",
+  "created_at": "2026-11-16T16:46:14Z",
+  "valid_until": "2026-11-17T16:46:14Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.55,
+  "confidence": 0.62,
   "long_zones": [],
   "short_zones": [],
-  "invalidation_levels": [
-    68000,
-    57700
-  ],
+  "invalidation_levels": [],
   "no_trade_conditions": [
-    "No confirmed bullish reversal structure and pullback",
-    "Price has not reclaimed the 67,000–68,000 area",
-    "Short-term structure remains unclear"
+    "Wait for a confirmed signal; avoid entries based only on the recent sharp drop.",
+    "No confirmed resistance reclaim."
   ],
-  "notes": "The speaker identifies 60,000–62,000 as an area to seek longs, but prefers waiting for an upward move and pullback confirmation; half of his short remains open."
+  "notes": "A further dip followed by a rebound is plausible, but the transcript gives no confirmed entry trigger."
 }
