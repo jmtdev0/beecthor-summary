@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "tpZCQ3QbVZk",
+  "video_url": "https://www.youtube.com/watch?v=tpZCQ3QbVZk",
+  "generated_at": "2026-11-17T15:45:43Z",
+  "created_at": "2026-11-17T15:45:43Z",
+  "valid_until": "2026-11-18T15:45:43Z",
+  "macro_bias": "bullish",
+  "preferred_setup": "wait",
+  "confidence": 0.56,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [
+    63100
+  ],
+  "no_trade_conditions": [
+    "No confirmed upward impulse followed by a correction to define a long entry.",
+    "Price remains directionless; the author is not seeking shorts."
+  ],
+  "notes": "Author expects a possible further downside sweep before a recovery. A sustained loss and reclaim below 63100 would reduce the probability of his current corrective interpretation."
+}
