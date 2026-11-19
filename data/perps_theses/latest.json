@@ -2,33 +2,22 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "lxnYWQIb1Ek",
-  "video_url": "https://www.youtube.com/watch?v=lxnYWQIb1Ek",
-  "generated_at": "2026-11-18T16:45:48Z",
-  "created_at": "2026-11-18T16:45:48Z",
-  "valid_until": "2026-11-19T16:45:48Z",
-  "macro_bias": "neutral",
-  "preferred_setup": "long_support_sweep_reclaim",
-  "confidence": 0.57,
-  "long_zones": [
-    {
-      "low": 61000.0,
-      "high": 61550.0,
-      "stop_loss": 60000.0,
-      "targets": [
-        62700.0,
-        65800.0
-      ],
-      "label": "Support sweep and reclaim"
-    }
-  ],
+  "video_id": "XWPb10F7lZY",
+  "video_url": "https://www.youtube.com/watch?v=XWPb10F7lZY",
+  "generated_at": "2026-11-19T15:45:40Z",
+  "created_at": "2026-11-19T15:45:40Z",
+  "valid_until": "2026-11-20T15:45:40Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.58,
+  "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [
-    60000
+    57000
   ],
   "no_trade_conditions": [
-    "No long entry before a sweep below the 61,000–61,550 support area and a reclaim with bullish structure.",
-    "Do not open a new short; the speaker is managing an existing short while seeking longs."
+    "No confirmed reversal or explicit perps entry and stop are provided.",
+    "Wait for a clear recovery above 63000; sustained trade below it increases downside risk."
   ],
-  "notes": "Conditional setup: price may sweep toward 60,000, then reclaim 61,000–61,550 with bullish structure. The speaker seeks longs and manages the remaining half of a short opened near 86,000, with its stop in profit."
+  "notes": "The speaker favors a near-term move toward 66000 but allows for a later retest of lows; no actionable perps entry or stop is specified."
 }
