@@ -2,22 +2,23 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "XWPb10F7lZY",
-  "video_url": "https://www.youtube.com/watch?v=XWPb10F7lZY",
-  "generated_at": "2026-11-19T15:45:40Z",
-  "created_at": "2026-11-19T15:45:40Z",
-  "valid_until": "2026-11-20T15:45:40Z",
+  "video_id": "DwzccN2yZ90",
+  "video_url": "https://www.youtube.com/watch?v=DwzccN2yZ90",
+  "generated_at": "2026-11-20T16:45:16Z",
+  "created_at": "2026-11-20T16:45:16Z",
+  "valid_until": "2026-11-21T16:45:16Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.58,
+  "confidence": 0.48,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [
-    57000
+    57700
   ],
   "no_trade_conditions": [
-    "No confirmed reversal or explicit perps entry and stop are provided.",
-    "Wait for a clear recovery above 63000; sustained trade below it increases downside risk."
+    "Wait for a confirmed support reversal; the transcript cuts off before naming the support",
+    "Avoid entries in the middle of the range",
+    "Stand aside if the cycle lows break"
   ],
-  "notes": "The speaker favors a near-term move toward 66000 but allows for a later retest of lows; no actionable perps entry or stop is specified."
+  "notes": "The supplied transcript ends before the promised support and technical levels are explained, so no precise entry zone is defensible."
 }
