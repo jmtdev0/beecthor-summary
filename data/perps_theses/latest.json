@@ -2,23 +2,23 @@
   "schema_version": 1,
   "source": "beecthor-summary",
   "symbol": "BTCUSDC",
-  "video_id": "DwzccN2yZ90",
-  "video_url": "https://www.youtube.com/watch?v=DwzccN2yZ90",
-  "generated_at": "2026-11-20T16:45:16Z",
-  "created_at": "2026-11-20T16:45:16Z",
-  "valid_until": "2026-11-21T16:45:16Z",
+  "video_id": "V5escwLWjk8",
+  "video_url": "https://www.youtube.com/watch?v=V5escwLWjk8",
+  "generated_at": "2026-11-24T15:45:40Z",
+  "created_at": "2026-11-24T15:45:40Z",
+  "valid_until": "2026-11-25T15:45:40Z",
   "macro_bias": "unknown",
   "preferred_setup": "wait",
-  "confidence": 0.48,
+  "confidence": 0.58,
   "long_zones": [],
   "short_zones": [],
   "invalidation_levels": [
-    57700
+    59700
   ],
   "no_trade_conditions": [
-    "Wait for a confirmed support reversal; the transcript cuts off before naming the support",
-    "Avoid entries in the middle of the range",
-    "Stand aside if the cycle lows break"
+    "No confirmed structure after a sweep of recent lows",
+    "No clear corrective rise into resistance",
+    "Avoid initiating shorts directly at support"
   ],
-  "notes": "The supplied transcript ends before the promised support and technical levels are explained, so no precise entry zone is defensible."
+  "notes": "Possible sweep of recent lows toward 58000, followed by a potential reaction; 55000 is a further liquidity area. Holding 59700 and breaking recent highs would favor upside. No entry trigger is confirmed."
 }
