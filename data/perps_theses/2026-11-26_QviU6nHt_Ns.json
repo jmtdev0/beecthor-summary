@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "QviU6nHt_Ns",
+  "video_url": "https://www.youtube.com/watch?v=QviU6nHt_Ns",
+  "generated_at": "2026-11-26T16:45:49Z",
+  "created_at": "2026-11-26T16:45:49Z",
+  "valid_until": "2026-11-28T16:45:49Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.39,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [],
+  "no_trade_conditions": [
+    "Price remains inside the current range without a confirmed break in either direction.",
+    "The transcript does not confirm that the downside move is complete."
+  ],
+  "notes": "The transcript is truncated and describes balanced short-term scenarios; no entry trigger is confirmed."
+}
