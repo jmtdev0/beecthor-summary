@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source": "beecthor-summary",
+  "symbol": "BTCUSDC",
+  "video_id": "54yXOJ8SzE8",
+  "video_url": "https://www.youtube.com/watch?v=54yXOJ8SzE8",
+  "generated_at": "2026-11-27T16:45:42Z",
+  "created_at": "2026-11-27T16:45:42Z",
+  "valid_until": "2026-11-28T16:45:42Z",
+  "macro_bias": "unknown",
+  "preferred_setup": "wait",
+  "confidence": 0.58,
+  "long_zones": [],
+  "short_zones": [],
+  "invalidation_levels": [],
+  "no_trade_conditions": [
+    "Wait for price action to clarify whether another low comes first or price rallies.",
+    "No exact entry trigger or stop level is confirmed in the transcript."
+  ],
+  "notes": "Beecthor expects a possible further low followed by a rebound; spot cycle accumulation is separate from leveraged perps trading."
+}
